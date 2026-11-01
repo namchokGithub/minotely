@@ -18,7 +18,7 @@ Libraries beyond the Vite/Tailwind baseline are added per milestone (see `docs/P
 pnpm install       # install dependencies
 pnpm dev           # run the app locally
 pnpm build         # type-check and production build
-pnpm test          # run Vitest (available once M1 adds it)
+pnpm test          # run Vitest
 pnpm lint          # run ESLint
 pnpm exec prettier --write <files>
 ```
@@ -29,7 +29,7 @@ Target layout (create folders when first needed):
 
 ```
 src/
-  app/              # router, providers, layout shell
+  app/              # app root, router, providers, layout shell, theme
   components/ui/    # shadcn/ui components
   features/
     auth/  books/  notes/  editor/  search/  trash/  settings/

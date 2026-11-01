@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Minotely</title>
+    <script>
+      // Apply the saved theme before first paint (store: src/stores/ui-store.ts).
+      try {
+        var theme = JSON.parse(localStorage.getItem("minotely-ui")).state.theme;
+      } catch (e) {}
+      if (
+        theme === "dark" ||
+        (theme !== "light" &&
+          matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

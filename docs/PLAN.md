@@ -21,7 +21,7 @@ Baseline already done: Vite + React 19 + TypeScript + Tailwind CSS v4 + ESLint +
    - Desktop: 3 columns — Books / Notes / Editor.
    - Tablet: collapsible Books sidebar + Notes + Editor.
    - Mobile: one screen at a time, Books → Notes → Editor, clear Back button.
-4. Routing: `BrowserRouter` with `basename` from `import.meta.env.BASE_URL`, `404.html` fallback for GitHub Pages.
+4. Routing: `BrowserRouter` with `basename` from `import.meta.env.BASE_URL`, `404.html` copied from `index.html` at deploy.
    Routes: `/login`, `/books/:bookId`, `/books/:bookId/notes/:noteId`.
 5. Firebase Authentication: Google Sign-in, owner-email allowlist, route guard, sign-out.
 6. GitHub Actions: build and deploy to GitHub Pages on push to branch `production` only.
