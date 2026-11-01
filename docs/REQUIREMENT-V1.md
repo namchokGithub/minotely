@@ -24,26 +24,26 @@ My Library
 
 ## Core Features
 
-| Feature           | Requirement                      | Priority |
-| ----------------- | -------------------------------- | -------- |
-| Authentication    | GoogleSign-inเฉพาะบัญชีตัวเอง    | P0       |
-| BookManagement    | Create,Rename,Delete,Color       | P0       |
-| NoteManagement    | Create,Edit,Delete,Move          | P0       |
-| Markdown          | Heading,List,Table,CodeBlock     | P0       |
-| RichText          | Bold,Italic,Highlight,TextColor  | P0       |
-| EditorMode        | Edit WYSIWYG                     | P0       |
-| AutoSave          | บันทึกอัตโนมัติ                  | P0       |
-| Search            | ค้นหาTitleและContent             | P0       |
-| Responsive        | Desktop,Tablet,Mobile            | P0       |
-| PaperStyles       | Lined,Grid,Plain,Dotted          | P1       |
-| Pin/Favorite      | ปักหมุดNoteสำคัญ                 | P1       |
-| Tags              | ติดTagให้Note                    | P1       |
-| Sorting           | Updated,Created,A–Z,Custom       | P1       |
-| Import/Export     | Markdown,JSON                    | P1       |
-| Trash             | กู้คืนNoteที่ลบ                  | P1       |
-| OfflineMode       | อ่าน/แก้ไขเมื่อไม่มีอินเทอร์เน็ต | P2       |
-| VersionHistory    | ดูประวัติการแก้ไขNote            | P2       |
-| KeyboardShortcuts | ควบคุมEditorด้วยคีย์บอร์ด        | P2       |
+| Feature           | Requirement                                | Priority |
+| ----------------- | ------------------------------------------ | -------- |
+| Authentication    | GoogleSign-inเฉพาะอีเมลเจ้าของ (Allowlist) | P0       |
+| BookManagement    | Create,Rename,Delete,Color                 | P0       |
+| NoteManagement    | Create,Edit,Delete,Move                    | P0       |
+| Markdown          | Heading,List,Table,CodeBlock               | P0       |
+| RichText          | Bold,Italic,Highlight,TextColor            | P0       |
+| EditorMode        | Edit WYSIWYG                               | P0       |
+| AutoSave          | บันทึกอัตโนมัติ                            | P0       |
+| Search            | ค้นหาTitleและContent                       | P0       |
+| Responsive        | Desktop,Tablet,Mobile                      | P0       |
+| PaperStyles       | Lined,Grid,Plain,Dotted                    | P1       |
+| Pin/Favorite      | ปักหมุดNoteสำคัญ                           | P1       |
+| Tags              | ติดTagให้Note                              | P1       |
+| Sorting           | Updated,Created,A–Z,Custom                 | P1       |
+| Import/Export     | Markdown,JSON                              | P1       |
+| Trash             | กู้คืนNoteที่ลบ                            | P1       |
+| OfflineMode       | อ่าน/แก้ไขเมื่อไม่มีอินเทอร์เน็ต           | P2       |
+| VersionHistory    | ดูประวัติการแก้ไขNote                      | P2       |
+| KeyboardShortcuts | ควบคุมEditorด้วยคีย์บอร์ด                  | P2       |
 
 ## UX/UI Design
 
@@ -123,28 +123,29 @@ users/
         deletedAt
 ```
 
+## Access & Routing
+
+- Sign-in ได้เฉพาะ Google Account ของเจ้าของ (Email Allowlist) บังคับใน Firestore Security Rules บัญชีอื่นถูกปฏิเสธ
+- Routing ใช้ `BrowserRouter` + `404.html` fallback สำหรับ GitHub Pages (URL ไม่มี `#`)
+
 ## Development Roadmap
 
-Phase 1 — Foundation & Layout
+รวม 6 Phase เดิมเป็น 4 Milestone รายละเอียดใน `docs/PLAN.md`
 
-Project setup, Theme, Responsive Layout, Sidebar, Routing, Firebase Authentication
+M1 — Foundation & Deploy (Phase 1 + Deploy จาก Phase 6)
 
-Phase 2 — Books & Notes
+Project setup, Theme (Light/Dark tokens), Responsive Layout, Sidebar, Routing, Firebase Authentication, GitHub Actions → GitHub Pages (deploy เฉพาะ branch `production`)
 
-CRUD, Firestore Sync, Sorting, Auto Save, Pinned Notes, Delete Confirmation
+M2 — Core Notebook (Phase 2 + 3 + Sync จาก Phase 5)
 
-Phase 3 — Rich Text Editor
+Books & Notes CRUD, Firestore Sync, Security Rules (ทดสอบกับ Firebase Project จริง ไม่ใช้ Emulator/Mock), Sorting, Pinned Notes, Delete Confirmation, Tiptap (Markdown, Text Color, Highlight, Tables, Code Blocks), Auto Save, Sync Status, IndexedDB Drafts
 
-Tiptap, Markdown, Text Color, Highlight, Tables, Code Blocks, Edit/Preview
+M3 — Reading & Data (Phase 4 + ส่วนที่เหลือของ Phase 5)
 
-Phase 4 — Reading Experience
+Paper Styles, Typography, Search, Tags, Motion, Mobile Polish, Trash, Import/Export, Custom Sort
 
-Paper Styles, Typography, Search, Dark/Light Mode, Motion, Mobile Polish
+M4 — Hardening & Release (ส่วนที่เหลือของ Phase 6)
 
-Phase 5 — Data & Reliability
+Performance, Accessibility, Security Rules Review, Release
 
-Import/Export, Trash, IndexedDB Cache, Sync Status, Offline Drafts
-
-Phase 6 — Deployment & Polish
-
-Deploy only branch 'production', GitHub Actions, GitHub Pages, Security Rules Testing, Performance, Accessibility
+Post-MVP (P2): Offline Mode, Version History, Keyboard Shortcuts
