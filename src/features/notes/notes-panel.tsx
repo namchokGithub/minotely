@@ -1,10 +1,10 @@
 import { useRef, useState, type ReactNode } from "react";
+import { Spinner } from "@/components/spinner";
 import { Link, useNavigate } from "react-router";
 import {
   ArrowUpDown,
   ChevronLeft,
   FileUp,
-  Loader2,
   MoreHorizontal,
   PanelLeft,
   Plus,
@@ -27,7 +27,6 @@ import {
 import { useUid } from "@/features/auth/auth-context";
 import { useBooks } from "@/features/books/api";
 import { BookGlyph } from "@/features/books/book-glyph";
-import { markdownToNote } from "@/features/data/markdown";
 import { useUiStore } from "@/stores/ui-store";
 import { createNote, useNotes } from "./api";
 import { NoteItem } from "./note-item";
@@ -46,6 +45,7 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
   const uid = useUid();
   const navigate = useNavigate();
   const toggleBooksSidebar = useUiStore((state) => state.toggleBooksSidebar);
+  const booksSidebarOpen = useUiStore((state) => state.booksSidebarOpen);
   const noteSort = useUiStore((state) => state.noteSort);
   const setNoteSort = useUiStore((state) => state.setNoteSort);
   const markdownInput = useRef<HTMLInputElement>(null);
@@ -64,6 +64,8 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
 
   const importMarkdown = async (files: FileList) => {
     if (!book) return;
+    // Loaded on demand: pulls in the Tiptap schema and Markdown parser.
+    const { markdownToNote } = await import("@/features/data/markdown");
     for (const file of Array.from(files)) {
       try {
         createNote(uid, book.id, markdownToNote(await file.text(), file.name));
@@ -85,6 +87,8 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
           variant="ghost"
           size="icon-sm"
           aria-label="Toggle books sidebar"
+          aria-expanded={booksSidebarOpen}
+          aria-controls="books-sidebar"
           className="hidden md:inline-flex lg:hidden"
           onClick={toggleBooksSidebar}
         >
@@ -204,7 +208,7 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
           <PanelMessage>Book not found.</PanelMessage>
         ) : notes.isPending ? (
           <PanelMessage>
-            <Loader2 className="size-4 animate-spin" aria-label="Loading" />
+            <Spinner />
           </PanelMessage>
         ) : notes.isError ? (
           <PanelMessage>Could not load notes.</PanelMessage>

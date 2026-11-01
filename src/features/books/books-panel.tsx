@@ -1,11 +1,11 @@
 import { useState, type ReactNode } from "react";
+import { Spinner } from "@/components/spinner";
 import { NavLink, useNavigate } from "react-router";
 import { useRouteIds } from "@/app/use-route-ids";
 import {
   ArrowDown,
   ArrowUp,
   BookOpen,
-  Loader2,
   LogOut,
   Monitor,
   Moon,
@@ -96,7 +96,7 @@ export function BooksPanel() {
       <nav className="flex-1 overflow-y-auto px-2 pb-2" aria-label="Books">
         {isPending ? (
           <PanelMessage>
-            <Loader2 className="size-4 animate-spin" aria-label="Loading" />
+            <Spinner />
           </PanelMessage>
         ) : isError ? (
           <PanelMessage>Could not load books.</PanelMessage>
@@ -121,7 +121,7 @@ export function BooksPanel() {
           to="/trash"
           className={({ isActive }) =>
             cn(
-              "flex h-9 items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              "flex h-9 items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
               isActive &&
                 "bg-sidebar-accent font-medium text-sidebar-foreground",
             )
@@ -168,7 +168,7 @@ function BookItem({ book, previous, next }: BookItemProps) {
         to={`/books/${book.id}`}
         className={({ isActive }) =>
           cn(
-            "flex h-9 items-center gap-2 rounded-md px-2 pr-9 text-sm transition-colors duration-150 hover:bg-sidebar-accent",
+            "flex h-9 items-center gap-2 rounded-md px-2 pr-9 text-sm transition-colors duration-150 hover:bg-sidebar-accent outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
             isActive && "bg-sidebar-accent font-medium",
           )
         }

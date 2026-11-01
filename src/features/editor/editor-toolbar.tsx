@@ -35,7 +35,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
   return (
     <div
-      role="toolbar"
+      role="group"
       aria-label="Formatting"
       className="flex w-max items-center gap-0.5"
     >
@@ -56,7 +56,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolButton label="Text color" active={Boolean(state.color)}>
+          <ToolButton menu label="Text color" active={Boolean(state.color)}>
             <Palette style={state.color ? { color: state.color } : undefined} />
           </ToolButton>
         </DropdownMenuTrigger>
@@ -82,7 +82,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolButton label="Highlight" active={state.highlight}>
+          <ToolButton menu label="Highlight" active={state.highlight}>
             <Highlighter />
           </ToolButton>
         </DropdownMenuTrigger>
@@ -116,7 +116,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolButton label="Table" active={state.table}>
+          <ToolButton menu label="Table" active={state.table}>
             <TableIcon />
           </ToolButton>
         </DropdownMenuTrigger>
@@ -164,15 +164,21 @@ function ToolButton({
   label,
   active,
   className,
+  menu = false,
   ...props
-}: ComponentProps<typeof Button> & { label: string; active: boolean }) {
+}: ComponentProps<typeof Button> & {
+  label: string;
+  active: boolean;
+  /** Opens a menu: no pressed state. */
+  menu?: boolean;
+}) {
   return (
     <Button
       variant="ghost"
       size="icon-sm"
       aria-label={label}
       title={label}
-      aria-pressed={active}
+      aria-pressed={menu ? undefined : active}
       className={cn(active && "bg-muted text-foreground", className)}
       {...props}
     />

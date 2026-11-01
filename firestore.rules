@@ -1,7 +1,8 @@
 rules_version = '2';
 
-// Owner-only access (D2). Replace OWNER_EMAIL with the owner's Google account
-// email, then publish in Firebase Console → Firestore → Rules.
+// Owner-only access (D2) with shape checks (D17). Replace OWNER_EMAIL with the
+// owner's Google account email, then publish in Firebase Console → Firestore → Rules.
+// Anything not matched below is denied.
 service cloud.firestore {
   match /databases/{database}/documents {
     function isOwner(uid) {
@@ -11,8 +12,61 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
-    match /users/{uid}/{document=**} {
-      allow read, write: if isOwner(uid);
+    function keepsCreatedAt() {
+      return request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function validBook(d) {
+      return d.keys().hasOnly(["name", "color", "icon", "order", "createdAt", "updatedAt"])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.color is string && d.color.size() <= 20
+        && d.icon is string && d.icon.size() <= 40
+        && d.order is number
+        && d.createdAt is timestamp
+        && d.updatedAt is timestamp;
+    }
+
+    function validNote(d) {
+      return d.keys().hasOnly([
+          "bookId", "title", "content", "plainText", "tags", "isPinned",
+          "paperStyle", "order", "createdAt", "updatedAt", "deletedAt"
+        ])
+        && d.bookId is string && d.bookId.size() > 0
+        && d.title is string && d.title.size() <= 200
+        && d.content is string
+        && d.plainText is string
+        && d.tags is list && d.tags.size() <= 20
+        && d.isPinned is bool
+        && d.paperStyle in ["plain", "lined", "grid", "dotted"]
+        // Notes created before custom sort have no `order`.
+        && d.get("order", 0) is number
+        && d.createdAt is timestamp
+        && d.updatedAt is timestamp
+        && (d.deletedAt == null || d.deletedAt is timestamp);
+    }
+
+    function validSettings(d) {
+      return d.keys().hasOnly(["fontFamily", "fontSize"])
+        && d.get("fontFamily", "sans") in ["sans", "serif", "mono"]
+        && d.get("fontSize", "md") in ["sm", "md", "lg"];
+    }
+
+    match /users/{uid}/books/{bookId} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid) && validBook(request.resource.data);
+      allow update: if isOwner(uid) && validBook(request.resource.data) && keepsCreatedAt();
+    }
+
+    match /users/{uid}/notes/{noteId} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid) && validNote(request.resource.data);
+      allow update: if isOwner(uid) && validNote(request.resource.data) && keepsCreatedAt();
+    }
+
+    match /users/{uid}/preferences/{docId} {
+      allow read: if isOwner(uid) && docId == "settings";
+      allow write: if isOwner(uid) && docId == "settings"
+        && validSettings(request.resource.data);
     }
   }
 }

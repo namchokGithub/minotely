@@ -37,7 +37,6 @@ import { useUid } from "@/features/auth/auth-context";
 import { BookGlyph } from "@/features/books/book-glyph";
 import type { Book } from "@/features/books/types";
 import { downloadFile, toFileName } from "@/features/data/download";
-import { noteToMarkdown } from "@/features/data/markdown";
 import { deleteNote, moveNote, setNotePinned, swapNoteOrder } from "./api";
 import type { Note } from "./types";
 
@@ -76,6 +75,19 @@ export function NoteItem({
     if (activeNoteId === note.id) navigate(`/books/${bookId}/notes/${note.id}`);
   };
 
+  const exportMarkdown = async () => {
+    try {
+      const { noteToMarkdown } = await import("@/features/data/markdown");
+      downloadFile(
+        toFileName(title, "md"),
+        noteToMarkdown(note),
+        "text/markdown",
+      );
+    } catch (error) {
+      logError("Export Markdown")(error);
+    }
+  };
+
   const handleDelete = () => {
     deleteNote(uid, note.id).catch(logError("Delete note"));
     if (activeNoteId === note.id) navigate(`/books/${note.bookId}`);
@@ -87,7 +99,7 @@ export function NoteItem({
         to={`/books/${note.bookId}/notes/${note.id}`}
         className={({ isActive }) =>
           cn(
-            "grid gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted",
+            "grid gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
             isActive && "bg-muted",
           )
         }
@@ -183,15 +195,7 @@ export function NoteItem({
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-          <DropdownMenuItem
-            onSelect={() =>
-              downloadFile(
-                toFileName(title, "md"),
-                noteToMarkdown(note),
-                "text/markdown",
-              )
-            }
-          >
+          <DropdownMenuItem onSelect={() => void exportMarkdown()}>
             <FileDown /> Export Markdown
           </DropdownMenuItem>
           <DropdownMenuSeparator />

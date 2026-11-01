@@ -26,9 +26,9 @@ Every item not `Done`. Keep in sync with the sections below.
 | M3.7 | Trash                                    | In progress |
 | M3.8 | Import/Export                            | In progress |
 | M3.9 | Custom sort                              | In progress |
-| M4.1 | Performance                              | Todo        |
-| M4.2 | Accessibility                            | Todo        |
-| M4.3 | Security Rules review                    | Todo        |
+| M4.1 | Performance                              | In progress |
+| M4.2 | Accessibility                            | In progress |
+| M4.3 | Security Rules review                    | In progress |
 | M4.4 | Release                                  | Todo        |
 
 ## Notes
@@ -38,6 +38,8 @@ Every item not `Done`. Keep in sync with the sections below.
 
 - M2: code done for M2.1–M2.7; needs manual testing with the real project after publishing `firestore.rules` (replace `OWNER_EMAIL` first).
 - M3: code done for M3.1–M3.9; needs manual testing. Custom sort uses Move up / Move down, not drag (D14).
+- M4.1–M4.3: code done; needs manual checks (rules playground cases in `docs/SECURITY.md`, keyboard and screen-reader pass).
+- M4.4: deferred by the owner; not releasing yet.
 
 ## Done
 

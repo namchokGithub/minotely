@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Spinner } from "@/components/spinner";
 import { Link } from "react-router";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { AlertCircle, Check, ChevronLeft, Loader2 } from "lucide-react";
@@ -26,7 +27,7 @@ export function EditorPanel({ bookId, noteId }: EditorPanelProps) {
 
   let body: ReactNode;
   if (!noteId) body = <PanelMessage>Select a note.</PanelMessage>;
-  else if (notes.isPending) body = <Spinner />;
+  else if (notes.isPending) body = <LoadingMessage />;
   else if (!note) body = <PanelMessage>Note not found.</PanelMessage>;
   else body = <DraftLoader key={note.id} note={note} />;
 
@@ -65,7 +66,7 @@ function DraftLoader({ note }: { note: Note }) {
     };
   }, [note.id, uid]);
 
-  if (draft === undefined) return <Spinner />;
+  if (draft === undefined) return <LoadingMessage />;
   return <NoteEditor note={note} draft={draft} />;
 }
 
@@ -180,10 +181,10 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
   );
 }
 
-function Spinner() {
+function LoadingMessage() {
   return (
     <PanelMessage>
-      <Loader2 className="size-4 animate-spin" aria-label="Loading" />
+      <Spinner />
     </PanelMessage>
   );
 }

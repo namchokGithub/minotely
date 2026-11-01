@@ -1,12 +1,7 @@
 import { useState, type ReactNode } from "react";
+import { Spinner } from "@/components/spinner";
 import { Link } from "react-router";
-import {
-  ChevronLeft,
-  Loader2,
-  MoreHorizontal,
-  RotateCcw,
-  Trash2,
-} from "lucide-react";
+import { ChevronLeft, MoreHorizontal, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -79,7 +74,7 @@ export function TrashPanel() {
       <div className="flex-1 overflow-y-auto px-2 pb-2">
         {notes.isPending ? (
           <PanelMessage>
-            <Loader2 className="size-4 animate-spin" aria-label="Loading" />
+            <Spinner />
           </PanelMessage>
         ) : notes.isError ? (
           <PanelMessage>Could not load Trash.</PanelMessage>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
+import { Spinner } from "@/components/spinner";
 import { Navigate, useLocation } from "react-router";
-import { Loader2 } from "lucide-react";
 import { useAuth } from "./auth-context";
 
 export function RequireAuth({ children }: { children: ReactNode }) {
@@ -10,7 +10,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (status === "loading") {
     return (
       <div className="flex h-dvh items-center justify-center text-muted-foreground">
-        <Loader2 className="size-5 animate-spin" aria-label="Loading" />
+        <Spinner className="size-5" />
       </div>
     );
   }

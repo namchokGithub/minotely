@@ -113,7 +113,7 @@ function BookForm({
               <button
                 key={key}
                 type="button"
-                aria-label={key}
+                aria-label={`Icon: ${key.replace(/-/g, " ")}`}
                 aria-pressed={icon === key}
                 onClick={() => setIcon(key)}
                 className={cn(

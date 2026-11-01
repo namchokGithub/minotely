@@ -98,3 +98,17 @@ installed; add it only if an interaction needs more than CSS.
   documents with new ids (never overwrites); notes whose book is not in the file are skipped.
 - Markdown: per-note export and multi-file import into the current book through `@tiptap/markdown`. A leading
   `# Heading` becomes the title. Text colors have no Markdown form and are dropped; highlights use `==text==`.
+
+## D17 — Security Rules check paths and shapes (2026-11-01)
+
+Rules allow only `books`, `notes` and `preferences/settings` under `users/{uid}`, and validate field names, types,
+enums and size limits on create/update; `createdAt` is immutable. Import code clamps values to the same limits
+(title 200, book name 80, 20 tags, known paper styles). Review steps: `docs/SECURITY.md`.
+
+## D18 — Code splitting by route and feature (2026-11-01)
+
+Firestore is initialised in `src/lib/firestore.ts`, apart from Auth in `src/lib/firebase.ts`. The signed-in app
+(`AppLayout`), the editor (Tiptap) and the Markdown converter load with `React.lazy` / dynamic `import()`, so
+the sign-in screen loads React, the router and Firebase Auth only (~480 kB, ~153 kB gzip; was 1.72 MB).
+Manual vendor chunk groups were tried and dropped: Rolldown pulled shared dependencies into them, so the entry
+chunk imported them again.

@@ -32,7 +32,8 @@ export function markdownToNote(
 
   const content: JSONContent = { type: "doc", content: blocks };
   return {
-    title,
+    // Same limit as the title field and firestore.rules.
+    title: title.slice(0, 200),
     content: JSON.stringify(content),
     plainText: plainTextOf(content),
   };

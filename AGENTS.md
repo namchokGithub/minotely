@@ -34,16 +34,18 @@ src/
   features/
     auth/  books/  notes/  editor/  search/  trash/  settings/  data/ (import/export)
   lib/
-    firebase.ts     # Firebase app, auth, firestore init (real project via .env.local)
+    firebase.ts     # Firebase app + Auth (real project via .env.local)
+    firestore.ts    # Firestore, loaded only after sign-in (D18)
     db.ts           # Dexie (drafts, cache)
   stores/           # Zustand UI stores
-firestore.rules     # publish via Firebase Console after replacing OWNER_EMAIL
+firestore.rules     # owner-only + shape checks (D17); publish after replacing OWNER_EMAIL
 .github/workflows/  # deploy on branch `production`
 ```
 
 ## Architecture Rules
 
 - All user data lives under `users/{uid}/…` in Firestore (schema in `docs/REQUIREMENT-V1.md`).
+- Keep heavy modules (Firestore, Tiptap, Markdown) behind `React.lazy` / dynamic `import()` so the sign-in screen stays small (D18).
 - Firestore Security Rules are the security boundary: owner email allowlist + `request.auth.uid == uid`. Client checks are UX only (D2 in `docs/DECISIONS.md`).
 - Firebase connects to the real project only. Do not add the Firebase Emulator, mock servers, or mocked Firebase SDKs (D6). Config comes from `.env.local` (template: `.env.example`).
 - Components do not call Firestore directly. Each feature exposes data access through its own `api.ts` (plain write functions + realtime `useSnapshotQuery` hooks, D11).
@@ -63,7 +65,7 @@ firestore.rules     # publish via Firebase Console after replacing OWNER_EMAIL
 - Ask for help, request clarification, or use available collaboration when it would improve confidence; do not carry uncertainty alone.
 - State the relevant fact and ask the next useful question rather than repeatedly apologizing. Confirmation is more useful than an apology.
 - Don't add features, refactors, or abstractions beyond what's asked. This project favors small, focused, calm implementations.
-- When adding a new stored field or document type, update the TypeScript type and data module in `src/features/<feature>/`, `firestore.rules`, and the schema in `docs/REQUIREMENT-V1.md` — don't skip layers.
+- When adding a new stored field or document type, update the TypeScript type and data module in `src/features/<feature>/`, the field list and checks in `firestore.rules` (writes with unknown fields are denied), import clamping in `src/features/data/backup.ts`, and the schema in `docs/REQUIREMENT-V1.md` — don't skip layers.
 - **Testing policy:** Do not create test files (`*.test.ts`, `*.spec.ts`, test folders) and do not add or update automated tests, for any kind of work. The user tests everything manually against the real Firebase project. Only write tests when the user explicitly asks for them.
 - **Verification checklist (all changes):**
   1. Do not write tests and do not run `pnpm test`.

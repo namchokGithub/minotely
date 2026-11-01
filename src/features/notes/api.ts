@@ -12,7 +12,7 @@ import {
   type QueryConstraint,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firestore";
 import { deleteDraft } from "@/lib/db";
 import { toDate } from "@/lib/firestore-utils";
 import { useSnapshotQuery } from "@/lib/use-snapshot-query";

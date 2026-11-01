@@ -11,7 +11,7 @@ import {
   writeBatch,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firestore";
 import { toDate } from "@/lib/firestore-utils";
 import { useSnapshotQuery } from "@/lib/use-snapshot-query";
 import { useUid } from "@/features/auth/auth-context";

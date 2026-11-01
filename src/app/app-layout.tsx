@@ -1,13 +1,20 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { BooksPanel } from "@/features/books/books-panel";
 import { NotesPanel } from "@/features/notes/notes-panel";
-import { EditorPanel } from "@/features/editor/editor-panel";
 import { SearchDialog } from "@/features/search/search-dialog";
 import { TrashPanel } from "@/features/trash/trash-panel";
 import { useUiStore } from "@/stores/ui-store";
 import { useRouteIds } from "./use-route-ids";
+
+// Tiptap is the largest dependency; load it with the editor column.
+const EditorPanel = lazy(() =>
+  import("@/features/editor/editor-panel").then((m) => ({
+    default: m.EditorPanel,
+  })),
+);
 
 /**
  * Desktop (lg+): Books / Notes / Editor columns.
@@ -43,7 +50,16 @@ export function AppLayout() {
 
   return (
     <div className="flex h-dvh overflow-hidden">
+      <h1 className="sr-only">Minotely</h1>
+      <a
+        href="#editor"
+        className="sr-only z-50 rounded-md bg-background px-3 py-2 text-sm shadow focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        Skip to editor
+      </a>
       <aside
+        id="books-sidebar"
+        aria-label="Library"
         inert={sidebarCollapsed}
         className={cn(
           "w-full flex-col overflow-hidden md:flex md:shrink-0 md:border-r md:transition-[width] md:duration-200 md:ease-out lg:w-60",
@@ -57,6 +73,7 @@ export function AppLayout() {
       </aside>
 
       <section
+        aria-label={isTrash ? "Trash" : "Notes"}
         className={cn(
           "w-full flex-col border-r md:flex md:w-72 md:shrink-0 lg:w-80",
           mobileScreen === "notes" ? "flex" : "hidden",
@@ -66,12 +83,22 @@ export function AppLayout() {
       </section>
 
       <main
+        id="editor"
+        tabIndex={-1}
         className={cn(
           "min-w-0 flex-1 flex-col md:flex",
           mobileScreen === "editor" ? "flex" : "hidden",
         )}
       >
-        <EditorPanel bookId={bookId} noteId={noteId} />
+        <Suspense
+          fallback={
+            <div className="flex flex-1 items-center justify-center text-muted-foreground">
+              <Spinner />
+            </div>
+          }
+        >
+          <EditorPanel bookId={bookId} noteId={noteId} />
+        </Suspense>
       </main>
 
       <SearchDialog />

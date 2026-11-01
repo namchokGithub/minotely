@@ -34,7 +34,7 @@ export function TagEditor({ note }: { note: Note }) {
           <button
             type="button"
             aria-label={`Remove tag ${tag}`}
-            className="rounded-full p-0.5 transition-colors duration-150 hover:bg-foreground/10"
+            className="flex size-5 items-center justify-center rounded-full transition-colors duration-150 hover:bg-foreground/10"
             onClick={() => void save(note.tags.filter((t) => t !== tag))}
           >
             <X className="size-3" />

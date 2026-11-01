@@ -6,9 +6,16 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firestore";
 import { booksCol, toBook } from "@/features/books/api";
 import { BATCH_LIMIT, EMPTY_DOC, notesCol, toNote } from "@/features/notes/api";
+import { normalizeTag } from "@/features/notes/tags";
+
+// Limits match firestore.rules (D17).
+const MAX_BOOK_NAME = 80;
+const MAX_TITLE = 200;
+const MAX_TAGS = 20;
+const PAPER_STYLES = ["plain", "lined", "grid", "dotted"];
 
 const BACKUP_APP = "minotely";
 const BACKUP_VERSION = 1;
@@ -121,7 +128,7 @@ export async function importBackup(uid: string, backup: Backup) {
     bookIds.set(str(book.id), ref.id);
     writes.push((batch) =>
       batch.set(ref, {
-        name: str(book.name, "Untitled"),
+        name: str(book.name).trim().slice(0, MAX_BOOK_NAME) || "Untitled",
         color: str(book.color, "gray"),
         icon: str(book.icon, "book"),
         order: num(book.order, 0),
@@ -141,14 +148,23 @@ export async function importBackup(uid: string, backup: Backup) {
     writes.push((batch) =>
       batch.set(ref, {
         bookId,
-        title: str(note.title),
+        title: str(note.title).slice(0, MAX_TITLE),
         content: str(note.content, EMPTY_DOC),
         plainText: str(note.plainText),
         tags: Array.isArray(note.tags)
-          ? note.tags.filter((t) => typeof t === "string")
+          ? [
+              ...new Set(
+                note.tags
+                  .filter((t) => typeof t === "string")
+                  .map(normalizeTag)
+                  .filter(Boolean),
+              ),
+            ].slice(0, MAX_TAGS)
           : [],
         isPinned: note.isPinned === true,
-        paperStyle: str(note.paperStyle, "plain"),
+        paperStyle: PAPER_STYLES.includes(str(note.paperStyle))
+          ? note.paperStyle
+          : "plain",
         order: num(note.order, createdAt.toMillis()),
         createdAt,
         updatedAt: time(note.updatedAt),

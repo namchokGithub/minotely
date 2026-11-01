@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { Spinner } from "@/components/spinner";
 import { useNavigate } from "react-router";
-import { Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useBooks } from "@/features/books/api";
@@ -54,6 +55,15 @@ function SearchBody({ onDone }: { onDone: () => void }) {
           value={input}
           placeholder="Search titles, content, #tags…"
           aria-label="Search notes"
+          role="combobox"
+          aria-expanded={results.length > 0}
+          aria-controls="search-results"
+          aria-autocomplete="list"
+          aria-activedescendant={
+            results[active]
+              ? `search-result-${results[active].note.id}`
+              : undefined
+          }
           className="h-12 flex-1 bg-transparent text-base outline-none sm:text-sm"
           onChange={(event) => {
             setInput(event.target.value);
@@ -73,11 +83,16 @@ function SearchBody({ onDone }: { onDone: () => void }) {
           }}
         />
         {notes.isPending && (
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          <Spinner className="text-muted-foreground" label="Searching…" />
         )}
       </div>
 
-      <ul className="overflow-y-auto p-1" role="listbox" aria-label="Results">
+      <ul
+        id="search-results"
+        className="overflow-y-auto p-1"
+        role="listbox"
+        aria-label="Results"
+      >
         {input.trim() && results.length === 0 && !notes.isPending && (
           <li className="px-3 py-6 text-center text-sm text-muted-foreground">
             No notes found.
@@ -86,9 +101,15 @@ function SearchBody({ onDone }: { onDone: () => void }) {
         {results.map(({ note, snippet }, index) => {
           const book = books?.find((b) => b.id === note.bookId);
           return (
-            <li key={note.id} role="option" aria-selected={index === active}>
+            <li
+              key={note.id}
+              id={`search-result-${note.id}`}
+              role="option"
+              aria-selected={index === active}
+            >
               <button
                 type="button"
+                tabIndex={-1}
                 className={cn(
                   "grid w-full gap-0.5 rounded-md px-3 py-2 text-left transition-colors duration-150",
                   index === active && "bg-muted",
