@@ -35,8 +35,7 @@ original roadmap) go to M3.
 The app connects to the owner's real Firebase project, configured through `.env.local` (template:
 `.env.example`). No Firebase Emulator, mock server, or mocked Firebase SDK. Security Rules are verified against
 the real project (Firebase Console Rules Playground and manual checks with the owner and a non-owner account).
-Automated tests cover only logic that runs without Firebase (debounce, drafts, `plainText`, search, sorting,
-import/export).
+All verification is manual by the owner; agents do not write automated tests (see Testing policy in `AGENTS.md`).
 
 ## D7 — Popup sign-in (2026-11-01)
 
@@ -48,3 +47,29 @@ Use `signInWithPopup`, not `signInWithRedirect`. Redirect sign-in on a domain ot
 shadcn/ui is initialised with the `radix-nova` style and the `cn` package (shadcn's clsx + tailwind-merge
 replacement). Files in `src/components/ui/` are generated: ESLint's `react-refresh/only-export-components` is
 off there because they export variant helpers next to components.
+
+## D9 — Deleting a book moves its notes to Trash (2026-11-01)
+
+Deleting a book removes the book document and soft-deletes (`deletedAt`) its notes in one batch, so nothing is
+lost. Restoring a note whose book no longer exists is handled with Trash in M3.
+
+## D10 — Note content stored as a JSON string (2026-11-01)
+
+`content` holds Tiptap JSON serialized with `JSON.stringify`. Firestore limits nested maps/arrays to 20 levels,
+and nested lists or tables in Tiptap JSON exceed that quickly. The string keeps the format Tiptap JSON while
+avoiding the depth limit.
+
+## D11 — Realtime listeners into TanStack Query, sorting in the client (2026-11-01)
+
+Books and notes are read with Firestore `onSnapshot` listeners that update the TanStack Query cache
+(`src/lib/use-snapshot-query.ts`), so other devices' edits appear live. Note queries use only equality filters
+(`bookId`, `deletedAt == null`), which need no composite index; sorting and pinned-first ordering run in the
+client. New books and notes get a client-generated id so the UI can navigate before the write is acknowledged.
+
+## D12 — Auto Save and local drafts (2026-11-01)
+
+Each edit is written to a Dexie draft immediately and to Firestore after an 800 ms debounce; failed writes retry
+every 5 s and on `online`. The draft is deleted only after Firestore acknowledges a write containing the latest
+edit. When a note opens and a draft exists, the draft wins and is saved again (unsaved local text is never
+dropped; a newer edit from another device is overwritten in that case). Pending edits flush when the tab is
+hidden or the note is closed.

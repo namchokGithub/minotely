@@ -132,3 +132,71 @@ body {
     @apply font-sans;
   }
 }
+
+/* Tiptap editor content. Paper styles (M3) go on the editor background only. */
+@layer components {
+  .minotely-editor {
+    @apply min-h-[50vh] text-base leading-7 outline-none;
+  }
+  .minotely-editor > * + * {
+    @apply mt-3;
+  }
+  .minotely-editor h1 {
+    @apply mt-8 text-2xl font-semibold tracking-tight;
+  }
+  .minotely-editor h2 {
+    @apply mt-6 text-xl font-semibold tracking-tight;
+  }
+  .minotely-editor h3 {
+    @apply mt-5 text-lg font-semibold;
+  }
+  .minotely-editor ul {
+    @apply list-disc pl-6;
+  }
+  .minotely-editor ol {
+    @apply list-decimal pl-6;
+  }
+  .minotely-editor li > p {
+    @apply my-0.5;
+  }
+  .minotely-editor blockquote {
+    @apply border-l-2 pl-4 text-muted-foreground;
+  }
+  .minotely-editor hr {
+    @apply my-6;
+  }
+  .minotely-editor a {
+    @apply text-primary underline underline-offset-4;
+  }
+  .minotely-editor code {
+    @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.875em];
+  }
+  .minotely-editor pre {
+    @apply overflow-x-auto rounded-lg bg-muted p-4 font-mono text-sm leading-6;
+  }
+  .minotely-editor pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+  .minotely-editor mark {
+    @apply rounded-sm px-0.5 text-inherit;
+  }
+  .minotely-editor table {
+    @apply w-full table-fixed border-collapse text-sm;
+  }
+  .minotely-editor th,
+  .minotely-editor td {
+    @apply relative border px-2 py-1.5 align-top;
+  }
+  .minotely-editor th {
+    @apply bg-muted text-left font-semibold;
+  }
+  .minotely-editor .tableWrapper {
+    @apply overflow-x-auto;
+  }
+  .minotely-editor .selectedCell::after {
+    @apply pointer-events-none absolute inset-0 bg-primary/10 content-[''];
+  }
+  .minotely-editor p.is-editor-empty:first-child::before {
+    @apply pointer-events-none float-left h-0 text-muted-foreground/60 content-[attr(data-placeholder)];
+  }
+}

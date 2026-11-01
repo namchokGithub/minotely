@@ -1,9 +1,9 @@
-import { useMatch } from "react-router";
 import { cn } from "@/lib/utils";
 import { BooksPanel } from "@/features/books/books-panel";
 import { NotesPanel } from "@/features/notes/notes-panel";
 import { EditorPanel } from "@/features/editor/editor-panel";
 import { useUiStore } from "@/stores/ui-store";
+import { useRouteIds } from "./use-route-ids";
 
 /**
  * Desktop (lg+): Books / Notes / Editor columns.
@@ -11,10 +11,7 @@ import { useUiStore } from "@/stores/ui-store";
  * Mobile: one screen at a time, chosen by the route.
  */
 export function AppLayout() {
-  const noteMatch = useMatch("/books/:bookId/notes/:noteId");
-  const bookMatch = useMatch("/books/:bookId");
-  const bookId = noteMatch?.params.bookId ?? bookMatch?.params.bookId;
-  const noteId = noteMatch?.params.noteId;
+  const { bookId, noteId } = useRouteIds();
   const mobileScreen = noteId ? "editor" : bookId ? "notes" : "books";
 
   const booksSidebarOpen = useUiStore((state) => state.booksSidebarOpen);

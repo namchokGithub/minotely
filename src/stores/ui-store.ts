@@ -1,13 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { NoteSort } from "@/features/notes/types";
 
 export type ThemePreference = "system" | "light" | "dark";
 
 type UiState = {
   theme: ThemePreference;
   booksSidebarOpen: boolean;
+  noteSort: NoteSort;
   setTheme: (theme: ThemePreference) => void;
   toggleBooksSidebar: () => void;
+  setNoteSort: (noteSort: NoteSort) => void;
 };
 
 export const useUiStore = create<UiState>()(
@@ -15,9 +18,11 @@ export const useUiStore = create<UiState>()(
     (set) => ({
       theme: "system",
       booksSidebarOpen: true,
+      noteSort: "updated",
       setTheme: (theme) => set({ theme }),
       toggleBooksSidebar: () =>
         set((state) => ({ booksSidebarOpen: !state.booksSidebarOpen })),
+      setNoteSort: (noteSort) => set({ noteSort }),
     }),
     {
       // Read by the inline script in index.html to avoid a theme flash.
@@ -25,6 +30,7 @@ export const useUiStore = create<UiState>()(
       partialize: (state) => ({
         theme: state.theme,
         booksSidebarOpen: state.booksSidebarOpen,
+        noteSort: state.noteSort,
       }),
     },
   ),

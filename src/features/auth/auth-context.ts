@@ -18,3 +18,10 @@ export function useAuth(): AuthContextValue {
   if (!value) throw new Error("useAuth must be used inside <AuthProvider>");
   return value;
 }
+
+/** The signed-in user's uid. Only use below <RequireAuth>. */
+export function useUid(): string {
+  const { user } = useAuth();
+  if (!user) throw new Error("useUid must be used below <RequireAuth>");
+  return user.uid;
+}

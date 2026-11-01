@@ -113,7 +113,7 @@ users/
       {noteId}/
         bookId
         title
-        content (Tiptap JSON)
+        content (Tiptap JSON string — D10)
         plainText
         tags
         isPinned

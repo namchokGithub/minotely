@@ -1,0 +1,19 @@
+import { createElement } from "react";
+import { cn } from "@/lib/utils";
+import { bookColorClass, bookIcon } from "./appearance";
+
+/** A book's icon in its color. */
+export function BookGlyph({
+  icon,
+  color,
+  className,
+}: {
+  icon: string;
+  color: string;
+  className?: string;
+}) {
+  return createElement(bookIcon(icon), {
+    className: cn("size-4 shrink-0", bookColorClass(color), className),
+    "aria-hidden": true,
+  });
+}

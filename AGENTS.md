@@ -18,7 +18,7 @@ Libraries beyond the Vite/Tailwind baseline are added per milestone (see `docs/P
 pnpm install       # install dependencies
 pnpm dev           # run the app locally
 pnpm build         # type-check and production build
-pnpm test          # run Vitest
+pnpm test          # run Vitest (user-run only; agents do not write tests)
 pnpm lint          # run ESLint
 pnpm exec prettier --write <files>
 ```
@@ -37,7 +37,7 @@ src/
     firebase.ts     # Firebase app, auth, firestore init (real project via .env.local)
     db.ts           # Dexie (drafts, cache)
   stores/           # Zustand UI stores
-firestore.rules
+firestore.rules     # publish via Firebase Console after replacing OWNER_EMAIL
 .github/workflows/  # deploy on branch `production`
 ```
 
@@ -46,9 +46,9 @@ firestore.rules
 - All user data lives under `users/{uid}/…` in Firestore (schema in `docs/REQUIREMENT-V1.md`).
 - Firestore Security Rules are the security boundary: owner email allowlist + `request.auth.uid == uid`. Client checks are UX only (D2 in `docs/DECISIONS.md`).
 - Firebase connects to the real project only. Do not add the Firebase Emulator, mock servers, or mocked Firebase SDKs (D6). Config comes from `.env.local` (template: `.env.example`).
-- Components do not call Firestore directly. Each feature exposes data access through its own module and TanStack Query hooks.
+- Components do not call Firestore directly. Each feature exposes data access through its own `api.ts` (plain write functions + realtime `useSnapshotQuery` hooks, D11).
 - Server data lives in TanStack Query; Zustand holds UI state only (sidebar, selection, filters).
-- Note content is stored as Tiptap JSON. `plainText` is derived from it on save and used for search.
+- Note content is stored as a Tiptap JSON string (D10). `plainText` is derived from it on save and used for search.
 - The editor is always-editable inline WYSIWYG. No Edit/Preview toggle, no raw Markdown source editor (D1).
 - Notes are soft-deleted with `deletedAt`; Trash restores or permanently deletes.
 - Auto Save debounces writes, shows Saving / Saved / Error, and keeps a local draft in Dexie until the write succeeds.
@@ -64,15 +64,14 @@ firestore.rules
 - State the relevant fact and ask the next useful question rather than repeatedly apologizing. Confirmation is more useful than an apology.
 - Don't add features, refactors, or abstractions beyond what's asked. This project favors small, focused, calm implementations.
 - When adding a new stored field or document type, update the TypeScript type and data module in `src/features/<feature>/`, `firestore.rules`, and the schema in `docs/REQUIREMENT-V1.md` — don't skip layers.
-- **Testing policy:** Do not create or update automated tests for UI-only work (visual styling, layout, presentation components, or page appearance); the user performs that verification manually. Add automated tests for non-visual logic that runs without Firebase: Auto Save/debounce, draft recovery, `plainText` derivation, search, sorting, trash, and import/export. Only change a UI test when the user explicitly asks for it or a UI change also changes non-visual behavior.
-- **UI-only changes — verification checklist:**
-  1. Do not write or update tests.
-  2. Do not run `pnpm test` (full or focused), `pnpm build`, or `tsc -b`.
-  3. Do not start the dev server or drive a browser (Playwright, Chrome automation) unless the user asks.
-  4. Run only Prettier and ESLint on the touched files, e.g. `pnpm exec prettier --write <files>` and `pnpm exec eslint <files>`.
-  5. Hand off: tell the user what to check by eye (pages, widths such as 360px and 1280px, states), and name any existing test that may break because visible text or markup changed.
-- For logic, data, rules, or save changes, run the focused test command(s) that cover the changed behavior. Do not run the full `pnpm test` suite by default; remind the user to run `pnpm test` locally instead.
-- **Build verification:** Do not run `pnpm build` by default for small, isolated work that touches only a few files, and never for UI-only changes. Run it only when the change's risk warrants it, the user requests it, or it materially validates the work; otherwise, tell the user that they can build locally.
+- **Testing policy:** Do not create test files (`*.test.ts`, `*.spec.ts`, test folders) and do not add or update automated tests, for any kind of work. The user tests everything manually against the real Firebase project. Only write tests when the user explicitly asks for them.
+- **Verification checklist (all changes):**
+  1. Do not write tests and do not run `pnpm test`.
+  2. Do not start the dev server or drive a browser (Playwright, Chrome automation) unless the user asks.
+  3. Run Prettier and ESLint on the touched files, e.g. `pnpm exec prettier --write <files>` and `pnpm exec eslint <files>`.
+  4. For logic, data, or save changes, also type-check (`pnpm exec tsc -b`) when it materially validates the work.
+  5. Hand off: give the user a manual test list — pages, widths such as 360px, 768px and 1280px, states, and data cases to try (create, edit, delete, reload, second device, sign-in as owner and non-owner).
+- **Build verification:** Do not run `pnpm build` by default for small, isolated work that touches only a few files, or for UI-only changes. Run it only when the change's risk warrants it, the user requests it, or it materially validates the work; otherwise, tell the user that they can build locally.
 - For a multi-step implementation plan, when a build is warranted, run `pnpm build` once during final verification—not after each step.
 - Record non-obvious architectural choices in `docs/DECISIONS.md`, not as scattered code comments. Update the authoritative topic document when a decision changes its model or policy.
 - Track detailed implementation status in `docs/PROGRESS.md`. Read its

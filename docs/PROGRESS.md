@@ -10,13 +10,13 @@ Every item not `Done`. Keep in sync with the sections below.
 | ---- | ---------------------------------------- | ----------- |
 | M1.5 | Google Sign-in + owner allowlist + guard | In progress |
 | M1.6 | GitHub Actions deploy on `production`    | In progress |
-| M2.1 | Firestore data layer                     | Todo        |
-| M2.2 | Security Rules (real project)            | Todo        |
-| M2.3 | Book management                          | Todo        |
-| M2.4 | Note management + Pin                    | Todo        |
-| M2.5 | Sorting (Updated, Created, A–Z)          | Todo        |
-| M2.6 | Tiptap editor                            | Todo        |
-| M2.7 | Auto Save + status + Dexie drafts        | Todo        |
+| M2.1 | Firestore data layer                     | In progress |
+| M2.2 | Security Rules (real project)            | In progress |
+| M2.3 | Book management                          | In progress |
+| M2.4 | Note management + Pin                    | In progress |
+| M2.5 | Sorting (Updated, Created, A–Z)          | In progress |
+| M2.6 | Tiptap editor                            | In progress |
+| M2.7 | Auto Save + status + Dexie drafts        | In progress |
 | M3.1 | Paper Styles                             | Todo        |
 | M3.2 | Typography                               | Todo        |
 | M3.3 | Search                                   | Todo        |
@@ -35,6 +35,8 @@ Every item not `Done`. Keep in sync with the sections below.
 
 - M1.5: code done; needs a manual check with the owner account and a non-owner account after `.env.local` is filled in.
 - M1.6: workflow added; needs GitHub Pages source set to GitHub Actions, repository variables, and a first push to `production`.
+
+- M2: code done for M2.1–M2.7; needs manual testing with the real project after publishing `firestore.rules` (replace `OWNER_EMAIL` first).
 
 ## Done
 

@@ -39,7 +39,7 @@ Done when: the owner signs in and sees the empty layout on the deployed URL; any
    Table, Code Block, Bold, Italic, Highlight, Text Color. Store Tiptap JSON; derive `plainText` on save.
 7. Auto Save: debounce, Saving / Saved / Error status, local draft in Dexie (IndexedDB), draft recovery after failed save or device switch.
 
-Tests: save debounce, draft recovery, `plainText` derivation.
+Verification: manual by the owner against the real Firebase project.
 
 Done when: notes are usable day to day and typed text is never lost.
 
@@ -55,7 +55,7 @@ Done when: notes are usable day to day and typed text is never lost.
 8. Import/Export: Markdown and JSON.
 9. Custom sort (drag to reorder).
 
-Tests: search matching, tag filter, trash restore, import/export round-trip.
+Verification: manual by the owner against the real Firebase project.
 
 ## M4 — Hardening & Release
 
