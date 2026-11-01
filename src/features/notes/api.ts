@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   query,
@@ -7,20 +8,27 @@ import {
   setDoc,
   updateDoc,
   where,
+  writeBatch,
+  type QueryConstraint,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { deleteDraft } from "@/lib/db";
 import { toDate } from "@/lib/firestore-utils";
 import { useSnapshotQuery } from "@/lib/use-snapshot-query";
 import { useUid } from "@/features/auth/auth-context";
-import type { Note, NoteContentFields } from "./types";
+import type { Note, NoteContentFields, PaperStyle } from "./types";
 
-const notesCol = (uid: string) => collection(db, "users", uid, "notes");
+export const notesCol = (uid: string) => collection(db, "users", uid, "notes");
 
 export const EMPTY_DOC = JSON.stringify({ type: "doc", content: [] });
 
-function toNote(snap: QueryDocumentSnapshot): Note {
+/** Firestore allows 500 writes per batch. */
+export const BATCH_LIMIT = 400;
+
+export function toNote(snap: QueryDocumentSnapshot): Note {
   const data = snap.data({ serverTimestamps: "estimate" });
+  const createdAt = toDate(data.createdAt);
   return {
     id: snap.id,
     bookId: data.bookId,
@@ -30,42 +38,67 @@ function toNote(snap: QueryDocumentSnapshot): Note {
     tags: data.tags ?? [],
     isPinned: data.isPinned ?? false,
     paperStyle: data.paperStyle ?? "plain",
-    createdAt: toDate(data.createdAt),
+    order: data.order ?? createdAt.getTime(),
+    createdAt,
     updatedAt: toDate(data.updatedAt),
     deletedAt: data.deletedAt ? toDate(data.deletedAt) : null,
   };
 }
 
-/** Live notes of one book, excluding Trash. */
-export function useNotes(bookId: string | undefined) {
+function useNotesQuery(
+  key: unknown[],
+  constraints: QueryConstraint[],
+  enabled = true,
+) {
   const uid = useUid();
   return useSnapshotQuery<Note[]>(
-    ["notes", uid, bookId],
+    ["notes", uid, ...key],
     (onData, onError) =>
       onSnapshot(
-        query(
-          notesCol(uid),
-          where("bookId", "==", bookId ?? ""),
-          where("deletedAt", "==", null),
-        ),
+        query(notesCol(uid), ...constraints),
         (snap) => onData(snap.docs.map(toNote)),
         onError,
       ),
+    enabled,
+  );
+}
+
+/** Live notes of one book, excluding Trash. */
+export function useNotes(bookId: string | undefined) {
+  return useNotesQuery(
+    ["book", bookId],
+    [where("bookId", "==", bookId ?? ""), where("deletedAt", "==", null)],
     Boolean(bookId),
   );
 }
 
+/** Live notes of every book, excluding Trash (search). */
+export function useAllNotes(enabled = true) {
+  return useNotesQuery(["all"], [where("deletedAt", "==", null)], enabled);
+}
+
+/** Live notes in Trash. */
+export function useTrashNotes() {
+  return useNotesQuery(["trash"], [where("deletedAt", "!=", null)]);
+}
+
 /** Creates the note locally right away and returns its id; the write syncs in the background. */
-export function createNote(uid: string, bookId: string) {
+export function createNote(
+  uid: string,
+  bookId: string,
+  fields?: Partial<NoteContentFields>,
+) {
   const ref = doc(notesCol(uid));
   setDoc(ref, {
     bookId,
     title: "",
     content: EMPTY_DOC,
     plainText: "",
+    ...fields,
     tags: [],
     isPinned: false,
     paperStyle: "plain",
+    order: Date.now(),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     deletedAt: null,
@@ -88,11 +121,35 @@ export function setNotePinned(uid: string, noteId: string, isPinned: boolean) {
   return updateDoc(doc(notesCol(uid), noteId), { isPinned });
 }
 
+export function setNoteTags(uid: string, noteId: string, tags: string[]) {
+  return updateDoc(doc(notesCol(uid), noteId), {
+    tags,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export function setNotePaperStyle(
+  uid: string,
+  noteId: string,
+  paperStyle: PaperStyle,
+) {
+  return updateDoc(doc(notesCol(uid), noteId), { paperStyle });
+}
+
 export function moveNote(uid: string, noteId: string, bookId: string) {
   return updateDoc(doc(notesCol(uid), noteId), {
     bookId,
     updatedAt: serverTimestamp(),
   });
+}
+
+/** Swaps the custom order of two notes. */
+export function swapNoteOrder(uid: string, a: Note, b: Note) {
+  const batch = writeBatch(db);
+  const bOrder = a.order === b.order ? b.order - 1 : b.order;
+  batch.update(doc(notesCol(uid), a.id), { order: bOrder });
+  batch.update(doc(notesCol(uid), b.id), { order: a.order });
+  return batch.commit();
 }
 
 /** Moves the note to Trash. */
@@ -101,4 +158,29 @@ export function deleteNote(uid: string, noteId: string) {
     deletedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+}
+
+/** Brings a note back from Trash, optionally into another book. */
+export function restoreNote(uid: string, noteId: string, bookId?: string) {
+  return updateDoc(doc(notesCol(uid), noteId), {
+    ...(bookId ? { bookId } : {}),
+    deletedAt: null,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteNoteForever(uid: string, noteId: string) {
+  await deleteDoc(doc(notesCol(uid), noteId));
+  await deleteDraft(noteId);
+}
+
+export async function emptyTrash(uid: string, noteIds: string[]) {
+  for (let i = 0; i < noteIds.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    for (const id of noteIds.slice(i, i + BATCH_LIMIT)) {
+      batch.delete(doc(notesCol(uid), id));
+    }
+    await batch.commit();
+  }
+  await Promise.all(noteIds.map((id) => deleteDraft(id)));
 }

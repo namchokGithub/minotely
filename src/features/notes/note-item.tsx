@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router";
-import { FolderInput, MoreHorizontal, Pin, PinOff, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  FileDown,
+  FolderInput,
+  MoreHorizontal,
+  Pin,
+  PinOff,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -27,7 +36,9 @@ import { useRouteIds } from "@/app/use-route-ids";
 import { useUid } from "@/features/auth/auth-context";
 import { BookGlyph } from "@/features/books/book-glyph";
 import type { Book } from "@/features/books/types";
-import { deleteNote, moveNote, setNotePinned } from "./api";
+import { downloadFile, toFileName } from "@/features/data/download";
+import { noteToMarkdown } from "@/features/data/markdown";
+import { deleteNote, moveNote, setNotePinned, swapNoteOrder } from "./api";
 import type { Note } from "./types";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
@@ -36,7 +47,22 @@ function logError(action: string) {
   return (error: unknown) => console.error(`${action} failed`, error);
 }
 
-export function NoteItem({ note, books }: { note: Note; books: Book[] }) {
+type NoteItemProps = {
+  note: Note;
+  books: Book[];
+  /** Neighbors for Move up / Move down (custom sort only). */
+  previous?: Note;
+  next?: Note;
+  showReorder?: boolean;
+};
+
+export function NoteItem({
+  note,
+  books,
+  previous,
+  next,
+  showReorder = false,
+}: NoteItemProps) {
   const uid = useUid();
   const navigate = useNavigate();
   const { noteId: activeNoteId } = useRouteIds();
@@ -61,7 +87,7 @@ export function NoteItem({ note, books }: { note: Note; books: Book[] }) {
         to={`/books/${note.bookId}/notes/${note.id}`}
         className={({ isActive }) =>
           cn(
-            "grid gap-0.5 rounded-md px-3 py-2 pr-9 hover:bg-muted",
+            "grid gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted",
             isActive && "bg-muted",
           )
         }
@@ -80,8 +106,13 @@ export function NoteItem({ note, books }: { note: Note; books: Book[] }) {
             {snippet}
           </span>
         )}
-        <span className="text-xs text-muted-foreground">
-          {dateFormat.format(note.updatedAt)}
+        <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="shrink-0">{dateFormat.format(note.updatedAt)}</span>
+          {note.tags.length > 0 && (
+            <span className="truncate">
+              {note.tags.map((tag) => `#${tag}`).join(" ")}
+            </span>
+          )}
         </span>
       </NavLink>
 
@@ -114,6 +145,28 @@ export function NoteItem({ note, books }: { note: Note; books: Book[] }) {
               </>
             )}
           </DropdownMenuItem>
+          {showReorder && (
+            <>
+              <DropdownMenuItem
+                disabled={!previous}
+                onSelect={() =>
+                  previous &&
+                  swapNoteOrder(uid, note, previous).catch(logError("Reorder"))
+                }
+              >
+                <ArrowUp /> Move up
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!next}
+                onSelect={() =>
+                  next &&
+                  swapNoteOrder(uid, note, next).catch(logError("Reorder"))
+                }
+              >
+                <ArrowDown /> Move down
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger disabled={otherBooks.length === 0}>
               <FolderInput /> Move to
@@ -130,6 +183,17 @@ export function NoteItem({ note, books }: { note: Note; books: Book[] }) {
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+          <DropdownMenuItem
+            onSelect={() =>
+              downloadFile(
+                toFileName(title, "md"),
+                noteToMarkdown(note),
+                "text/markdown",
+              )
+            }
+          >
+            <FileDown /> Export Markdown
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"

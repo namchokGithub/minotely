@@ -17,9 +17,9 @@ import { useSnapshotQuery } from "@/lib/use-snapshot-query";
 import { useUid } from "@/features/auth/auth-context";
 import type { Book, BookInput } from "./types";
 
-const booksCol = (uid: string) => collection(db, "users", uid, "books");
+export const booksCol = (uid: string) => collection(db, "users", uid, "books");
 
-function toBook(snap: QueryDocumentSnapshot): Book {
+export function toBook(snap: QueryDocumentSnapshot): Book {
   const data = snap.data({ serverTimestamps: "estimate" });
   return {
     id: snap.id,
@@ -60,6 +60,15 @@ export function updateBook(uid: string, bookId: string, input: BookInput) {
     ...input,
     updatedAt: serverTimestamp(),
   });
+}
+
+/** Swaps the order of two books. */
+export function swapBookOrder(uid: string, a: Book, b: Book) {
+  const batch = writeBatch(db);
+  const bOrder = a.order === b.order ? b.order - 1 : b.order;
+  batch.update(doc(booksCol(uid), a.id), { order: bOrder });
+  batch.update(doc(booksCol(uid), b.id), { order: a.order });
+  return batch.commit();
 }
 
 /** Deletes the book and moves its notes to Trash (soft delete), in one batch. */

@@ -101,6 +101,8 @@ users/
   {uid}/
     preferences/
       settings
+        fontFamily (sans | serif | mono)
+        fontSize (sm | md | lg)
     books/
       {bookId}/
         name
@@ -118,6 +120,7 @@ users/
         tags
         isPinned
         paperStyle
+        order
         createdAt
         updatedAt
         deletedAt

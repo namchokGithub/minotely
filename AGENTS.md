@@ -8,7 +8,7 @@ Minotely is a private notebook web app for one owner: `Library → Books → Not
 
 ## Tech Stack
 
-React + Vite + TypeScript, Tailwind CSS v4, shadcn/ui + Radix UI, Tiptap, Motion, Lucide React, React Router, TanStack Query (server state), Zustand (UI state), Firebase Authentication (Google), Cloud Firestore, Dexie (IndexedDB), Vitest, GitHub Pages + GitHub Actions. Package manager: `pnpm`.
+React + Vite + TypeScript, Tailwind CSS v4, shadcn/ui + Radix UI, Tiptap (+ `@tiptap/markdown`), Lucide React, React Router, TanStack Query (server state), Zustand (UI state), Firebase Authentication (Google), Cloud Firestore, Dexie (IndexedDB), Vitest, GitHub Pages + GitHub Actions. Package manager: `pnpm`.
 
 Libraries beyond the Vite/Tailwind baseline are added per milestone (see `docs/PROGRESS.md`); do not assume one is installed until it is in `package.json`.
 
@@ -32,7 +32,7 @@ src/
   app/              # app root, router, providers, layout shell, theme
   components/ui/    # shadcn/ui components
   features/
-    auth/  books/  notes/  editor/  search/  trash/  settings/
+    auth/  books/  notes/  editor/  search/  trash/  settings/  data/ (import/export)
   lib/
     firebase.ts     # Firebase app, auth, firestore init (real project via .env.local)
     db.ts           # Dexie (drafts, cache)
@@ -53,7 +53,7 @@ firestore.rules     # publish via Firebase Console after replacing OWNER_EMAIL
 - Notes are soft-deleted with `deletedAt`; Trash restores or permanently deletes.
 - Auto Save debounces writes, shows Saving / Saved / Error, and keeps a local draft in Dexie until the write succeeds.
 - Paper Style is an editor background only; text is not snapped to lines.
-- Motion stays at 150–250 ms and respects `prefers-reduced-motion`.
+- Motion stays at 150–250 ms, uses CSS transitions (D15), and respects `prefers-reduced-motion`.
 - Routing uses `BrowserRouter` with `basename` from `import.meta.env.BASE_URL` and a `404.html` fallback for GitHub Pages (D3).
 
 ## Working Conventions

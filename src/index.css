@@ -200,3 +200,63 @@ body {
     @apply pointer-events-none float-left h-0 text-muted-foreground/60 content-[attr(data-placeholder)];
   }
 }
+
+/* Paper styles: editor background only, scrolls with the text (D13). */
+@layer components {
+  .paper-lined,
+  .paper-grid,
+  .paper-dotted {
+    --paper-line: color-mix(in oklch, var(--foreground) 9%, transparent);
+    background-attachment: local;
+  }
+  .paper-lined {
+    background-image: linear-gradient(
+      to bottom,
+      transparent calc(2rem - 1px),
+      var(--paper-line) calc(2rem - 1px)
+    );
+    background-size: 100% 2rem;
+  }
+  .paper-grid {
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size: 1.5rem 1.5rem;
+  }
+  .paper-dotted {
+    background-image: radial-gradient(
+      color-mix(in oklch, var(--foreground) 22%, transparent) 1px,
+      transparent 1.25px
+    );
+    background-size: 1.25rem 1.25rem;
+  }
+
+  /* Typography settings (users/{uid}/preferences/settings). */
+  .editor-font-serif .minotely-editor,
+  .editor-font-serif input[aria-label="Note title"] {
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  }
+  .editor-font-mono .minotely-editor,
+  .editor-font-mono input[aria-label="Note title"] {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .editor-size-sm .minotely-editor {
+    font-size: 0.9375rem;
+  }
+  .editor-size-lg .minotely-editor {
+    font-size: 1.125rem;
+    line-height: 1.8;
+  }
+}
+
+/* Motion stays at 150–250 ms; switch it off for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

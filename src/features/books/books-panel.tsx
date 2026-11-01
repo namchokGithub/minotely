@@ -2,6 +2,8 @@ import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router";
 import { useRouteIds } from "@/app/use-route-ids";
 import {
+  ArrowDown,
+  ArrowUp,
   BookOpen,
   Loader2,
   LogOut,
@@ -10,6 +12,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Search,
   Sun,
   Trash2,
 } from "lucide-react";
@@ -28,12 +31,20 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth, useUid } from "@/features/auth/auth-context";
+import { DataMenu } from "@/features/data/data-menu";
 import { useUiStore, type ThemePreference } from "@/stores/ui-store";
-import { createBook, deleteBook, updateBook, useBooks } from "./api";
+import {
+  createBook,
+  deleteBook,
+  swapBookOrder,
+  updateBook,
+  useBooks,
+} from "./api";
 import { BookDialog } from "./book-dialog";
 import { BookGlyph } from "./book-glyph";
 import type { Book } from "./types";
@@ -50,6 +61,7 @@ export function BooksPanel() {
   const navigate = useNavigate();
   const { data: books, isPending, isError } = useBooks();
   const [createOpen, setCreateOpen] = useState(false);
+  const setSearchOpen = useUiStore((state) => state.setSearchOpen);
 
   const handleCreate = (input: Parameters<typeof createBook>[1]) => {
     const order = Math.max(0, ...(books ?? []).map((b) => b.order)) + 1;
@@ -61,6 +73,15 @@ export function BooksPanel() {
       <header className="flex h-14 items-center gap-2 px-4">
         <BookOpen className="size-5" />
         <h2 className="flex-1 font-semibold">My Library</h2>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Search (Ctrl+K)"
+          title="Search (Ctrl+K)"
+          onClick={() => setSearchOpen(true)}
+        >
+          <Search />
+        </Button>
         <Button
           variant="ghost"
           size="icon-sm"
@@ -83,12 +104,32 @@ export function BooksPanel() {
           <PanelMessage>No books yet.</PanelMessage>
         ) : (
           <ul className="grid gap-0.5">
-            {books.map((book) => (
-              <BookItem key={book.id} book={book} />
+            {books.map((book, index) => (
+              <BookItem
+                key={book.id}
+                book={book}
+                previous={books[index - 1]}
+                next={books[index + 1]}
+              />
             ))}
           </ul>
         )}
       </nav>
+
+      <div className="px-2 pb-2">
+        <NavLink
+          to="/trash"
+          className={({ isActive }) =>
+            cn(
+              "flex h-9 items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              isActive &&
+                "bg-sidebar-accent font-medium text-sidebar-foreground",
+            )
+          }
+        >
+          <Trash2 className="size-4" /> Trash
+        </NavLink>
+      </div>
 
       <PanelFooter />
 
@@ -101,7 +142,13 @@ export function BooksPanel() {
   );
 }
 
-function BookItem({ book }: { book: Book }) {
+type BookItemProps = {
+  book: Book;
+  previous: Book | undefined;
+  next: Book | undefined;
+};
+
+function BookItem({ book, previous, next }: BookItemProps) {
   const uid = useUid();
   const navigate = useNavigate();
   const { bookId: activeBookId } = useRouteIds();
@@ -121,7 +168,7 @@ function BookItem({ book }: { book: Book }) {
         to={`/books/${book.id}`}
         className={({ isActive }) =>
           cn(
-            "flex h-9 items-center gap-2 rounded-md px-2 pr-9 text-sm hover:bg-sidebar-accent",
+            "flex h-9 items-center gap-2 rounded-md px-2 pr-9 text-sm transition-colors duration-150 hover:bg-sidebar-accent",
             isActive && "bg-sidebar-accent font-medium",
           )
         }
@@ -145,6 +192,29 @@ function BookItem({ book }: { book: Book }) {
           <DropdownMenuItem onSelect={() => setEditOpen(true)}>
             <Pencil /> Edit
           </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!previous}
+            onSelect={() =>
+              previous &&
+              swapBookOrder(uid, book, previous).catch((error) =>
+                console.error("Reorder failed", error),
+              )
+            }
+          >
+            <ArrowUp /> Move up
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!next}
+            onSelect={() =>
+              next &&
+              swapBookOrder(uid, book, next).catch((error) =>
+                console.error("Reorder failed", error),
+              )
+            }
+          >
+            <ArrowDown /> Move down
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
             onSelect={() => setDeleteOpen(true)}
@@ -192,7 +262,7 @@ function PanelFooter() {
   const ThemeIcon = THEME_ICON[theme];
 
   return (
-    <footer className="flex items-center gap-1 border-t px-3 py-2">
+    <footer className="flex items-center gap-1 border-t px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
         {user?.email}
       </span>
@@ -205,6 +275,7 @@ function PanelFooter() {
       >
         <ThemeIcon />
       </Button>
+      <DataMenu />
       <Button
         variant="ghost"
         size="icon-sm"

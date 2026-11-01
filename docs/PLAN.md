@@ -53,7 +53,7 @@ Done when: notes are usable day to day and typed text is never lost.
 6. Mobile polish.
 7. Trash: restore, permanent delete.
 8. Import/Export: Markdown and JSON.
-9. Custom sort (drag to reorder).
+9. Custom sort (Move up / Move down, D14).
 
 Verification: manual by the owner against the real Firebase project.
 

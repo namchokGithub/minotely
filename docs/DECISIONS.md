@@ -73,3 +73,28 @@ every 5 s and on `online`. The draft is deleted only after Firestore acknowledge
 edit. When a note opens and a draft exists, the draft wins and is saved again (unsaved local text is never
 dropped; a newer edit from another device is overwritten in that case). Pending edits flush when the tab is
 hidden or the note is closed.
+
+## D13 — Paper style per note, typography per user (2026-11-01)
+
+`paperStyle` is stored on each note and drawn as a CSS background on the editor scroll area
+(`background-attachment: local`), not aligned to text lines. Font family and size are one setting for all notes,
+stored in `users/{uid}/preferences/settings` so they follow the owner across devices.
+
+## D14 — Custom sort with Move up / Move down (2026-11-01)
+
+Books and notes have a numeric `order` (notes created before M3 fall back to `createdAt` in ms). Reordering swaps
+the `order` of two neighbors in one batch, from the item menu. It works with mouse, keyboard and touch without a
+drag-and-drop dependency; drag can be added later if wanted.
+
+## D15 — Motion with CSS, not the Motion library (2026-11-01)
+
+The required motion (sidebar width, note fade-in, hover colors) is done with Tailwind transitions and
+`tw-animate-css` at 150–250 ms, plus a global `prefers-reduced-motion` override. The Motion library is not
+installed; add it only if an interaction needs more than CSS.
+
+## D16 — Import/Export formats (2026-11-01)
+
+- JSON backup: all books and all notes outside Trash, with an `app`/`version` header. Import always adds new
+  documents with new ids (never overwrites); notes whose book is not in the file are skipped.
+- Markdown: per-note export and multi-file import into the current book through `@tiptap/markdown`. A leading
+  `# Heading` becomes the title. Text colors have no Markdown form and are dropped; highlights use `==text==`.

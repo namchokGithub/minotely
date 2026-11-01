@@ -8,6 +8,7 @@ const compareBy: Record<NoteSort, (a: Note, b: Note) => number> = {
       sensitivity: "base",
       numeric: true,
     }),
+  custom: (a, b) => a.order - b.order,
 };
 
 /** Pinned notes first, then by the chosen order. */

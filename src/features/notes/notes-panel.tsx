@@ -1,34 +1,45 @@
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   ArrowUpDown,
   ChevronLeft,
+  FileUp,
   Loader2,
+  MoreHorizontal,
   PanelLeft,
   Plus,
+  Tag,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUid } from "@/features/auth/auth-context";
 import { useBooks } from "@/features/books/api";
 import { BookGlyph } from "@/features/books/book-glyph";
+import { markdownToNote } from "@/features/data/markdown";
 import { useUiStore } from "@/stores/ui-store";
 import { createNote, useNotes } from "./api";
 import { NoteItem } from "./note-item";
 import { sortNotes } from "./sort";
+import { collectTags } from "./tags";
 import type { NoteSort } from "./types";
 
 const SORT_LABELS: Record<NoteSort, string> = {
   updated: "Last updated",
   created: "Date created",
   title: "Title A–Z",
+  custom: "Custom",
 };
 
 export function NotesPanel({ bookId }: { bookId: string | undefined }) {
@@ -37,10 +48,30 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
   const toggleBooksSidebar = useUiStore((state) => state.toggleBooksSidebar);
   const noteSort = useUiStore((state) => state.noteSort);
   const setNoteSort = useUiStore((state) => state.setNoteSort);
+  const markdownInput = useRef<HTMLInputElement>(null);
+  // Tag filter belongs to one book; switching books clears it.
+  const [filter, setFilter] = useState<{ bookId?: string; tag: string }>();
+  const tagFilter = filter?.bookId === bookId ? filter?.tag : undefined;
 
   const { data: books } = useBooks();
   const book = books?.find((b) => b.id === bookId);
   const notes = useNotes(bookId);
+  const tags = collectTags(notes.data ?? []);
+  const visible = sortNotes(
+    (notes.data ?? []).filter((n) => !tagFilter || n.tags.includes(tagFilter)),
+    noteSort,
+  );
+
+  const importMarkdown = async (files: FileList) => {
+    if (!book) return;
+    for (const file of Array.from(files)) {
+      try {
+        createNote(uid, book.id, markdownToNote(await file.text(), file.name));
+      } catch (error) {
+        console.error(`Import of ${file.name} failed`, error);
+      }
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -72,24 +103,58 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Sort: ${SORT_LABELS[noteSort]}`}
-                  title={`Sort: ${SORT_LABELS[noteSort]}`}
+                  aria-label="Notes options"
+                  title="Notes options"
                 >
-                  <ArrowUpDown />
+                  <MoreHorizontal />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={noteSort}
-                  onValueChange={(value) => setNoteSort(value as NoteSort)}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <ArrowUpDown /> Sort: {SORT_LABELS[noteSort]}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup
+                      value={noteSort}
+                      onValueChange={(value) => setNoteSort(value as NoteSort)}
+                    >
+                      {(Object.keys(SORT_LABELS) as NoteSort[]).map((key) => (
+                        <DropdownMenuRadioItem key={key} value={key}>
+                          {SORT_LABELS[key]}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger disabled={tags.length === 0}>
+                    <Tag /> Filter by tag
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
+                    <DropdownMenuRadioGroup
+                      value={tagFilter ?? ""}
+                      onValueChange={(tag) =>
+                        setFilter(tag ? { bookId, tag } : undefined)
+                      }
+                    >
+                      <DropdownMenuRadioItem value="">
+                        All notes
+                      </DropdownMenuRadioItem>
+                      {tags.map((tag) => (
+                        <DropdownMenuRadioItem key={tag} value={tag}>
+                          #{tag}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={() => markdownInput.current?.click()}
                 >
-                  {(Object.keys(SORT_LABELS) as NoteSort[]).map((key) => (
-                    <DropdownMenuRadioItem key={key} value={key}>
-                      {SORT_LABELS[key]}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
+                  <FileUp /> Import Markdown…
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
@@ -103,9 +168,34 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
             >
               <Plus />
             </Button>
+            <input
+              ref={markdownInput}
+              type="file"
+              accept=".md,.markdown,.txt,text/markdown,text/plain"
+              multiple
+              hidden
+              onChange={(event) => {
+                const files = event.target.files;
+                if (files) void importMarkdown(files);
+                event.target.value = "";
+              }}
+            />
           </>
         )}
       </header>
+
+      {tagFilter && (
+        <div className="px-3 pb-2">
+          <button
+            type="button"
+            onClick={() => setFilter(undefined)}
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs transition-colors duration-150 hover:bg-muted/70"
+            aria-label={`Clear tag filter #${tagFilter}`}
+          >
+            #{tagFilter} <X className="size-3" />
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-2 pb-2">
         {!bookId ? (
@@ -118,13 +208,35 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
           </PanelMessage>
         ) : notes.isError ? (
           <PanelMessage>Could not load notes.</PanelMessage>
-        ) : notes.data.length === 0 ? (
-          <PanelMessage>No notes yet.</PanelMessage>
+        ) : visible.length === 0 ? (
+          <PanelMessage>
+            {tagFilter ? "No notes with this tag." : "No notes yet."}
+          </PanelMessage>
         ) : (
           <ul className="grid gap-0.5">
-            {sortNotes(notes.data, noteSort).map((note) => (
-              <NoteItem key={note.id} note={note} books={books ?? []} />
-            ))}
+            {visible.map((note, index) => {
+              const canReorder = noteSort === "custom";
+              const previous = visible[index - 1];
+              const next = visible[index + 1];
+              return (
+                <NoteItem
+                  key={note.id}
+                  note={note}
+                  books={books ?? []}
+                  previous={
+                    canReorder && previous?.isPinned === note.isPinned
+                      ? previous
+                      : undefined
+                  }
+                  next={
+                    canReorder && next?.isPinned === note.isPinned
+                      ? next
+                      : undefined
+                  }
+                  showReorder={canReorder}
+                />
+              );
+            })}
           </ul>
         )}
       </div>

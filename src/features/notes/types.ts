@@ -11,6 +11,8 @@ export type Note = {
   tags: string[];
   isPinned: boolean;
   paperStyle: PaperStyle;
+  /** Custom sort position, ascending. Falls back to createdAt (ms) for older notes. */
+  order: number;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -18,4 +20,4 @@ export type Note = {
 
 export type NoteContentFields = Pick<Note, "title" | "content" | "plainText">;
 
-export type NoteSort = "updated" | "created" | "title";
+export type NoteSort = "updated" | "created" | "title" | "custom";

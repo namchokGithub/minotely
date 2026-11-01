@@ -4,10 +4,14 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { AlertCircle, Check, ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDraft, type NoteDraft } from "@/lib/db";
+import { cn } from "@/lib/utils";
 import { useUid } from "@/features/auth/auth-context";
+import { useSettings } from "@/features/settings/api";
 import { useNotes } from "@/features/notes/api";
 import type { Note, NoteContentFields } from "@/features/notes/types";
+import { AppearanceMenu } from "./appearance-menu";
 import { EditorToolbar } from "./editor-toolbar";
+import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
 import { useAutoSave, type SaveStatus } from "./use-auto-save";
 
@@ -75,6 +79,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     plainText: initial.plainText,
   });
   const [title, setTitle] = useState(initial.title);
+  const settings = useSettings();
 
   const editor = useEditor({
     extensions: editorExtensions,
@@ -101,20 +106,30 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   }, [draft, change]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5">
-        <EditorToolbar editor={editor} />
+    <div className="flex min-h-0 flex-1 animate-in flex-col duration-200 fade-in-0">
+      <div className="flex shrink-0 items-center gap-2 border-b px-2 py-1.5 sm:px-3">
+        <div className="min-w-0 flex-1 overflow-x-auto">
+          <EditorToolbar editor={editor} />
+        </div>
         <SaveIndicator status={status} />
+        <AppearanceMenu note={note} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl px-6 py-8">
+      <div
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto",
+          `paper-${note.paperStyle}`,
+          `editor-font-${settings.fontFamily}`,
+          `editor-size-${settings.fontSize}`,
+        )}
+      >
+        <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
           <input
             value={title}
             placeholder="Untitled"
             aria-label="Note title"
             maxLength={200}
-            className="mb-4 w-full bg-transparent text-3xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground/60"
+            className="mb-2 w-full bg-transparent text-2xl font-semibold sm:text-3xl tracking-tight outline-none placeholder:text-muted-foreground/60"
             onChange={(event) => {
               setTitle(event.target.value);
               latest.current = { ...latest.current, title: event.target.value };
@@ -127,6 +142,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
               }
             }}
           />
+          <TagEditor note={note} />
           <EditorContent editor={editor} />
         </div>
       </div>
@@ -156,7 +172,7 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
     <span
       role="status"
       aria-live="polite"
-      className="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground"
+      className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground"
     >
       {view?.icon}
       {view && <span className="hidden sm:inline">{view.label}</span>}

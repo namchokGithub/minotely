@@ -4,8 +4,10 @@ import { useMatch } from "react-router";
 export function useRouteIds() {
   const noteMatch = useMatch("/books/:bookId/notes/:noteId");
   const bookMatch = useMatch("/books/:bookId");
+  const trashMatch = useMatch("/trash");
   return {
     bookId: noteMatch?.params.bookId ?? bookMatch?.params.bookId,
     noteId: noteMatch?.params.noteId,
+    isTrash: Boolean(trashMatch),
   };
 }

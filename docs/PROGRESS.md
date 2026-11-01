@@ -17,15 +17,15 @@ Every item not `Done`. Keep in sync with the sections below.
 | M2.5 | Sorting (Updated, Created, A–Z)          | In progress |
 | M2.6 | Tiptap editor                            | In progress |
 | M2.7 | Auto Save + status + Dexie drafts        | In progress |
-| M3.1 | Paper Styles                             | Todo        |
-| M3.2 | Typography                               | Todo        |
-| M3.3 | Search                                   | Todo        |
-| M3.4 | Tags                                     | Todo        |
-| M3.5 | Motion                                   | Todo        |
-| M3.6 | Mobile polish                            | Todo        |
-| M3.7 | Trash                                    | Todo        |
-| M3.8 | Import/Export                            | Todo        |
-| M3.9 | Custom sort                              | Todo        |
+| M3.1 | Paper Styles                             | In progress |
+| M3.2 | Typography                               | In progress |
+| M3.3 | Search                                   | In progress |
+| M3.4 | Tags                                     | In progress |
+| M3.5 | Motion                                   | In progress |
+| M3.6 | Mobile polish                            | In progress |
+| M3.7 | Trash                                    | In progress |
+| M3.8 | Import/Export                            | In progress |
+| M3.9 | Custom sort                              | In progress |
 | M4.1 | Performance                              | Todo        |
 | M4.2 | Accessibility                            | Todo        |
 | M4.3 | Security Rules review                    | Todo        |
@@ -37,6 +37,7 @@ Every item not `Done`. Keep in sync with the sections below.
 - M1.6: workflow added; needs GitHub Pages source set to GitHub Actions, repository variables, and a first push to `production`.
 
 - M2: code done for M2.1–M2.7; needs manual testing with the real project after publishing `firestore.rules` (replace `OWNER_EMAIL` first).
+- M3: code done for M3.1–M3.9; needs manual testing. Custom sort uses Move up / Move down, not drag (D14).
 
 ## Done
 

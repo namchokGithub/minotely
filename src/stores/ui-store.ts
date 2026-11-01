@@ -8,9 +8,11 @@ type UiState = {
   theme: ThemePreference;
   booksSidebarOpen: boolean;
   noteSort: NoteSort;
+  searchOpen: boolean;
   setTheme: (theme: ThemePreference) => void;
   toggleBooksSidebar: () => void;
   setNoteSort: (noteSort: NoteSort) => void;
+  setSearchOpen: (searchOpen: boolean) => void;
 };
 
 export const useUiStore = create<UiState>()(
@@ -19,10 +21,12 @@ export const useUiStore = create<UiState>()(
       theme: "system",
       booksSidebarOpen: true,
       noteSort: "updated",
+      searchOpen: false,
       setTheme: (theme) => set({ theme }),
       toggleBooksSidebar: () =>
         set((state) => ({ booksSidebarOpen: !state.booksSidebarOpen })),
       setNoteSort: (noteSort) => set({ noteSort }),
+      setSearchOpen: (searchOpen) => set({ searchOpen }),
     }),
     {
       // Read by the inline script in index.html to avoid a theme flash.

@@ -37,7 +37,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
     <div
       role="toolbar"
       aria-label="Formatting"
-      className="flex flex-wrap items-center gap-0.5"
+      className="flex w-max items-center gap-0.5"
     >
       <ToolButton
         label="Bold"
