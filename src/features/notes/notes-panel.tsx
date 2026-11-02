@@ -113,7 +113,7 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
                   <MoreHorizontal />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-auto min-w-44">
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <ArrowUpDown /> Sort: {SORT_LABELS[noteSort]}

@@ -111,13 +111,13 @@ function SearchBody({ onDone }: { onDone: () => void }) {
                 type="button"
                 tabIndex={-1}
                 className={cn(
-                  "grid w-full gap-0.5 rounded-md px-3 py-2 text-left transition-colors duration-150",
+                  "grid w-full grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 text-left transition-colors duration-150",
                   index === active && "bg-muted",
                 )}
                 onMouseMove={() => setActive(index)}
                 onClick={() => openResult(index)}
               >
-                <span className="flex items-center gap-2 text-sm font-medium">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
                   {book && <BookGlyph icon={book.icon} color={book.color} />}
                   <span className="truncate">
                     {note.title.trim() || "Untitled"}

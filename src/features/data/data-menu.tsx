@@ -81,7 +81,7 @@ export function DataMenu() {
             <Settings2 />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="top">
+        <DropdownMenuContent align="end" side="top" className="w-auto min-w-44">
           <DropdownMenuLabel>Backup (JSON)</DropdownMenuLabel>
           <DropdownMenuItem onSelect={() => void handleExport()}>
             <Download /> Export all

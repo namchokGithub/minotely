@@ -137,6 +137,8 @@ body {
 @layer components {
   .minotely-editor {
     @apply min-h-[50vh] text-base leading-7 outline-none;
+    /* Long URLs and unbroken strings wrap instead of scrolling sideways. */
+    overflow-wrap: anywhere;
   }
   .minotely-editor > * + * {
     @apply mt-3;
@@ -180,12 +182,13 @@ body {
   .minotely-editor mark {
     @apply rounded-sm px-0.5 text-inherit;
   }
+  /* Tables fill the width but scroll inside .tableWrapper when columns need more room. */
   .minotely-editor table {
-    @apply w-full table-fixed border-collapse text-sm;
+    @apply min-w-full border-collapse text-sm;
   }
   .minotely-editor th,
   .minotely-editor td {
-    @apply relative border px-2 py-1.5 align-top;
+    @apply relative min-w-24 border px-2 py-1.5 align-top;
   }
   .minotely-editor th {
     @apply bg-muted text-left font-semibold;

@@ -183,12 +183,12 @@ function BookItem({ book, previous, next }: BookItemProps) {
             variant="ghost"
             size="icon-xs"
             aria-label={`Actions for ${book.name}`}
-            className="absolute top-1.5 right-1.5 opacity-100 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 md:opacity-0"
+            className="absolute top-1.5 right-1.5 opacity-100 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 [@media(hover:hover)]:opacity-0"
           >
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-auto min-w-44">
           <DropdownMenuItem onSelect={() => setEditOpen(true)}>
             <Pencil /> Edit
           </DropdownMenuItem>
@@ -262,7 +262,7 @@ function PanelFooter() {
   const ThemeIcon = THEME_ICON[theme];
 
   return (
-    <footer className="flex items-center gap-1 border-t px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <footer className="flex items-center gap-1 border-t px-3 py-2">
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
         {user?.email}
       </span>

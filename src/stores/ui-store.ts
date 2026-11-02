@@ -11,6 +11,7 @@ type UiState = {
   searchOpen: boolean;
   setTheme: (theme: ThemePreference) => void;
   toggleBooksSidebar: () => void;
+  setBooksSidebarOpen: (booksSidebarOpen: boolean) => void;
   setNoteSort: (noteSort: NoteSort) => void;
   setSearchOpen: (searchOpen: boolean) => void;
 };
@@ -26,6 +27,7 @@ export const useUiStore = create<UiState>()(
       toggleBooksSidebar: () =>
         set((state) => ({ booksSidebarOpen: !state.booksSidebarOpen })),
       setNoteSort: (noteSort) => set({ noteSort }),
+      setBooksSidebarOpen: (booksSidebarOpen) => set({ booksSidebarOpen }),
       setSearchOpen: (searchOpen) => set({ searchOpen }),
     }),
     {

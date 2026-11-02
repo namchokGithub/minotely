@@ -1,7 +1,13 @@
 import { useState, type ReactNode } from "react";
 import { Spinner } from "@/components/spinner";
 import { Link } from "react-router";
-import { ChevronLeft, MoreHorizontal, RotateCcw, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  MoreHorizontal,
+  PanelLeft,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -24,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUid } from "@/features/auth/auth-context";
+import { useUiStore } from "@/stores/ui-store";
 import { useBooks } from "@/features/books/api";
 import { BookGlyph } from "@/features/books/book-glyph";
 import type { Book } from "@/features/books/types";
@@ -46,6 +53,8 @@ export function TrashPanel() {
   const notes = useTrashNotes();
   const { data: books } = useBooks();
   const [emptyOpen, setEmptyOpen] = useState(false);
+  const toggleBooksSidebar = useUiStore((state) => state.toggleBooksSidebar);
+  const booksSidebarOpen = useUiStore((state) => state.booksSidebarOpen);
   const sorted = [...(notes.data ?? [])].sort(
     (a, b) => (b.deletedAt?.getTime() ?? 0) - (a.deletedAt?.getTime() ?? 0),
   );
@@ -57,6 +66,17 @@ export function TrashPanel() {
           <Link to="/" aria-label="Back to books">
             <ChevronLeft />
           </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Toggle books sidebar"
+          aria-expanded={booksSidebarOpen}
+          aria-controls="books-sidebar"
+          className="hidden md:inline-flex lg:hidden"
+          onClick={toggleBooksSidebar}
+        >
+          <PanelLeft />
         </Button>
         <h2 className="flex flex-1 items-center gap-2 px-2 font-semibold">
           <Trash2 className="size-4" /> Trash
@@ -126,9 +146,9 @@ function TrashItem({ note, books }: { note: Note; books: Book[] }) {
 
   return (
     <li className="group relative">
-      <div className="grid gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted">
         <span className="truncate text-sm font-medium">{title}</span>
-        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
           {book ? (
             <>
               <BookGlyph
@@ -156,7 +176,7 @@ function TrashItem({ note, books }: { note: Note; books: Book[] }) {
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-auto min-w-44">
           {book && (
             <DropdownMenuItem
               onSelect={() =>
@@ -170,7 +190,7 @@ function TrashItem({ note, books }: { note: Note; books: Book[] }) {
             <DropdownMenuSubTrigger disabled={books.length === 0}>
               <RotateCcw /> Restore to
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
+            <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
               {books.map((b) => (
                 <DropdownMenuItem
                   key={b.id}

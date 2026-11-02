@@ -35,6 +35,12 @@ export function AppLayout() {
     "(min-width: 768px) and (max-width: 1023.98px)",
   );
   const sidebarCollapsed = isTablet && !booksSidebarOpen;
+  const setBooksSidebarOpen = useUiStore((state) => state.setBooksSidebarOpen);
+
+  // Tablet: give the editor room when a note opens; the toggle brings Books back.
+  useEffect(() => {
+    if (isTablet && noteId) setBooksSidebarOpen(false);
+  }, [isTablet, noteId, setBooksSidebarOpen]);
 
   // Cmd/Ctrl+K opens search.
   useEffect(() => {
@@ -75,7 +81,7 @@ export function AppLayout() {
       <section
         aria-label={isTrash ? "Trash" : "Notes"}
         className={cn(
-          "w-full flex-col border-r md:flex md:w-72 md:shrink-0 lg:w-80",
+          "w-full flex-col md:flex md:w-64 md:shrink-0 md:border-r lg:w-80",
           mobileScreen === "notes" ? "flex" : "hidden",
         )}
       >

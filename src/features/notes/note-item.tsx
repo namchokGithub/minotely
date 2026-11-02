@@ -99,12 +99,12 @@ export function NoteItem({
         to={`/books/${note.bookId}/notes/${note.id}`}
         className={({ isActive }) =>
           cn(
-            "grid gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+            "grid grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
             isActive && "bg-muted",
           )
         }
       >
-        <span className="flex items-center gap-1.5 text-sm font-medium">
+        <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
           {note.isPinned && (
             <Pin
               className="size-3 shrink-0 text-muted-foreground"
@@ -134,12 +134,12 @@ export function NoteItem({
             variant="ghost"
             size="icon-xs"
             aria-label={`Actions for ${title}`}
-            className="absolute top-2 right-1.5 opacity-100 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 md:opacity-0"
+            className="absolute top-2 right-1.5 opacity-100 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 [@media(hover:hover)]:opacity-0"
           >
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-auto min-w-44">
           <DropdownMenuItem
             onSelect={() =>
               setNotePinned(uid, note.id, !note.isPinned).catch(
@@ -183,7 +183,7 @@ export function NoteItem({
             <DropdownMenuSubTrigger disabled={otherBooks.length === 0}>
               <FolderInput /> Move to
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
+            <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
               {otherBooks.map((book) => (
                 <DropdownMenuItem
                   key={book.id}

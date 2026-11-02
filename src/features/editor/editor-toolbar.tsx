@@ -60,7 +60,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
             <Palette style={state.color ? { color: state.color } : undefined} />
           </ToolButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align="start" className="w-auto min-w-44">
           {TEXT_COLORS.map((c) => (
             <DropdownMenuItem
               key={c.value}
@@ -86,7 +86,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
             <Highlighter />
           </ToolButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align="start" className="w-auto min-w-44">
           {HIGHLIGHT_COLORS.map((c) => (
             <DropdownMenuItem
               key={c.value}
@@ -120,7 +120,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
             <TableIcon />
           </ToolButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align="start" className="w-auto min-w-44">
           <DropdownMenuItem
             onSelect={() =>
               chain()
