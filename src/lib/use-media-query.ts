@@ -10,3 +10,13 @@ export function useMediaQuery(query: string): boolean {
     () => window.matchMedia(query).matches,
   );
 }
+
+function subscribeResize(onChange: () => void) {
+  window.addEventListener("resize", onChange);
+  return () => window.removeEventListener("resize", onChange);
+}
+
+/** Current viewport width in px, updated on resize. */
+export function useViewportWidth(): number {
+  return useSyncExternalStore(subscribeResize, () => window.innerWidth);
+}

@@ -14,7 +14,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M5.1 | Bug: import (JSON / Markdown) does nothing, no error shown                                     | In progress |
 | M5.2 | Export file names lowercase, no spaces                                                         | In progress |
 | M5.3 | Book color: custom color picker (any color)                                                    | In progress |
-| M5.4 | Resizable panels: Library / Notes / Editor                                                     | Todo        |
+| M5.4 | Resizable panels: Library / Notes / Editor                                                     | In progress |
 | M5.5 | Editor: checklist (task list) tool                                                             | In progress |
 | M5.6 | Note Pin + Lock (read-only) from the note itself                                               | In progress |
 | M5.7 | Links: hyperlink insert/edit UI + light-yellow `#fff200` link style                            | In progress |
@@ -35,7 +35,7 @@ Every item not `Done`. Keep in sync with the sections below.
   Thai and other scripts are kept; empty → `untitled.md`. Backup name unchanged.
 - M5.3 (approved, done in code — publish rules): keep the preset swatches and add a free color picker; `color` then also accepts a hex value (rules,
   backup clamping and `bookColorClass` must follow).
-- M5.4: drag the borders between Library, Notes and Editor on desktop/tablet; remember widths per device.
+- M5.4 (done in code, D25): drag the borders between Library, Notes and Editor on desktop/tablet; remember widths per device.
 - M5.5 (done in code): Markdown shortcut `[ ]` plus a toolbar button; Markdown import/export as `- [ ]` / `- [x]`.
 - M5.6 (approved, done in code — publish rules): Pin already exists in the note list menu; add Pin and Lock to the note header. Lock = read-only editor
   until unlocked; new stored field `isLocked` (rules, types, backup, requirement schema).

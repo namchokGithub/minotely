@@ -1,13 +1,15 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/lib/use-media-query";
+import { useMediaQuery, useViewportWidth } from "@/lib/use-media-query";
 import { BooksPanel } from "@/features/books/books-panel";
 import { NotesPanel } from "@/features/notes/notes-panel";
 import { SearchDialog } from "@/features/search/search-dialog";
 import { TrashPanel } from "@/features/trash/trash-panel";
 import { useUiStore } from "@/stores/ui-store";
 import { LibraryDnd } from "./library-dnd";
+import { fitWidths, LIBRARY_WIDTH, NOTES_WIDTH } from "./panel-sizes";
+import { ResizeHandle } from "./resize-handle";
 import { useRouteIds } from "./use-route-ids";
 
 // Tiptap is the largest dependency; load it with the editor column.
@@ -38,6 +40,20 @@ export function AppLayout() {
   const sidebarCollapsed = isTablet && !booksSidebarOpen;
   const setBooksSidebarOpen = useUiStore((state) => state.setBooksSidebarOpen);
 
+  // Resizable columns (M5.4, D25): saved widths, fitted so the editor keeps its minimum.
+  const libraryWidth = useUiStore((state) => state.libraryWidth);
+  const notesWidth = useUiStore((state) => state.notesWidth);
+  const setLibraryWidth = useUiStore((state) => state.setLibraryWidth);
+  const setNotesWidth = useUiStore((state) => state.setNotesWidth);
+  const viewport = useViewportWidth();
+  const widths = fitWidths(
+    libraryWidth,
+    notesWidth,
+    viewport,
+    !sidebarCollapsed,
+  );
+  const [resizing, setResizing] = useState(false);
+
   // Tablet: give the editor room when a note opens; the toggle brings Books back.
   useEffect(() => {
     if (isTablet && noteId) setBooksSidebarOpen(false);
@@ -56,7 +72,18 @@ export function AppLayout() {
   }, [setSearchOpen]);
 
   return (
-    <div className="flex h-dvh overflow-hidden">
+    <div
+      className={cn(
+        "flex h-dvh overflow-hidden",
+        resizing && "cursor-col-resize select-none",
+      )}
+      style={
+        {
+          "--library-w": `${widths.library}px`,
+          "--notes-w": `${widths.notes}px`,
+        } as CSSProperties
+      }
+    >
       <h1 className="sr-only">Minotely</h1>
       <a
         href="#editor"
@@ -70,25 +97,49 @@ export function AppLayout() {
           aria-label="Library"
           inert={sidebarCollapsed}
           className={cn(
-            "w-full flex-col overflow-hidden md:flex md:shrink-0 md:border-r md:transition-[width] md:duration-200 md:ease-out lg:w-60",
+            "w-full flex-col overflow-hidden md:flex md:shrink-0 md:border-r",
+            !resizing && "md:transition-[width] md:duration-200 md:ease-out",
             mobileScreen === "books" ? "flex" : "hidden",
-            sidebarCollapsed ? "md:w-0 md:border-r-0" : "md:w-60",
+            sidebarCollapsed ? "md:w-0 md:border-r-0" : "md:w-(--library-w)",
           )}
         >
-          <div className="h-full w-full md:w-60">
+          <div className="h-full w-full md:w-(--library-w)">
             <BooksPanel />
           </div>
         </aside>
+        {!sidebarCollapsed && (
+          <ResizeHandle
+            label="Resize Library"
+            controls="books-sidebar"
+            value={widths.library}
+            min={LIBRARY_WIDTH.min}
+            max={LIBRARY_WIDTH.max}
+            defaultValue={LIBRARY_WIDTH.default}
+            onChange={setLibraryWidth}
+            onResizingChange={setResizing}
+          />
+        )}
 
         <section
+          id="notes-column"
           aria-label={isTrash ? "Trash" : "Notes"}
           className={cn(
-            "w-full flex-col md:flex md:w-64 md:shrink-0 md:border-r lg:w-80",
+            "w-full flex-col md:flex md:w-(--notes-w) md:shrink-0 md:border-r",
             mobileScreen === "notes" ? "flex" : "hidden",
           )}
         >
           {isTrash ? <TrashPanel /> : <NotesPanel bookId={bookId} />}
         </section>
+        <ResizeHandle
+          label="Resize Notes"
+          controls="notes-column"
+          value={widths.notes}
+          min={NOTES_WIDTH.min}
+          max={NOTES_WIDTH.max}
+          defaultValue={NOTES_WIDTH.default}
+          onChange={setNotesWidth}
+          onResizingChange={setResizing}
+        />
       </LibraryDnd>
 
       <main

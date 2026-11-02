@@ -168,3 +168,12 @@ pointer to move there. Mouse drags start after 6 px and touch drags after a 250 
 scrolling keep working. Move up / Move down (books) and Move to (notes) stay in the ⋯ menus as the keyboard and
 screen-reader path, so the rows keep their link semantics instead of becoming drag buttons. On mobile the two
 columns are separate screens, so moving a note between books uses Move to.
+
+## D25 — Resizable columns without a library (2026-11-02)
+
+Library and Notes widths are set by two splitters (`src/app/resize-handle.tsx`, `role="separator"`): drag, or
+←/→ by 16 px, Home/End for min/max, Enter or double-click to reset. Saved widths live in the persisted UI store
+(per device, `localStorage`). Limits: Library 180–400 px, Notes 220–520 px. At render, `fitWidths` shrinks
+Notes then Library so the editor keeps at least 320 px; saved values stay unchanged. Mobile has no splitters.
+`react-resizable-panels` (shadcn Resizable) was not added: two fixed-side columns plus a flexible editor need
+only this much.
