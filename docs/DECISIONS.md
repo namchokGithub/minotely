@@ -201,3 +201,11 @@ editors (Google Docs, Notion). Everywhere else, and in locked notes, Ctrl/⌘+K 
 handles the key first and the global search listener ignores already-handled events. Toolbar Link, right-click
 Link / Edit link and the shortcut share `insertOrEditLink` (`src/features/editor/links.ts`). Trash rows also get
 the right-click menu (same `MenuKit` items as their ⋯ menu).
+
+## D28 — Toasts with sonner (2026-11-02)
+
+Short, non-blocking feedback uses `sonner` through shadcn's `Toaster` (`src/components/ui/sonner.tsx`). The
+generated component used `next-themes`; it now reads the theme from the UI store and `next-themes` was removed.
+The `Toaster` is mounted in `AppLayout`, not the app root, so the sign-in bundle stays small (D18). First use:
+drag and drop (D24) shows "Moved … to …" with an Undo action, and failures show an error toast. Result dialogs
+(`MessageDialog`) stay for imports, where the user should read the outcome.

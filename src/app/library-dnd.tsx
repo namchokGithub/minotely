@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import {
   closestCenter,
   DndContext,
@@ -36,6 +37,16 @@ const collisionDetection: CollisionDetection = (args) => {
     ? pointerWithin({ ...args, droppableContainers: books })
     : closestCenter({ ...args, droppableContainers: books });
 };
+
+/** Logs the error and shows it as a toast. */
+function failed(message: string) {
+  return (error: unknown) => {
+    console.error(message, error);
+    toast.error(message, {
+      description: error instanceof Error ? error.message : undefined,
+    });
+  };
+}
 
 /** New order for an item dropped between two neighbours: one write, no renumbering. */
 function orderBetween(previous?: Book, next?: Book): number {
@@ -74,12 +85,27 @@ export function LibraryDnd({ children }: { children: ReactNode }) {
 
     if (from.type === "note") {
       const note = from.note;
-      if (note.bookId === to.book.id) return;
-      moveNote(uid, note.id, to.book.id).catch((error) =>
-        console.error("Move note failed", error),
-      );
+      const target = to.book;
+      if (note.bookId === target.id) return;
+      const title = note.title.trim() || "Untitled";
+      const isOpen = () =>
+        window.location.pathname.endsWith(`/notes/${note.id}`);
+      moveNote(uid, note.id, target.id)
+        .then(() =>
+          toast.success(`Moved “${title}” to “${target.name}”`, {
+            action: {
+              label: "Undo",
+              onClick: () => {
+                moveNote(uid, note.id, note.bookId).catch(failed("Undo move"));
+                if (isOpen())
+                  navigate(`/books/${note.bookId}/notes/${note.id}`);
+              },
+            },
+          }),
+        )
+        .catch(failed(`Could not move “${title}”`));
       if (openNoteId === note.id)
-        navigate(`/books/${to.book.id}/notes/${note.id}`);
+        navigate(`/books/${target.id}/notes/${note.id}`);
       return;
     }
 
@@ -91,9 +117,20 @@ export function LibraryDnd({ children }: { children: ReactNode }) {
       reordered[newIndex - 1],
       reordered[newIndex + 1],
     );
-    setBookOrder(uid, from.book.id, order).catch((error) =>
-      console.error("Reorder books failed", error),
-    );
+    const book = from.book;
+    setBookOrder(uid, book.id, order)
+      .then(() =>
+        toast.success(`Moved “${book.name}” to position ${newIndex + 1}`, {
+          action: {
+            label: "Undo",
+            onClick: () =>
+              setBookOrder(uid, book.id, book.order).catch(
+                failed("Undo reorder"),
+              ),
+          },
+        }),
+      )
+      .catch(failed(`Could not move “${book.name}”`));
   };
 
   return (

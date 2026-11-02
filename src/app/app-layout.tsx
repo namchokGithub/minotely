@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { Spinner } from "@/components/spinner";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { useMediaQuery, useViewportWidth } from "@/lib/use-media-query";
 import { isSaveShortcut } from "@/lib/shortcuts";
@@ -168,6 +169,8 @@ export function AppLayout() {
       </main>
 
       <SearchDialog />
+      {/* Here, not in the app root, so sonner loads after sign-in (D18). */}
+      <Toaster position="bottom-right" closeButton />
     </div>
   );
 }
