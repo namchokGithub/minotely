@@ -224,7 +224,17 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
 
       <div className="flex-1 overflow-y-auto px-2 pb-2">
         {!bookId ? (
-          <PanelMessage>Select a book.</PanelMessage>
+          <PanelMessage>
+            <span className="grid justify-items-center gap-2">
+              Select a book.
+              <Link
+                to="/"
+                className="text-foreground underline underline-offset-4 md:hidden"
+              >
+                Browse books
+              </Link>
+            </span>
+          </PanelMessage>
         ) : books && !book ? (
           <PanelMessage>Book not found.</PanelMessage>
         ) : notes.isPending ? (

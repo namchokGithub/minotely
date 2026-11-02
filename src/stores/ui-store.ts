@@ -13,6 +13,8 @@ type UiState = {
   /** Saved column widths in px, per device (M5.4). */
   libraryWidth: number;
   notesWidth: number;
+  /** Book opened last; the mobile Notes tab returns to it (D30). */
+  lastBookId: string | null;
   setTheme: (theme: ThemePreference) => void;
   toggleBooksSidebar: () => void;
   setBooksSidebarOpen: (booksSidebarOpen: boolean) => void;
@@ -20,6 +22,7 @@ type UiState = {
   setSearchOpen: (searchOpen: boolean) => void;
   setLibraryWidth: (width: number) => void;
   setNotesWidth: (width: number) => void;
+  setLastBookId: (bookId: string | null) => void;
 };
 
 export const useUiStore = create<UiState>()(
@@ -31,12 +34,14 @@ export const useUiStore = create<UiState>()(
       searchOpen: false,
       libraryWidth: LIBRARY_WIDTH.default,
       notesWidth: NOTES_WIDTH.default,
+      lastBookId: null,
       setTheme: (theme) => set({ theme }),
       toggleBooksSidebar: () =>
         set((state) => ({ booksSidebarOpen: !state.booksSidebarOpen })),
       setNoteSort: (noteSort) => set({ noteSort }),
       setBooksSidebarOpen: (booksSidebarOpen) => set({ booksSidebarOpen }),
       setSearchOpen: (searchOpen) => set({ searchOpen }),
+      setLastBookId: (lastBookId) => set({ lastBookId }),
       setLibraryWidth: (width) =>
         set({
           libraryWidth: clamp(width, LIBRARY_WIDTH.min, LIBRARY_WIDTH.max),
@@ -53,6 +58,7 @@ export const useUiStore = create<UiState>()(
         noteSort: state.noteSort,
         libraryWidth: state.libraryWidth,
         notesWidth: state.notesWidth,
+        lastBookId: state.lastBookId,
       }),
     },
   ),

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
+import { Navigate } from "react-router";
 import { Spinner } from "@/components/spinner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,8 @@ import { NotesPanel } from "@/features/notes/notes-panel";
 import { SearchDialog } from "@/features/search/search-dialog";
 import { TrashPanel } from "@/features/trash/trash-panel";
 import { useUiStore } from "@/stores/ui-store";
+import { SettingsPanel } from "@/features/settings/settings-panel";
+import { BottomNav } from "./bottom-nav";
 import { LibraryDnd } from "./library-dnd";
 import { fitWidths, LIBRARY_WIDTH, NOTES_WIDTH } from "./panel-sizes";
 import { ResizeHandle } from "./resize-handle";
@@ -27,12 +30,21 @@ const EditorPanel = lazy(() =>
  * Mobile: one screen at a time, chosen by the route.
  */
 export function AppLayout() {
-  const { bookId, noteId, isTrash } = useRouteIds();
-  const mobileScreen = noteId
-    ? "editor"
-    : bookId || isTrash
-      ? "notes"
-      : "books";
+  const { bookId, noteId, isTrash, isNotesHome, isSettings } = useRouteIds();
+  const mobileScreen = isSettings
+    ? "settings"
+    : noteId
+      ? "editor"
+      : bookId || isTrash || isNotesHome
+        ? "notes"
+        : "books";
+  // Bottom menu on phones, except while writing (D30).
+  const showBottomNav = mobileScreen !== "editor";
+  const isMobile = useMediaQuery("(max-width: 767.98px)");
+  const setLastBookId = useUiStore((state) => state.setLastBookId);
+  useEffect(() => {
+    if (bookId) setLastBookId(bookId);
+  }, [bookId, setLastBookId]);
 
   const booksSidebarOpen = useUiStore((state) => state.booksSidebarOpen);
   const setSearchOpen = useUiStore((state) => state.setSearchOpen);
@@ -78,10 +90,14 @@ export function AppLayout() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [setSearchOpen]);
 
+  // Settings is a phone screen; larger screens keep it in the sidebar and menus (D30).
+  if (isSettings && !isMobile) return <Navigate to="/" replace />;
+
   return (
     <div
       className={cn(
         "flex h-dvh overflow-hidden",
+        showBottomNav && "pb-14 md:pb-0",
         resizing && "cursor-col-resize select-none",
       )}
       style={
@@ -168,9 +184,35 @@ export function AppLayout() {
         </Suspense>
       </main>
 
+      {isSettings && (
+        <section
+          aria-label="Settings"
+          className="flex w-full flex-col md:hidden"
+        >
+          <SettingsPanel />
+        </section>
+      )}
+      {showBottomNav && (
+        <BottomNav
+          active={
+            mobileScreen === "settings"
+              ? "settings"
+              : mobileScreen === "notes" && !isTrash
+                ? "notes"
+                : mobileScreen === "books"
+                  ? "books"
+                  : null
+          }
+        />
+      )}
+
       <SearchDialog />
       {/* Here, not in the app root, so sonner loads after sign-in (D18). */}
-      <Toaster position="bottom-right" closeButton />
+      <Toaster
+        position="bottom-right"
+        closeButton
+        mobileOffset={{ bottom: showBottomNav ? 72 : 16 }}
+      />
     </div>
   );
 }

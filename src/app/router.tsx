@@ -14,6 +14,8 @@ export const router = createBrowserRouter([
       { path: "books/:bookId", element: null },
       { path: "books/:bookId/notes/:noteId", element: null },
       { path: "trash", element: null },
+      { path: "notes", element: null },
+      { path: "settings", element: null },
     ],
   },
   { path: "*", element: <Navigate to="/" replace /> },

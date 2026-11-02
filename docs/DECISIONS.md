@@ -217,3 +217,12 @@ listener (the same query search uses), grouped by `bookId`, so they update immed
 and restore, and need no stored counter, extra writes or rule changes. Trade-off: the signed-in app reads every
 non-deleted note once per session (one Firestore read per note, then only changes). If libraries grow large,
 switch to a stored `noteCount` or Firestore count aggregation.
+
+## D30 — Mobile bottom menu and Settings screen (2026-11-02)
+
+Below 768 px a fixed bottom menu has Books (`/`), Notes and Settings (`/settings`); it is hidden in the editor to
+leave room for writing and the keyboard. Notes opens the last opened book (`lastBookId`, persisted per device)
+or, if there is none or it was deleted, `/notes` ("Select a book" + Browse books). Settings is phone-only:
+Theme, editor font and size (the synced setting from D13), and a link to Trash; on 768 px and up `/settings`
+redirects to `/`, where the sidebar footer and the Aa menu cover the same controls. Account, sign out and backup
+stay in the Library footer on every size. Toasts sit above the bottom menu on phones.
