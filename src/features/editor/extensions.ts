@@ -10,13 +10,17 @@ import {
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Placeholder } from "@tiptap/extensions";
 import { Extension, type JSONContent } from "@tiptap/react";
-import { openLink } from "./links";
+import { insertOrEditLink, openLink } from "./links";
 
-/** ⌥Enter / Alt+Enter opens the link under the cursor in a new tab (M5.7). */
+/**
+ * ⌥Enter / Alt+Enter opens the link under the cursor in a new tab (M5.7).
+ * Ctrl/⌘+K inserts a link or moves focus to the link bar (D27).
+ */
 const LinkShortcuts = Extension.create({
   name: "linkShortcuts",
   addKeyboardShortcuts() {
     return {
+      "Mod-k": () => insertOrEditLink(this.editor),
       "Alt-Enter": () => {
         if (!this.editor.isActive("link")) return false;
         openLink(this.editor.getAttributes("link").href);

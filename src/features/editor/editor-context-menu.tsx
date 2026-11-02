@@ -17,7 +17,7 @@ import {
   ContextMenuShortcut,
 } from "@/components/ui/context-menu";
 import { shortcut } from "@/lib/shortcuts";
-import { NEW_LINK_HREF } from "./link-bubble";
+import { insertOrEditLink } from "./links";
 
 /**
  * Right-click menu inside the note (M5.9): clipboard, the most used formatting, Select all. A locked note
@@ -72,21 +72,9 @@ export function EditorContextItems({ editor }: { editor: Editor }) {
           <ContextMenuItem onSelect={() => chain().toggleHighlight().run()}>
             <Highlighter /> Highlight {hint("Mod+Shift+H")}
           </ContextMenuItem>
-          <ContextMenuItem
-            disabled={editor.isActive("link")}
-            onSelect={() =>
-              empty
-                ? chain()
-                    .insertContent({
-                      type: "text",
-                      text: "link",
-                      marks: [{ type: "link", attrs: { href: NEW_LINK_HREF } }],
-                    })
-                    .run()
-                : chain().setLink({ href: NEW_LINK_HREF }).run()
-            }
-          >
-            <Link2 /> Link
+          <ContextMenuItem onSelect={() => insertOrEditLink(editor)}>
+            <Link2 /> {editor.isActive("link") ? "Edit link" : "Link"}{" "}
+            {hint("Mod+K")}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => chain().toggleTaskList().run()}>
             <ListTodo /> Checklist {hint("Mod+Shift+9")}

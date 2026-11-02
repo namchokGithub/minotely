@@ -191,3 +191,12 @@ only this much.
   Bold, Italic, Highlight, Link, Checklist, Code block, Select all. Locked notes show Copy and Select all only.
 - Accessibility: toolbar and search buttons expose `aria-keyshortcuts` and show the shortcut in their tooltip;
   checklist checkboxes are labelled "To do / Done: <text>".
+
+## D27 — Ctrl/⌘+K is the link shortcut inside the editor (2026-11-02)
+
+Inside the note body Ctrl/⌘+K inserts a link (selection → link, no selection → "link" placeholder) or, when the
+cursor is on a link, moves focus to the link bar's URL field; Enter/Esc return to the text. This matches common
+editors (Google Docs, Notion). Everywhere else, and in locked notes, Ctrl/⌘+K still opens search: the editor
+handles the key first and the global search listener ignores already-handled events. Toolbar Link, right-click
+Link / Edit link and the shortcut share `insertOrEditLink` (`src/features/editor/links.ts`). Trash rows also get
+the right-click menu (same `MenuKit` items as their ⋯ menu).

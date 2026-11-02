@@ -8,6 +8,8 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react";
+import { AppContextMenu } from "@/components/app-context-menu";
+import { contextKit, dropdownKit, type MenuKit } from "@/components/menu-kit";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -22,11 +24,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUid } from "@/features/auth/auth-context";
@@ -144,100 +141,106 @@ function TrashItem({ note, books }: { note: Note; books: Book[] }) {
   const book = books.find((b) => b.id === note.bookId);
   const title = note.title.trim() || "Untitled";
 
-  return (
-    <li className="group relative">
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted">
-        <span className="truncate text-sm font-medium">{title}</span>
-        <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-          {book ? (
-            <>
-              <BookGlyph
-                icon={book.icon}
-                color={book.color}
-                className="size-3"
-              />
-              <span className="truncate">{book.name}</span>
-            </>
-          ) : (
-            <span>Book deleted</span>
-          )}
-          {note.deletedAt && <span>· {dateFormat.format(note.deletedAt)}</span>}
-        </span>
-      </div>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            aria-label={`Actions for ${title}`}
-            className="absolute top-2 right-1.5"
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-auto min-w-44">
-          {book && (
-            <DropdownMenuItem
+  // Same items in the ⋯ menu and the right-click menu (D26).
+  const menuItems = (k: MenuKit) => (
+    <>
+      {book && (
+        <k.Item
+          onSelect={() =>
+            restoreNote(uid, note.id).catch(logError("Restore note"))
+          }
+        >
+          <RotateCcw /> Restore
+        </k.Item>
+      )}
+      <k.Sub>
+        <k.SubTrigger disabled={books.length === 0}>
+          <RotateCcw /> Restore to
+        </k.SubTrigger>
+        <k.SubContent className="max-h-72 overflow-y-auto">
+          {books.map((b) => (
+            <k.Item
+              key={b.id}
               onSelect={() =>
-                restoreNote(uid, note.id).catch(logError("Restore note"))
+                restoreNote(uid, note.id, b.id).catch(logError("Restore note"))
               }
             >
-              <RotateCcw /> Restore
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger disabled={books.length === 0}>
-              <RotateCcw /> Restore to
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
-              {books.map((b) => (
-                <DropdownMenuItem
-                  key={b.id}
-                  onSelect={() =>
-                    restoreNote(uid, note.id, b.id).catch(
-                      logError("Restore note"),
-                    )
-                  }
-                >
-                  <BookGlyph icon={b.icon} color={b.color} />
-                  <span className="truncate">{b.name}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={() => setDeleteOpen(true)}
-          >
-            <Trash2 /> Delete forever
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <BookGlyph icon={b.icon} color={b.color} />
+              <span className="truncate">{b.name}</span>
+            </k.Item>
+          ))}
+        </k.SubContent>
+      </k.Sub>
+      <k.Separator />
+      <k.Item variant="destructive" onSelect={() => setDeleteOpen(true)}>
+        <Trash2 /> Delete forever
+      </k.Item>
+    </>
+  );
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{title}” forever?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() =>
-                deleteNoteForever(uid, note.id).catch(logError("Delete note"))
-              }
+  return (
+    <AppContextMenu label={`Actions for ${title}`} menu={menuItems(contextKit)}>
+      <li className="group relative">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted">
+          <span className="truncate text-sm font-medium">{title}</span>
+          <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+            {book ? (
+              <>
+                <BookGlyph
+                  icon={book.icon}
+                  color={book.color}
+                  className="size-3"
+                />
+                <span className="truncate">{book.name}</span>
+              </>
+            ) : (
+              <span>Book deleted</span>
+            )}
+            {note.deletedAt && (
+              <span>· {dateFormat.format(note.deletedAt)}</span>
+            )}
+          </span>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Actions for ${title}`}
+              className="absolute top-2 right-1.5"
             >
-              Delete forever
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </li>
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-auto min-w-44">
+            {menuItems(dropdownKit)}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete “{title}” forever?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={() =>
+                  deleteNoteForever(uid, note.id).catch(logError("Delete note"))
+                }
+              >
+                Delete forever
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </li>
+    </AppContextMenu>
   );
 }
 

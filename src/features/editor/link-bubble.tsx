@@ -3,10 +3,12 @@ import { getMarkRange, useEditorState, type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { ExternalLink, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { normalizeHref, openLink } from "./links";
-
-/** Placeholder href of a just-inserted link; the URL field gets focus. */
-export const NEW_LINK_HREF = "https://";
+import {
+  LINK_URL_FIELD,
+  NEW_LINK_HREF,
+  normalizeHref,
+  openLink,
+} from "./links";
 
 const isMac =
   typeof navigator !== "undefined" &&
@@ -139,6 +141,7 @@ function LinkForm({ editor, link }: { editor: Editor; link: LinkInfo }) {
         value={href}
         autoFocus={link.href === NEW_LINK_HREF}
         aria-label="Link URL"
+        {...{ [LINK_URL_FIELD]: "" }}
         aria-invalid={invalid}
         placeholder="https://"
         inputMode="url"

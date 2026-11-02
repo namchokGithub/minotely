@@ -21,7 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { shortcut } from "@/lib/shortcuts";
 import { HIGHLIGHT_COLORS, TEXT_COLORS } from "./extensions";
-import { NEW_LINK_HREF } from "./link-bubble";
+import { insertOrEditLink } from "./links";
 
 export function EditorToolbar({
   editor,
@@ -45,24 +45,6 @@ export function EditorToolbar({
     }),
   });
   const chain = () => editor.chain().focus();
-
-  // Selected text becomes a link; with no selection a "link" placeholder is inserted and selected.
-  const insertLink = () => {
-    if (editor.isActive("link")) return;
-    const { from, empty } = editor.state.selection;
-    if (!empty) {
-      chain().setLink({ href: NEW_LINK_HREF }).run();
-      return;
-    }
-    chain()
-      .insertContent({
-        type: "text",
-        text: "link",
-        marks: [{ type: "link", attrs: { href: NEW_LINK_HREF } }],
-      })
-      .setTextSelection({ from, to: from + 4 })
-      .run();
-  };
 
   return (
     <fieldset disabled={disabled} className="contents">
@@ -155,7 +137,12 @@ export function EditorToolbar({
         >
           <ListTodo />
         </ToolButton>
-        <ToolButton label="Link" active={state.link} onClick={insertLink}>
+        <ToolButton
+          label="Link"
+          keys="Mod+K"
+          active={state.link}
+          onClick={() => insertOrEditLink(editor)}
+        >
           <Link2 />
         </ToolButton>
         <ToolButton

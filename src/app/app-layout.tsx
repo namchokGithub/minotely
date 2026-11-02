@@ -60,11 +60,15 @@ export function AppLayout() {
     if (isTablet && noteId) setBooksSidebarOpen(false);
   }, [isTablet, noteId, setBooksSidebarOpen]);
 
-  // Cmd/Ctrl+K opens search. Cmd/Ctrl+S never opens the browser's "Save page" (the open note saves itself).
+  // Cmd/Ctrl+K opens search (inside the editor it is the link shortcut, D27). Cmd/Ctrl+S never opens the browser's "Save page" (the open note saves itself).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (isSaveShortcut(event)) event.preventDefault();
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        event.key.toLowerCase() === "k" &&
+        !event.defaultPrevented
+      ) {
         event.preventDefault();
         setSearchOpen(true);
       }
