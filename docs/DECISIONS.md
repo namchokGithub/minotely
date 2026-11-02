@@ -209,3 +209,11 @@ generated component used `next-themes`; it now reads the theme from the UI store
 The `Toaster` is mounted in `AppLayout`, not the app root, so the sign-in bundle stays small (D18). First use:
 drag and drop (D24) shows "Moved … to …" with an Undo action, and failures show an error toast. Result dialogs
 (`MessageDialog`) stay for imports, where the user should read the outcome.
+
+## D29 — Note count per book, counted in the client (2026-11-02)
+
+The Library shows how many notes (outside Trash) each book has. Counts come from the live `useAllNotes`
+listener (the same query search uses), grouped by `bookId`, so they update immediately on create, move, delete
+and restore, and need no stored counter, extra writes or rule changes. Trade-off: the signed-in app reads every
+non-deleted note once per session (one Firestore read per note, then only changes). If libraries grow large,
+switch to a stored `noteCount` or Firestore count aggregation.

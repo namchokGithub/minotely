@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { bookDragId, type DragData } from "@/app/dnd-ids";
@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { shortcut } from "@/lib/shortcuts";
 import { useAuth, useUid } from "@/features/auth/auth-context";
 import { DataMenu } from "@/features/data/data-menu";
+import { useAllNotes } from "@/features/notes/api";
 import { useUiStore, type ThemePreference } from "@/stores/ui-store";
 import {
   createBook,
@@ -65,6 +66,15 @@ export function BooksPanel() {
   const { data: books, isPending, isError } = useBooks();
   const [createOpen, setCreateOpen] = useState(false);
   const setSearchOpen = useUiStore((state) => state.setSearchOpen);
+  // Note count per book (D29): counted from the live list of notes outside Trash.
+  const { data: allNotes } = useAllNotes();
+  const noteCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const note of allNotes ?? []) {
+      counts.set(note.bookId, (counts.get(note.bookId) ?? 0) + 1);
+    }
+    return counts;
+  }, [allNotes]);
 
   const handleCreate = (input: Parameters<typeof createBook>[1]) => {
     const order = Math.max(0, ...(books ?? []).map((b) => b.order)) + 1;
@@ -121,6 +131,9 @@ export function BooksPanel() {
                 book={book}
                 previous={books[index - 1]}
                 next={books[index + 1]}
+                noteCount={
+                  allNotes ? (noteCounts.get(book.id) ?? 0) : undefined
+                }
               />
             ))}
           </ul>
@@ -157,9 +170,11 @@ type BookItemProps = {
   book: Book;
   previous: Book | undefined;
   next: Book | undefined;
+  /** Undefined while notes are loading. */
+  noteCount: number | undefined;
 };
 
-function BookItem({ book, previous, next }: BookItemProps) {
+function BookItem({ book, previous, next, noteCount }: BookItemProps) {
   const uid = useUid();
   const navigate = useNavigate();
   const { bookId: activeBookId } = useRouteIds();
@@ -252,6 +267,14 @@ function BookItem({ book, previous, next }: BookItemProps) {
         >
           <BookGlyph icon={book.icon} color={book.color} />
           <span className="truncate">{book.name}</span>
+          {noteCount !== undefined && (
+            <span className="ml-auto shrink-0 text-xs text-muted-foreground tabular-nums">
+              <span aria-hidden>{noteCount}</span>
+              <span className="sr-only">
+                , {noteCount} {noteCount === 1 ? "note" : "notes"}
+              </span>
+            </span>
+          )}
         </NavLink>
 
         <DropdownMenu>
