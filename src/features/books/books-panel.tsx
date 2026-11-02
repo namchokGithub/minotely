@@ -5,7 +5,6 @@ import { useRouteIds } from "@/app/use-route-ids";
 import {
   ArrowDown,
   ArrowUp,
-  BookOpen,
   LogOut,
   Monitor,
   Moon,
@@ -71,7 +70,14 @@ export function BooksPanel() {
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <header className="flex h-14 items-center gap-2 px-4">
-        <BookOpen className="size-5" />
+        <img
+          src="/Kawaii Gold Slime with Embossed N-64x64.png"
+          alt="Logo"
+          width={64}
+          height={64}
+          className="size-5"
+          unselectable="on"
+        />
         <h2 className="flex-1 font-semibold">My Library</h2>
         <Button
           variant="ghost"
