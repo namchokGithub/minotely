@@ -47,12 +47,17 @@ export function EditorPanel({ bookId, noteId }: EditorPanelProps) {
   return (
     <div className="flex h-full flex-col">
       {bookId && (
-        <div className="flex h-14 shrink-0 items-center px-2 md:hidden">
+        <div className="flex h-14 shrink-0 items-center gap-1 px-2 md:hidden">
           <Button variant="ghost" size="icon-sm" asChild>
             <Link to={`/books/${bookId}`} aria-label="Back to notes">
               <ChevronLeft />
             </Link>
           </Button>
+          {note && (
+            <h2 className="min-w-0 flex-1 truncate px-1 font-semibold">
+              {note.title.trim() || "Untitled"}
+            </h2>
+          )}
         </div>
       )}
       {body}
