@@ -251,4 +251,14 @@ its title/content match neither the edit's base (last version known to be in Fir
 `baseTitle`/`baseContent`, local only) nor the edit itself; content is compared, not `updatedAt`, so tag changes
 and our own writes are not conflicts. On a conflict syncing stops and a dialog asks Keep mine (overwrite) or Use
 other version (drop the draft). Cost: one read per sync. Out of scope: opening the app offline (needs a service
-worker) and Firestore persistent cache.
+worker); Firestore persistent cache came later in D33.
+
+## D33 — One notes listener and a persistent Firestore cache (2026-11-03)
+
+Reduces reads from D29's all-notes listener. `useNotes(bookId)` no longer opens its own query; it filters the
+`useAllNotes` result in the client, so opening a book costs no reads and each note change is read once, not
+once per listener. Firestore uses `persistentLocalCache` with `persistentMultipleTabManager` (IndexedDB, shared
+by tabs): listeners show cached data first and a reload re-reads only changed documents while the resume token
+is valid (about 30 minutes; after that the query is read again in full). Trade-off: note data stays in this
+browser's IndexedDB after sign-out, like Dexie drafts (D12), so the app suits personal devices. The note count
+remains client-side; a stored `noteCount` is the next step only if libraries grow to thousands of notes.

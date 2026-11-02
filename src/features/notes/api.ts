@@ -13,6 +13,7 @@ import {
   type QueryConstraint,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
+import { useMemo } from "react";
 import { db } from "@/lib/firestore";
 import { deleteDraft } from "@/lib/db";
 import { toDate } from "@/lib/firestore-utils";
@@ -65,13 +66,18 @@ function useNotesQuery(
   );
 }
 
-/** Live notes of one book, excluding Trash. */
+/**
+ * Live notes of one book, excluding Trash. Filtered from the all-notes listener
+ * so opening a book or syncing a note is not read twice (D33).
+ */
 export function useNotes(bookId: string | undefined) {
-  return useNotesQuery(
-    ["book", bookId],
-    [where("bookId", "==", bookId ?? ""), where("deletedAt", "==", null)],
-    Boolean(bookId),
+  const all = useAllNotes(Boolean(bookId));
+  const data = useMemo(
+    () =>
+      bookId ? all.data?.filter((note) => note.bookId === bookId) : undefined,
+    [all.data, bookId],
   );
+  return { data, isPending: all.isPending, isError: all.isError };
 }
 
 /** Live notes of every book, excluding Trash (search). */

@@ -11,6 +11,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | ID   | Item                                                                 | Status      |
 | ---- | -------------------------------------------------------------------- | ----------- |
 | M6.1 | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
+| M6.2 | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
 
 ## Notes
 
@@ -22,8 +23,10 @@ Every item not `Done`. Keep in sync with the sections below.
 - M6.1 (approved, done in code, D32; owner to test): sync a note 30 s after typing stops or at most every 5 min
   instead of 800 ms; nothing is sent while offline; each sync checks Firestore still holds the version the edit
   started from and asks "Keep mine / Use other version" if not. Status shows Saved on this device / Syncing /
-  Synced / Offline / Changed elsewhere. Out of scope: opening the app offline (service worker), Firestore
-  persistent cache.
+  Synced / Offline / Changed elsewhere. Out of scope: opening the app offline (service worker); persistent cache
+  followed in M6.2.
+- M6.2 (approved, done in code, D33; owner to test): `useNotes(bookId)` filters the all-notes listener instead of
+  its own query; Firestore uses a persistent IndexedDB cache shared by tabs.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 
