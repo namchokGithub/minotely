@@ -14,7 +14,7 @@ Every item not `Done`. Keep in sync with the sections below.
 
 ## Notes
 
-- M4.4: deferred by the owner; not releasing yet. Release = `firebase deploy --only hosting` (and rules), see `README.md`.
+- M4.4: release = push to `production` after the one-time GitHub setup in `README.md` (D31); rules by hand.
 - M1–M4.3 were verified manually by the owner against the real Firebase project (2026-11-02).
 
 ### M5 — Owner feedback (2026-11-02) — all done

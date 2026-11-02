@@ -24,7 +24,7 @@ Baseline already done: Vite + React 19 + TypeScript + Tailwind CSS v4 + ESLint +
 4. Routing: `BrowserRouter` at `/`; Firebase Hosting rewrites all paths to `index.html` (D19).
    Routes: `/login`, `/books/:bookId`, `/books/:bookId/notes/:noteId`.
 5. Firebase Authentication: Google Sign-in, route guard, sign-out (any Google account since D22).
-6. Firebase Hosting: `firebase.json`, manual deploy with `firebase deploy --only hosting` (D19).
+6. Firebase Hosting: `firebase.json` (D19); deploy on push to `production` via GitHub Actions (D31).
 
 Done when: the owner signs in and sees the empty layout on the deployed URL; any other Google account is rejected.
 
@@ -62,7 +62,7 @@ Verification: manual by the owner against the real Firebase project.
 1. Performance: code-split Tiptap, check bundle size.
 2. Accessibility: full keyboard use, focus states, contrast.
 3. Security Rules review against the real project.
-4. Release: `firebase deploy --only hosting` (and rules).
+4. Release: push to `production` (D31); rules with `firebase deploy --only firestore:rules`.
 
 ## Post-MVP (P2)
 
