@@ -167,8 +167,37 @@ body {
   .minotely-editor hr {
     @apply my-6;
   }
+  /* Links (D23): light-yellow #fff200 tint + underline, text keeps the readable body color. */
   .minotely-editor a {
-    @apply text-primary underline underline-offset-4;
+    @apply rounded-sm px-0.5 underline decoration-2 underline-offset-4;
+    color: inherit;
+    background-color: rgb(255 242 0 / 0.28);
+    text-decoration-color: #fff200;
+  }
+  .dark .minotely-editor a {
+    background-color: rgb(255 242 0 / 0.16);
+  }
+  /* Checklists (M5.5). */
+  .minotely-editor ul[data-type="taskList"] {
+    @apply list-none pl-0;
+  }
+  .minotely-editor ul[data-type="taskList"] li {
+    @apply flex items-start gap-2;
+  }
+  .minotely-editor ul[data-type="taskList"] li > label {
+    @apply mt-1.5 flex shrink-0 select-none;
+  }
+  .minotely-editor ul[data-type="taskList"] li > label input {
+    @apply size-4 cursor-pointer accent-primary;
+  }
+  .minotely-editor ul[data-type="taskList"] li > div {
+    @apply min-w-0 flex-1;
+  }
+  .minotely-editor ul[data-type="taskList"] li[data-checked="true"] > div {
+    @apply text-muted-foreground line-through;
+  }
+  .minotely-editor ul[data-type="taskList"] ul[data-type="taskList"] {
+    @apply mt-1 pl-1;
   }
   .minotely-editor code {
     @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.875em];

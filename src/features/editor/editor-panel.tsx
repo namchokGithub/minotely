@@ -21,6 +21,7 @@ import { setNoteLocked, setNotePinned, useNotes } from "@/features/notes/api";
 import type { Note, NoteContentFields } from "@/features/notes/types";
 import { AppearanceMenu } from "./appearance-menu";
 import { EditorToolbar } from "./editor-toolbar";
+import { LinkBubble } from "./link-bubble";
 import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
 import { useAutoSave, type SaveStatus } from "./use-auto-save";
@@ -193,6 +194,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
           />
           <TagEditor note={note} readOnly={note.isLocked} />
           <EditorContent editor={editor} />
+          <LinkBubble editor={editor} />
         </div>
       </div>
     </div>

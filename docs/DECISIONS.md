@@ -146,3 +146,15 @@ allow a request only when `request.auth.uid` matches the `users/{uid}` path and 
 `google.com`, so each account sees only its own books, notes and settings. Trade-off: strangers who find the URL
 can create their own data and use the project's quota. `src/features/auth/owner.ts` and its test are unused and
 kept until the owner decides to remove them.
+
+## D23 — Link editing bar and link style (2026-11-02)
+
+Links use Tiptap's Link (from StarterKit) with autolink and link-on-paste. A Tiptap `BubbleMenu`
+(`src/features/editor/link-bubble.tsx`) appears above the link under the cursor with Alias, URL, Open in new tab,
+Remove (unlink, keep text) and the `⌥Enter` / `Alt+Enter` hint; the same shortcut works in the editor. Only
+`http(s):`, `mailto:` and `tel:` links are opened. Links are styled with a `#fff200` tint and underline while the
+text keeps the body color (owner chose this over yellow text, which is ~1.1:1 on white). Locked notes are not
+editable, so links there open as normal anchors.
+
+Checklists use `TaskList` / `TaskItem` from `@tiptap/extension-list` (nested allowed); `[ ] ` starts one, and
+Markdown import/export uses `- [ ]` / `- [x]`.

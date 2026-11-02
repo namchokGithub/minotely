@@ -5,6 +5,8 @@ import {
   Code2,
   Highlighter,
   Italic,
+  Link2,
+  ListTodo,
   Palette,
   Table as TableIcon,
 } from "lucide-react";
@@ -18,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { HIGHLIGHT_COLORS, TEXT_COLORS } from "./extensions";
+import { NEW_LINK_HREF } from "./link-bubble";
 
 export function EditorToolbar({
   editor,
@@ -36,9 +39,29 @@ export function EditorToolbar({
       color: e.getAttributes("textStyle").color as string | undefined,
       codeBlock: e.isActive("codeBlock"),
       table: e.isActive("table"),
+      taskList: e.isActive("taskList"),
+      link: e.isActive("link"),
     }),
   });
   const chain = () => editor.chain().focus();
+
+  // Selected text becomes a link; with no selection a "link" placeholder is inserted and selected.
+  const insertLink = () => {
+    if (editor.isActive("link")) return;
+    const { from, empty } = editor.state.selection;
+    if (!empty) {
+      chain().setLink({ href: NEW_LINK_HREF }).run();
+      return;
+    }
+    chain()
+      .insertContent({
+        type: "text",
+        text: "link",
+        marks: [{ type: "link", attrs: { href: NEW_LINK_HREF } }],
+      })
+      .setTextSelection({ from, to: from + 4 })
+      .run();
+  };
 
   return (
     <fieldset disabled={disabled} className="contents">
@@ -116,6 +139,16 @@ export function EditorToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
+        <ToolButton
+          label="Checklist"
+          active={state.taskList}
+          onClick={() => chain().toggleTaskList().run()}
+        >
+          <ListTodo />
+        </ToolButton>
+        <ToolButton label="Link" active={state.link} onClick={insertLink}>
+          <Link2 />
+        </ToolButton>
         <ToolButton
           label="Code block"
           active={state.codeBlock}
