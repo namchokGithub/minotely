@@ -123,7 +123,8 @@ chunk imported them again.
 Replaces GitHub Pages + GitHub Actions (D3, M1.6). The site is hosted on Firebase Hosting and deployed by the
 owner with `firebase deploy --only hosting` from a local machine; the build reads `.env.local`, so no secrets
 live in GitHub. `firebase.json` rewrites every path to `index.html` (clean `BrowserRouter` URLs at `/`, no
-`basename`, no `404.html` copy) and caches hashed files under `/assets/` for a year. Rules deploy separately with
+`basename`, no `404.html` copy) and caches hashed files under `/assets/` for a year; every other path (`index.html` and SPA routes) is
+`no-cache`, so a new deploy is picked up on the next load. Rules deploy separately with
 `firebase deploy --only firestore:rules`. The GitHub Actions workflow and the
 `BASE_PATH` build option were removed.
 
