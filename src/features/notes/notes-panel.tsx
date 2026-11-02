@@ -229,7 +229,7 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
               Select a book.
               <Link
                 to="/"
-                className="text-foreground underline underline-offset-4 md:hidden"
+                className="inline-flex h-10 items-center rounded-md px-4 text-foreground underline underline-offset-4 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 md:hidden"
               >
                 Browse books
               </Link>

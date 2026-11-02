@@ -55,7 +55,7 @@ export function TagEditor({
           placeholder={note.tags.length ? "Add tag" : "Add tags…"}
           aria-label="Add tag"
           maxLength={40}
-          className="min-w-24 flex-1 bg-transparent py-0.5 text-base text-muted-foreground outline-none placeholder:text-muted-foreground/60 sm:text-xs"
+          className="min-h-7 min-w-24 flex-1 bg-transparent py-0.5 text-base text-muted-foreground outline-none placeholder:text-muted-foreground/60 sm:text-xs"
           onChange={(event) => setInput(event.target.value)}
           onBlur={add}
           onKeyDown={(event) => {

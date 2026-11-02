@@ -68,9 +68,10 @@ export function AppLayout() {
   );
   const [resizing, setResizing] = useState(false);
 
-  // Tablet: give the editor room when a note opens; the toggle brings Books back.
+  // Tablet: fold Books away while a note is open, show it again when no note is open; the toggle still works
+  // in between.
   useEffect(() => {
-    if (isTablet && noteId) setBooksSidebarOpen(false);
+    if (isTablet) setBooksSidebarOpen(!noteId);
   }, [isTablet, noteId, setBooksSidebarOpen]);
 
   // Cmd/Ctrl+K opens search (inside the editor it is the link shortcut, D27). Cmd/Ctrl+S never opens the browser's "Save page" (the open note saves itself).
