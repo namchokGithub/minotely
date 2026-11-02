@@ -11,7 +11,9 @@ Sign in with any Google account; each account sees only its own books and notes.
 - **Library → Books → Notes** — books with color (preset or custom) and icon, drag to reorder, live note count.
 - **Editor** — inline WYSIWYG (Tiptap) with live Markdown shortcuts, headings, lists, checklists, tables, code
   blocks, bold/italic, text color, highlight, and links with an edit bar.
-- **Reliable Auto Save** — Saving / Saved / Error status, local drafts in IndexedDB, Ctrl/⌘+S to save now.
+- **Reliable Auto Save** — every edit saved on the device at once (IndexedDB), synced 30 s after typing stops
+  (at least every 5 min), keeps working offline, asks before overwriting a version changed elsewhere; Ctrl/⌘+S
+  syncs now.
 - **Organize** — pin, lock (read-only), tags with filter, sort (updated, created, A–Z, custom), move notes by drag
   and drop, Trash with restore.
 - **Find** — search titles, content and `#tags` across all books (Ctrl/⌘+K).
@@ -113,8 +115,7 @@ domains for Firebase Auth. Security notes: `docs/SECURITY.md`.
 
 ## Roadmap
 
-- **Released:** live on Firebase Hosting (`https://minotely.web.app`), deployed on push to `production`.
-- **Post-MVP:** full offline mode, version history.
+- **Post-MVP:** version history.
 
 Status details: `docs/PROGRESS.md`.
 

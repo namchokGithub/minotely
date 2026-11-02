@@ -4,6 +4,7 @@ import {
   doc,
   onSnapshot,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -134,14 +135,46 @@ export async function importNotes(
   }
 }
 
+/** The note's title and content in Firestore differ from both the edit's base and the edit itself (D32). */
+export class NoteConflictError extends Error {
+  readonly remote: NoteContentFields;
+
+  constructor(remote: NoteContentFields) {
+    super("Note changed elsewhere");
+    this.remote = remote;
+  }
+}
+
+type ContentBase = Pick<NoteContentFields, "title" | "content">;
+
+const sameContent = (a: ContentBase, b: ContentBase) =>
+  a.title === b.title && a.content === b.content;
+
+/**
+ * Saves title and content in a transaction. With a `base`, the write is refused
+ * (NoteConflictError) when Firestore holds a version that is neither the base nor
+ * this edit. `base: null` overwrites. Needs the server: fails while offline.
+ */
 export function saveNoteContent(
   uid: string,
   noteId: string,
   fields: NoteContentFields,
+  base: ContentBase | null,
 ) {
-  return updateDoc(doc(notesCol(uid), noteId), {
-    ...fields,
-    updatedAt: serverTimestamp(),
+  const ref = doc(notesCol(uid), noteId);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("Note not found");
+    const data = snap.data();
+    const remote: NoteContentFields = {
+      title: data.title ?? "",
+      content: data.content ?? EMPTY_DOC,
+      plainText: data.plainText ?? "",
+    };
+    if (base && !sameContent(remote, base) && !sameContent(remote, fields)) {
+      throw new NoteConflictError(remote);
+    }
+    tx.update(ref, { ...fields, updatedAt: serverTimestamp() });
   });
 }
 

@@ -73,7 +73,7 @@ Each edit is written to a Dexie draft immediately and to Firestore after an 800 
 every 5 s and on `online`. The draft is deleted only after Firestore acknowledges a write containing the latest
 edit. When a note opens and a draft exists, the draft wins and is saved again (unsaved local text is never
 dropped; a newer edit from another device is overwritten in that case). Pending edits flush when the tab is
-hidden or the note is closed.
+hidden or the note is closed. Timing, offline behaviour and the overwrite rule are replaced by D32.
 
 ## D13 — Paper style per note, typography per user (2026-11-01)
 
@@ -239,3 +239,16 @@ Admin, Firebase Authentication Admin, API Keys Viewer, Cloud Run Viewer and Serv
 `README.md`). Security Rules are still deployed by
 hand (`firebase deploy --only firestore:rules`) so a merge cannot change access rules unnoticed. No PR preview
 channels. Manual `firebase deploy --only hosting` still works for emergencies.
+
+## D32 — Slower sync, offline editing and a conflict check (2026-11-03)
+
+Replaces D12's timing and "draft wins" rule; drafts stay as in D12. To cut Firestore writes for a writer who
+pauses often, a note syncs 30 s after typing stops, at most 5 min after its first unsynced change, and at once on
+Ctrl/⌘+S, tab hide, note close and `online`. Every keystroke still goes to the Dexie draft immediately, so the
+longer delay does not risk text. While `navigator.onLine` is false nothing is sent (no SDK write queue), so the
+check below runs once the network is back. Each sync is a transaction that reads the note and refuses the write if
+its title/content match neither the edit's base (last version known to be in Firestore; stored in the draft as
+`baseTitle`/`baseContent`, local only) nor the edit itself; content is compared, not `updatedAt`, so tag changes
+and our own writes are not conflicts. On a conflict syncing stops and a dialog asks Keep mine (overwrite) or Use
+other version (drop the draft). Cost: one read per sync. Out of scope: opening the app offline (needs a service
+worker) and Firestore persistent cache.

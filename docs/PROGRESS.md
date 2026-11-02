@@ -8,12 +8,22 @@ Plan: `docs/PLAN.md`. Statuses: `Todo`, `In progress`, `Blocked`, `Done`.
 
 Every item not `Done`. Keep in sync with the sections below.
 
-None.
+| ID   | Item                                                                 | Status      |
+| ---- | -------------------------------------------------------------------- | ----------- |
+| M6.1 | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
 
 ## Notes
 
 - No open work. M4.4: first release deployed from GitHub Actions on push to `production` (2026-11-02, D31).
 - M1–M4.3 were verified manually by the owner against the real Firebase project (2026-11-02).
+
+### M6 — Sync cost and offline editing (2026-11-03)
+
+- M6.1 (approved, done in code, D32; owner to test): sync a note 30 s after typing stops or at most every 5 min
+  instead of 800 ms; nothing is sent while offline; each sync checks Firestore still holds the version the edit
+  started from and asks "Keep mine / Use other version" if not. Status shows Saved on this device / Syncing /
+  Synced / Offline / Changed elsewhere. Out of scope: opening the app offline (service worker), Firestore
+  persistent cache.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 
