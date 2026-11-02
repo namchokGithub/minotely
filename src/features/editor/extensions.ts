@@ -42,7 +42,13 @@ export const editorExtensions = [
     },
   }),
   TaskList,
-  TaskItem.configure({ nested: true }),
+  TaskItem.configure({
+    nested: true,
+    a11y: {
+      checkboxLabel: (node, checked) =>
+        `${checked ? "Done" : "To do"}: ${node.textContent || "empty task"}`,
+    },
+  }),
   LinkShortcuts,
   Highlight.configure({ multicolor: true }),
   TextStyle,

@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { shortcut } from "@/lib/shortcuts";
 import { HIGHLIGHT_COLORS, TEXT_COLORS } from "./extensions";
 import { NEW_LINK_HREF } from "./link-bubble";
 
@@ -72,6 +73,7 @@ export function EditorToolbar({
       >
         <ToolButton
           label="Bold"
+          keys="Mod+B"
           active={state.bold}
           onClick={() => chain().toggleBold().run()}
         >
@@ -79,6 +81,7 @@ export function EditorToolbar({
         </ToolButton>
         <ToolButton
           label="Italic"
+          keys="Mod+I"
           active={state.italic}
           onClick={() => chain().toggleItalic().run()}
         >
@@ -115,7 +118,12 @@ export function EditorToolbar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <ToolButton menu label="Highlight" active={state.highlight}>
+            <ToolButton
+              menu
+              label="Highlight"
+              keys="Mod+Shift+H"
+              active={state.highlight}
+            >
               <Highlighter />
             </ToolButton>
           </DropdownMenuTrigger>
@@ -141,6 +149,7 @@ export function EditorToolbar({
 
         <ToolButton
           label="Checklist"
+          keys="Mod+Shift+9"
           active={state.taskList}
           onClick={() => chain().toggleTaskList().run()}
         >
@@ -151,6 +160,7 @@ export function EditorToolbar({
         </ToolButton>
         <ToolButton
           label="Code block"
+          keys="Mod+Alt+C"
           active={state.codeBlock}
           onClick={() => chain().toggleCodeBlock().run()}
         >
@@ -211,19 +221,24 @@ function ToolButton({
   active,
   className,
   menu = false,
+  keys,
   ...props
 }: ComponentProps<typeof Button> & {
   label: string;
   active: boolean;
   /** Opens a menu: no pressed state. */
   menu?: boolean;
+  /** Keyboard shortcut, e.g. "Mod+B" (shown in the tooltip and aria-keyshortcuts). */
+  keys?: string;
 }) {
+  const hint = keys ? shortcut(keys) : null;
   return (
     <Button
       variant="ghost"
       size="icon-sm"
       aria-label={label}
-      title={label}
+      aria-keyshortcuts={hint?.aria}
+      title={hint ? `${label} (${hint.label})` : label}
       aria-pressed={menu ? undefined : active}
       className={cn(active && "bg-muted text-foreground", className)}
       {...props}

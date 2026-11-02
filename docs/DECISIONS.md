@@ -177,3 +177,17 @@ Library and Notes widths are set by two splitters (`src/app/resize-handle.tsx`, 
 Notes then Library so the editor keeps at least 320 px; saved values stay unchanged. Mobile has no splitters.
 `react-resizable-panels` (shadcn Resizable) was not added: two fixed-side columns plus a flexible editor need
 only this much.
+
+## D26 — Keyboard save, app right-click menus, shared menu items (2026-11-02)
+
+- Ctrl/⌘+S never triggers the browser's "Save page". With a note open it writes the pending edit at once
+  (`saveNow`); with nothing pending the status shows "Saved".
+- Right-click on a book row, a note row or the note body opens the app's menu (`AppContextMenu`, Radix Context
+  Menu). Right-clicking again while it is open, or within 600 ms after it closed, lets the browser's own menu open
+  (spell-check, inspect, etc.). The keyboard Menu key / Shift+F10 opens the app menu too.
+- Row actions are written once as a function of a `MenuKit` (`src/components/menu-kit.ts`) and rendered in both
+  the ⋯ dropdown and the right-click menu, so the two never drift.
+- Note-body menu: Cut, Copy (rich, via the editor's own copy), Paste as text (Clipboard API; needs permission),
+  Bold, Italic, Highlight, Link, Checklist, Code block, Select all. Locked notes show Copy and Select all only.
+- Accessibility: toolbar and search buttons expose `aria-keyshortcuts` and show the shortcut in their tooltip;
+  checklist checkboxes are labelled "To do / Done: <text>".

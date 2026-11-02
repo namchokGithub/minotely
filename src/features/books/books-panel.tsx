@@ -18,6 +18,8 @@ import {
   Sun,
   Trash2,
 } from "lucide-react";
+import { AppContextMenu } from "@/components/app-context-menu";
+import { contextKit, dropdownKit, type MenuKit } from "@/components/menu-kit";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -32,11 +34,10 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { shortcut } from "@/lib/shortcuts";
 import { useAuth, useUid } from "@/features/auth/auth-context";
 import { DataMenu } from "@/features/data/data-menu";
 import { useUiStore, type ThemePreference } from "@/stores/ui-store";
@@ -85,8 +86,9 @@ export function BooksPanel() {
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Search (Ctrl+K)"
-          title="Search (Ctrl+K)"
+          aria-label="Search"
+          aria-keyshortcuts={shortcut("Mod+K").aria}
+          title={`Search (${shortcut("Mod+K").label})`}
           onClick={() => setSearchOpen(true)}
         >
           <Search />
@@ -185,109 +187,118 @@ function BookItem({ book, previous, next }: BookItemProps) {
     );
   };
 
-  return (
-    <li
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Translate.toString(transform),
-        transition,
-      }}
-      className={cn(
-        "group relative rounded-md",
-        isDragging && "opacity-40",
-        noteOver && "ring-2 ring-primary/60",
-      )}
-    >
-      <NavLink
-        to={`/books/${book.id}`}
-        // Drag from the row; keyboard and screen-reader users reorder from the ⋯ menu.
-        {...listeners}
-        className={({ isActive }) =>
-          cn(
-            "flex h-9 touch-manipulation items-center select-none [-webkit-touch-callout:none] gap-2 rounded-md px-2 pr-9 text-sm transition-colors duration-150 hover:bg-sidebar-accent outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-            isActive && "bg-sidebar-accent font-medium",
+  // Same items in the ⋯ menu and the right-click menu (M5.9).
+  const menuItems = (k: MenuKit) => (
+    <>
+      <k.Item onSelect={() => setEditOpen(true)}>
+        <Pencil /> Edit
+      </k.Item>
+      <k.Item
+        disabled={!previous}
+        onSelect={() =>
+          previous &&
+          swapBookOrder(uid, book, previous).catch((error) =>
+            console.error("Reorder failed", error),
           )
         }
       >
-        <BookGlyph icon={book.icon} color={book.color} />
-        <span className="truncate">{book.name}</span>
-      </NavLink>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            aria-label={`Actions for ${book.name}`}
-            className="absolute top-1.5 right-1.5 opacity-100 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 [@media(hover:hover)]:opacity-0"
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-auto min-w-44">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-            <Pencil /> Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!previous}
-            onSelect={() =>
-              previous &&
-              swapBookOrder(uid, book, previous).catch((error) =>
-                console.error("Reorder failed", error),
-              )
-            }
-          >
-            <ArrowUp /> Move up
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!next}
-            onSelect={() =>
-              next &&
-              swapBookOrder(uid, book, next).catch((error) =>
-                console.error("Reorder failed", error),
-              )
-            }
-          >
-            <ArrowDown /> Move down
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={() => setDeleteOpen(true)}
-          >
-            <Trash2 /> Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <BookDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        book={book}
-        onSubmit={(input) =>
-          updateBook(uid, book.id, input).catch((error) =>
-            console.error("Update book failed", error),
+        <ArrowUp /> Move up
+      </k.Item>
+      <k.Item
+        disabled={!next}
+        onSelect={() =>
+          next &&
+          swapBookOrder(uid, book, next).catch((error) =>
+            console.error("Reorder failed", error),
           )
         }
-      />
+      >
+        <ArrowDown /> Move down
+      </k.Item>
+      <k.Separator />
+      <k.Item variant="destructive" onSelect={() => setDeleteOpen(true)}>
+        <Trash2 /> Delete
+      </k.Item>
+    </>
+  );
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{book.name}”?</AlertDialogTitle>
-            <AlertDialogDescription>
-              The book is removed and its notes move to Trash.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </li>
+  return (
+    <AppContextMenu
+      label={`Actions for ${book.name}`}
+      menu={menuItems(contextKit)}
+    >
+      <li
+        ref={setNodeRef}
+        style={{
+          transform: CSS.Translate.toString(transform),
+          transition,
+        }}
+        className={cn(
+          "group relative rounded-md",
+          isDragging && "opacity-40",
+          noteOver && "ring-2 ring-primary/60",
+        )}
+      >
+        <NavLink
+          to={`/books/${book.id}`}
+          // Drag from the row; keyboard and screen-reader users reorder from the ⋯ menu.
+          {...listeners}
+          className={({ isActive }) =>
+            cn(
+              "flex h-9 touch-manipulation items-center select-none [-webkit-touch-callout:none] gap-2 rounded-md px-2 pr-9 text-sm transition-colors duration-150 hover:bg-sidebar-accent outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+              isActive && "bg-sidebar-accent font-medium",
+            )
+          }
+        >
+          <BookGlyph icon={book.icon} color={book.color} />
+          <span className="truncate">{book.name}</span>
+        </NavLink>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Actions for ${book.name}`}
+              className="absolute top-1.5 right-1.5 opacity-100 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 [@media(hover:hover)]:opacity-0"
+            >
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-auto min-w-44">
+            {menuItems(dropdownKit)}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <BookDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          book={book}
+          onSubmit={(input) =>
+            updateBook(uid, book.id, input).catch((error) =>
+              console.error("Update book failed", error),
+            )
+          }
+        />
+
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete “{book.name}”?</AlertDialogTitle>
+              <AlertDialogDescription>
+                The book is removed and its notes move to Trash.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </li>
+    </AppContextMenu>
   );
 }
 

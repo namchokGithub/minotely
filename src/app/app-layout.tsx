@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
 import { useMediaQuery, useViewportWidth } from "@/lib/use-media-query";
+import { isSaveShortcut } from "@/lib/shortcuts";
 import { BooksPanel } from "@/features/books/books-panel";
 import { NotesPanel } from "@/features/notes/notes-panel";
 import { SearchDialog } from "@/features/search/search-dialog";
@@ -59,9 +60,10 @@ export function AppLayout() {
     if (isTablet && noteId) setBooksSidebarOpen(false);
   }, [isTablet, noteId, setBooksSidebarOpen]);
 
-  // Cmd/Ctrl+K opens search.
+  // Cmd/Ctrl+K opens search. Cmd/Ctrl+S never opens the browser's "Save page" (the open note saves itself).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isSaveShortcut(event)) event.preventDefault();
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setSearchOpen(true);

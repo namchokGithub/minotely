@@ -57,6 +57,7 @@ firebase.json       # Hosting (dist, SPA rewrite, asset caching) + rules path (D
 - Auto Save debounces writes, shows Saving / Saved / Error, and keeps a local draft in Dexie until the write succeeds.
 - Paper Style is an editor background only; text is not snapped to lines.
 - Motion stays at 150–250 ms, uses CSS transitions (D15), and respects `prefers-reduced-motion`.
+- Row actions are defined once per row type and rendered in both the ⋯ menu and the right-click menu via `MenuKit` (D26). Add new actions there, not to one menu only.
 - Routing uses `BrowserRouter` at `/`; Firebase Hosting rewrites every path to `index.html` (D19).
 - Deployment is manual by the owner (`firebase deploy`). Agents never run `firebase deploy` or change the live Firebase project.
 

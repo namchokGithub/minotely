@@ -20,6 +20,9 @@ import { useSettings } from "@/features/settings/api";
 import { setNoteLocked, setNotePinned, useNotes } from "@/features/notes/api";
 import type { Note, NoteContentFields } from "@/features/notes/types";
 import { AppearanceMenu } from "./appearance-menu";
+import { AppContextMenu } from "@/components/app-context-menu";
+import { isSaveShortcut } from "@/lib/shortcuts";
+import { EditorContextItems } from "./editor-context-menu";
 import { EditorToolbar } from "./editor-toolbar";
 import { LinkBubble } from "./link-bubble";
 import { TagEditor } from "./tag-editor";
@@ -82,7 +85,7 @@ function DraftLoader({ note }: { note: Note }) {
 
 function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const uid = useUid();
-  const { status, change } = useAutoSave(uid, note.id);
+  const { status, change, saveNow } = useAutoSave(uid, note.id);
   const initial = draft ?? note;
   const latest = useRef<NoteContentFields>({
     title: initial.title,
@@ -119,6 +122,17 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
 
   const logError = (action: string) => (error: unknown) =>
     console.error(`${action} failed`, error);
+
+  // Ctrl/⌘+S saves this note now instead of the browser's "Save page" (M5.9).
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isSaveShortcut(event)) return;
+      event.preventDefault();
+      saveNow();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [saveNow]);
 
   // A draft that survived a failed save or a closed tab: push it to Firestore.
   useEffect(() => {
@@ -193,7 +207,14 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
             }}
           />
           <TagEditor note={note} readOnly={note.isLocked} />
-          <EditorContent editor={editor} />
+          <AppContextMenu
+            label="Editor actions"
+            menu={<EditorContextItems editor={editor} />}
+          >
+            <div>
+              <EditorContent editor={editor} />
+            </div>
+          </AppContextMenu>
           <LinkBubble editor={editor} />
         </div>
       </div>

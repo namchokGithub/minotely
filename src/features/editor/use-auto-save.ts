@@ -63,7 +63,13 @@ export function useAutoSave(uid: string, noteId: string) {
       schedule(SAVE_DELAY_MS);
     }
 
-    return { change, flush };
+    /** Ctrl/⌘+S: write now; with nothing pending, confirm "Saved". */
+    function saveNow() {
+      if (!pending && !saving) setStatus((s) => (s === "idle" ? "saved" : s));
+      void flush();
+    }
+
+    return { change, flush, saveNow };
   }, [uid, noteId]);
 
   useEffect(() => {
@@ -80,5 +86,5 @@ export function useAutoSave(uid: string, noteId: string) {
     };
   }, [saver]);
 
-  return { status, change: saver.change };
+  return { status, change: saver.change, saveNow: saver.saveNow };
 }
