@@ -11,7 +11,9 @@ Sign in with any Google account; each account sees only its own books and notes.
 - **Library → Books → Notes** — books with color (preset or custom) and icon, drag to reorder, live note count.
 - **Editor** — inline WYSIWYG (Tiptap) with live Markdown shortcuts, headings, lists, checklists, tables, code
   blocks, bold/italic, text color, highlight, and links with an edit bar.
-- **Reliable Auto Save** — Saving / Saved / Error status, local drafts in IndexedDB, Ctrl/⌘+S to save now.
+- **Reliable Auto Save** — every edit saved on the device at once (IndexedDB), synced 30 s after typing stops
+  (at least every 5 min), keeps working offline, asks before overwriting a version changed elsewhere; Ctrl/⌘+S
+  syncs now.
 - **Organize** — pin, lock (read-only), tags with filter, sort (updated, created, A–Z, custom), move notes by drag
   and drop, Trash with restore.
 - **Find** — search titles, content and `#tags` across all books (Ctrl/⌘+K).
@@ -83,8 +85,14 @@ One-time setup:
 
 1. `npm install -g firebase-tools`, `firebase login`, then `firebase use --add` (pick `minotely`).
 2. Firebase Console → Hosting → Get started (once per project).
-3. `firebase init hosting:github` — connects the repo and creates the secret
-   `FIREBASE_SERVICE_ACCOUNT_MINOTELY`. Do not let it overwrite or add workflow files (delete any it creates).
+3. Deploy service account, in Google Cloud Console with **Project ID `minotely`** selected (another project may
+   share the display name "minotely" — check the ID):
+   - IAM & Admin → Service Accounts → use or create the deploy account; its email must end in
+     `@minotely.iam.gserviceaccount.com`.
+   - IAM & Admin → **IAM** (project level, not the service account's Permissions tab) → grant it Firebase Hosting
+     Admin, Firebase Authentication Admin, API Keys Viewer, Cloud Run Viewer and Service Usage Consumer.
+   - Service account → Keys → Add key → JSON. Paste the whole file into the GitHub secret
+     `FIREBASE_SERVICE_ACCOUNT_MINOTELY`, then delete the file. Never commit it.
 4. GitHub → Settings → Secrets and variables → Actions → **Variables**: add the six `VITE_FIREBASE_*` keys from
    `.env.example` with your values.
 
@@ -107,11 +115,10 @@ domains for Firebase Auth. Security notes: `docs/SECURITY.md`.
 
 ## Roadmap
 
-- **Next:** first release to Firebase Hosting.
-- **Post-MVP:** full offline mode, version history.
+- **Post-MVP:** version history.
 
 Status details: `docs/PROGRESS.md`.
 
 ---
 
-© _2026 Namchok Singhachai_. 1 in 48000 is released under the [MIT License](LICENSE).
+© _2026 Namchok Singhachai_. Minotely is released under the [MIT License](LICENSE).

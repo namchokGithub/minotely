@@ -8,14 +8,25 @@ Plan: `docs/PLAN.md`. Statuses: `Todo`, `In progress`, `Blocked`, `Done`.
 
 Every item not `Done`. Keep in sync with the sections below.
 
-| ID   | Item    | Status |
-| ---- | ------- | ------ |
-| M4.4 | Release | Todo   |
+| ID   | Item                                                                 | Status      |
+| ---- | -------------------------------------------------------------------- | ----------- |
+| M6.1 | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
+| M6.2 | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
 
 ## Notes
 
-- M4.4: release = push to `production` after the one-time GitHub setup in `README.md` (D31); rules by hand.
+- No open work. M4.4: first release deployed from GitHub Actions on push to `production` (2026-11-02, D31).
 - M1–M4.3 were verified manually by the owner against the real Firebase project (2026-11-02).
+
+### M6 — Sync cost and offline editing (2026-11-03)
+
+- M6.1 (approved, done in code, D32; owner to test): sync a note 30 s after typing stops or at most every 5 min
+  instead of 800 ms; nothing is sent while offline; each sync checks Firestore still holds the version the edit
+  started from and asks "Keep mine / Use other version" if not. Status shows Saved on this device / Syncing /
+  Synced / Offline / Changed elsewhere. Out of scope: opening the app offline (service worker); persistent cache
+  followed in M6.2.
+- M6.2 (approved, done in code, D33; owner to test): `useNotes(bookId)` filters the all-notes listener instead of
+  its own query; Firestore uses a persistent IndexedDB cache shared by tabs.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 
@@ -89,3 +100,4 @@ Every item not `Done`. Keep in sync with the sections below.
 | M5.7 | Links: hyperlink insert/edit UI + light-yellow `#fff200` link style                            | Done   |
 | M5.8 | Drag and drop: reorder books, move note to another book                                        | Done   |
 | M5.9 | Keyboard and context menu: Ctrl/⌘+S saves the note, app right-click menu, a11y pass on buttons | Done   |
+| M4.4 | Release (GitHub Actions → Firebase Hosting)                                                    | Done   |

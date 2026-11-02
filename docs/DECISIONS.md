@@ -73,7 +73,7 @@ Each edit is written to a Dexie draft immediately and to Firestore after an 800 
 every 5 s and on `online`. The draft is deleted only after Firestore acknowledges a write containing the latest
 edit. When a note opens and a draft exists, the draft wins and is saved again (unsaved local text is never
 dropped; a newer edit from another device is overwritten in that case). Pending edits flush when the tab is
-hidden or the note is closed.
+hidden or the note is closed. Timing, offline behaviour and the overwrite rule are replaced by D32.
 
 ## D13 — Paper style per note, typography per user (2026-11-01)
 
@@ -234,6 +234,31 @@ Replaces D19's manual-only deploy (hosting choice, rewrites and caching from D19
 runs `.github/workflows/deploy-production.yml`: install, `pnpm lint`, then `FirebaseExtended/action-hosting-deploy`
 to the live channel; `firebase.json`'s `predeploy` does the single `pnpm build`. Build config comes from repository
 **variables** (`VITE_FIREBASE_*`, public web config); deploy access comes from the **secret**
-`FIREBASE_SERVICE_ACCOUNT_MINOTELY`, created by `firebase init hosting:github`. Security Rules are still deployed by
+`FIREBASE_SERVICE_ACCOUNT_MINOTELY` (JSON key of a service account in project `minotely` with Firebase Hosting
+Admin, Firebase Authentication Admin, API Keys Viewer, Cloud Run Viewer and Service Usage Consumer; setup in
+`README.md`). Security Rules are still deployed by
 hand (`firebase deploy --only firestore:rules`) so a merge cannot change access rules unnoticed. No PR preview
 channels. Manual `firebase deploy --only hosting` still works for emergencies.
+
+## D32 — Slower sync, offline editing and a conflict check (2026-11-03)
+
+Replaces D12's timing and "draft wins" rule; drafts stay as in D12. To cut Firestore writes for a writer who
+pauses often, a note syncs 30 s after typing stops, at most 5 min after its first unsynced change, and at once on
+Ctrl/⌘+S, tab hide, note close and `online`. Every keystroke still goes to the Dexie draft immediately, so the
+longer delay does not risk text. While `navigator.onLine` is false nothing is sent (no SDK write queue), so the
+check below runs once the network is back. Each sync is a transaction that reads the note and refuses the write if
+its title/content match neither the edit's base (last version known to be in Firestore; stored in the draft as
+`baseTitle`/`baseContent`, local only) nor the edit itself; content is compared, not `updatedAt`, so tag changes
+and our own writes are not conflicts. On a conflict syncing stops and a dialog asks Keep mine (overwrite) or Use
+other version (drop the draft). Cost: one read per sync. Out of scope: opening the app offline (needs a service
+worker); Firestore persistent cache came later in D33.
+
+## D33 — One notes listener and a persistent Firestore cache (2026-11-03)
+
+Reduces reads from D29's all-notes listener. `useNotes(bookId)` no longer opens its own query; it filters the
+`useAllNotes` result in the client, so opening a book costs no reads and each note change is read once, not
+once per listener. Firestore uses `persistentLocalCache` with `persistentMultipleTabManager` (IndexedDB, shared
+by tabs): listeners show cached data first and a reload re-reads only changed documents while the resume token
+is valid (about 30 minutes; after that the query is read again in full). Trade-off: note data stays in this
+browser's IndexedDB after sign-out, like Dexie drafts (D12), so the app suits personal devices. The note count
+remains client-side; a stored `noteCount` is the next step only if libraries grow to thousands of notes.

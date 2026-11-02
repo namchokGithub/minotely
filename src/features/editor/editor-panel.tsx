@@ -6,6 +6,8 @@ import {
   AlertCircle,
   Check,
   ChevronLeft,
+  CloudOff,
+  HardDrive,
   Loader2,
   Lock,
   LockOpen,
@@ -13,6 +15,16 @@ import {
   PinOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { getDraft, type NoteDraft } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { useUid } from "@/features/auth/auth-context";
@@ -90,7 +102,11 @@ function DraftLoader({ note }: { note: Note }) {
 
 function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const uid = useUid();
-  const { status, change, saveNow } = useAutoSave(uid, note.id);
+  const { status, conflict, change, saveNow, keepMine, takeTheirs } =
+    useAutoSave(uid, note.id, {
+      title: draft?.baseTitle ?? note.title,
+      content: draft?.baseContent ?? note.content,
+    });
   const initial = draft ?? note;
   const latest = useRef<NoteContentFields>({
     title: initial.title,
@@ -139,10 +155,21 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [saveNow]);
 
-  // A draft that survived a failed save or a closed tab: push it to Firestore.
+  // A draft that survived a failed save or a closed tab: sync it now (checks for a newer version, D32).
   useEffect(() => {
-    if (draft) change(latest.current);
-  }, [draft, change]);
+    if (!draft) return;
+    change(latest.current);
+    saveNow();
+  }, [draft, change, saveNow]);
+
+  const applyOtherVersion = (remote: NoteContentFields) => {
+    takeTheirs(remote);
+    latest.current = remote;
+    setTitle(remote.title);
+    editor.commands.setContent(parseContent(remote.content), {
+      emitUpdate: false,
+    });
+  };
 
   return (
     <div className="flex min-h-0 flex-1 animate-in flex-col duration-200 fade-in-0">
@@ -230,6 +257,30 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
           <LinkBubble editor={editor} />
         </div>
       </div>
+
+      {/* Must choose: Esc and outside clicks do not close it (D32). */}
+      <AlertDialog open={conflict !== null}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              This note changed on another device
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Your edits here are saved on this device but not synced. Keep
+              yours to replace the other version, or use the other version and
+              discard your unsynced edits.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => conflict && applyOtherVersion(conflict)}
+            >
+              Use other version
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={keepMine}>Keep mine</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -239,14 +290,26 @@ const STATUS_VIEW: Record<
   { icon: ReactNode; label: string } | null
 > = {
   idle: null,
-  saving: {
-    icon: <Loader2 className="size-3.5 animate-spin" />,
-    label: "Saving…",
+  local: {
+    icon: <HardDrive className="size-3.5" />,
+    label: "Saved on this device",
   },
-  saved: { icon: <Check className="size-3.5" />, label: "Saved" },
+  syncing: {
+    icon: <Loader2 className="size-3.5 animate-spin" />,
+    label: "Syncing…",
+  },
+  synced: { icon: <Check className="size-3.5" />, label: "Synced" },
+  offline: {
+    icon: <CloudOff className="size-3.5" />,
+    label: "Offline — saved on this device",
+  },
   error: {
     icon: <AlertCircle className="size-3.5 text-destructive" />,
-    label: "Not saved — retrying",
+    label: "Not synced — retrying",
+  },
+  conflict: {
+    icon: <AlertCircle className="size-3.5 text-destructive" />,
+    label: "Changed elsewhere",
   },
 };
 

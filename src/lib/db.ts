@@ -8,6 +8,9 @@ export type NoteDraft = {
   content: string;
   plainText: string;
   updatedAt: number;
+  /** Title and content last confirmed in Firestore when this draft was written (D32). Missing in older drafts. */
+  baseTitle?: string;
+  baseContent?: string;
 };
 
 const localDb = new Dexie("minotely") as Dexie & {

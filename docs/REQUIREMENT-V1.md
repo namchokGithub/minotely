@@ -2,7 +2,7 @@
 
 - A private, modern notebook web app for organizing books and notes, customizable paper styles, and seamless cross-device access.
 - Private by Data Access — เว็บเปิด URL ได้ แต่บุคคลอื่นไม่มีสิทธิ์อ่านหรือเขียน Note จาก Firestore
-- Auto Save ที่เชื่อถือได้ — มีสถานะ Saving / Saved / Error, Debounce และ Draft ในเครื่อง เพื่อไม่ให้ข้อความหายระหว่างพิมพ์หรือสลับอุปกรณ์
+- Auto Save ที่เชื่อถือได้ — มีสถานะ Saved on this device / Syncing / Synced / Offline / Error, sync หลังหยุดพิมพ์ 30 วินาที (อย่างน้อยทุก 5 นาที) และ Draft ในเครื่อง เพื่อไม่ให้ข้อความหายระหว่างพิมพ์หรือสลับอุปกรณ์
 - แบบที่ต้องการคือ WYSIWYG Editor (What You See Is What You Get) ที่รองรับ Markdown Shortcuts แบบ Real-time ไม่ใช่ Markdown Source Editor
 - UX/UI Modern สวย ทันสมัยและใช้งานง่าย
 
