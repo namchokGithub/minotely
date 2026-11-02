@@ -83,8 +83,14 @@ One-time setup:
 
 1. `npm install -g firebase-tools`, `firebase login`, then `firebase use --add` (pick `minotely`).
 2. Firebase Console → Hosting → Get started (once per project).
-3. `firebase init hosting:github` — connects the repo and creates the secret
-   `FIREBASE_SERVICE_ACCOUNT_MINOTELY`. Do not let it overwrite or add workflow files (delete any it creates).
+3. Deploy service account, in Google Cloud Console with **Project ID `minotely`** selected (another project may
+   share the display name "minotely" — check the ID):
+   - IAM & Admin → Service Accounts → use or create the deploy account; its email must end in
+     `@minotely.iam.gserviceaccount.com`.
+   - IAM & Admin → **IAM** (project level, not the service account's Permissions tab) → grant it Firebase Hosting
+     Admin, Firebase Authentication Admin, API Keys Viewer, Cloud Run Viewer and Service Usage Consumer.
+   - Service account → Keys → Add key → JSON. Paste the whole file into the GitHub secret
+     `FIREBASE_SERVICE_ACCOUNT_MINOTELY`, then delete the file. Never commit it.
 4. GitHub → Settings → Secrets and variables → Actions → **Variables**: add the six `VITE_FIREBASE_*` keys from
    `.env.example` with your values.
 
@@ -107,11 +113,11 @@ domains for Firebase Auth. Security notes: `docs/SECURITY.md`.
 
 ## Roadmap
 
-- **Next:** first release to Firebase Hosting.
+- **Released:** live on Firebase Hosting (`https://minotely.web.app`), deployed on push to `production`.
 - **Post-MVP:** full offline mode, version history.
 
 Status details: `docs/PROGRESS.md`.
 
 ---
 
-© _2026 Namchok Singhachai_. 1 in 48000 is released under the [MIT License](LICENSE).
+© _2026 Namchok Singhachai_. Minotely is released under the [MIT License](LICENSE).

@@ -234,6 +234,8 @@ Replaces D19's manual-only deploy (hosting choice, rewrites and caching from D19
 runs `.github/workflows/deploy-production.yml`: install, `pnpm lint`, then `FirebaseExtended/action-hosting-deploy`
 to the live channel; `firebase.json`'s `predeploy` does the single `pnpm build`. Build config comes from repository
 **variables** (`VITE_FIREBASE_*`, public web config); deploy access comes from the **secret**
-`FIREBASE_SERVICE_ACCOUNT_MINOTELY`, created by `firebase init hosting:github`. Security Rules are still deployed by
+`FIREBASE_SERVICE_ACCOUNT_MINOTELY` (JSON key of a service account in project `minotely` with Firebase Hosting
+Admin, Firebase Authentication Admin, API Keys Viewer, Cloud Run Viewer and Service Usage Consumer; setup in
+`README.md`). Security Rules are still deployed by
 hand (`firebase deploy --only firestore:rules`) so a merge cannot change access rules unnoticed. No PR preview
 channels. Manual `firebase deploy --only hosting` still works for emergencies.

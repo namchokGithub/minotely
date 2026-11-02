@@ -8,13 +8,11 @@ Plan: `docs/PLAN.md`. Statuses: `Todo`, `In progress`, `Blocked`, `Done`.
 
 Every item not `Done`. Keep in sync with the sections below.
 
-| ID   | Item    | Status |
-| ---- | ------- | ------ |
-| M4.4 | Release | Todo   |
+None.
 
 ## Notes
 
-- M4.4: release = push to `production` after the one-time GitHub setup in `README.md` (D31); rules by hand.
+- No open work. M4.4: first release deployed from GitHub Actions on push to `production` (2026-11-02, D31).
 - M1–M4.3 were verified manually by the owner against the real Firebase project (2026-11-02).
 
 ### M5 — Owner feedback (2026-11-02) — all done
@@ -89,3 +87,4 @@ Every item not `Done`. Keep in sync with the sections below.
 | M5.7 | Links: hyperlink insert/edit UI + light-yellow `#fff200` link style                            | Done   |
 | M5.8 | Drag and drop: reorder books, move note to another book                                        | Done   |
 | M5.9 | Keyboard and context menu: Ctrl/⌘+S saves the note, app right-click menu, a11y pass on buttons | Done   |
+| M4.4 | Release (GitHub Actions → Firebase Hosting)                                                    | Done   |
