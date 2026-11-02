@@ -186,7 +186,14 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
           `editor-size-${settings.fontSize}`,
         )}
       >
-        <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <div
+          className={cn(
+            "mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8",
+            // Lined paper: red margin line left of the text, full height (D13).
+            note.paperStyle === "lined" &&
+              "relative min-h-full pl-14 before:absolute before:inset-y-0 before:left-9 before:w-0.5 before:bg-red-500/75 sm:pl-20 sm:before:left-12 dark:before:bg-red-400/60",
+          )}
+        >
           <input
             value={title}
             placeholder="Untitled"

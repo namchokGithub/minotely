@@ -82,7 +82,7 @@ export function BooksPanel() {
           className="size-5"
           unselectable="on"
         />
-        <h2 className="flex-1 font-semibold">My Library</h2>
+        <h2 className="flex-1 font-semibold">Minotely</h2>
         <Button
           variant="ghost"
           size="icon-sm"
