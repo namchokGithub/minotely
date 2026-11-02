@@ -5,6 +5,7 @@ import {
   ArrowUp,
   FileDown,
   FolderInput,
+  Lock,
   MoreHorizontal,
   Pin,
   PinOff,
@@ -105,6 +106,12 @@ export function NoteItem({
         }
       >
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
+          {note.isLocked && (
+            <Lock
+              className="size-3 shrink-0 text-muted-foreground"
+              aria-label="Locked"
+            />
+          )}
           {note.isPinned && (
             <Pin
               className="size-3 shrink-0 text-muted-foreground"

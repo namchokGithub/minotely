@@ -19,7 +19,14 @@ import {
 import { cn } from "@/lib/utils";
 import { HIGHLIGHT_COLORS, TEXT_COLORS } from "./extensions";
 
-export function EditorToolbar({ editor }: { editor: Editor }) {
+export function EditorToolbar({
+  editor,
+  disabled = false,
+}: {
+  editor: Editor;
+  /** Locked note: every formatting control is off. */
+  disabled?: boolean;
+}) {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -34,129 +41,135 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
   const chain = () => editor.chain().focus();
 
   return (
-    <div
-      role="group"
-      aria-label="Formatting"
-      className="flex w-max items-center gap-0.5"
-    >
-      <ToolButton
-        label="Bold"
-        active={state.bold}
-        onClick={() => chain().toggleBold().run()}
+    <fieldset disabled={disabled} className="contents">
+      <div
+        role="group"
+        aria-label="Formatting"
+        className="flex w-max items-center gap-0.5"
       >
-        <Bold />
-      </ToolButton>
-      <ToolButton
-        label="Italic"
-        active={state.italic}
-        onClick={() => chain().toggleItalic().run()}
-      >
-        <Italic />
-      </ToolButton>
+        <ToolButton
+          label="Bold"
+          active={state.bold}
+          onClick={() => chain().toggleBold().run()}
+        >
+          <Bold />
+        </ToolButton>
+        <ToolButton
+          label="Italic"
+          active={state.italic}
+          onClick={() => chain().toggleItalic().run()}
+        >
+          <Italic />
+        </ToolButton>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <ToolButton menu label="Text color" active={Boolean(state.color)}>
-            <Palette style={state.color ? { color: state.color } : undefined} />
-          </ToolButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-auto min-w-44">
-          {TEXT_COLORS.map((c) => (
-            <DropdownMenuItem
-              key={c.value}
-              onSelect={() => chain().setColor(c.value).run()}
-            >
-              <span
-                className="size-3 rounded-full"
-                style={{ background: c.value }}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <ToolButton menu label="Text color" active={Boolean(state.color)}>
+              <Palette
+                style={state.color ? { color: state.color } : undefined}
               />
-              {c.label}
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => chain().unsetColor().run()}>
-            Default
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <ToolButton menu label="Highlight" active={state.highlight}>
-            <Highlighter />
-          </ToolButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-auto min-w-44">
-          {HIGHLIGHT_COLORS.map((c) => (
-            <DropdownMenuItem
-              key={c.value}
-              onSelect={() => chain().setHighlight({ color: c.value }).run()}
-            >
-              <span
-                className="size-3 rounded-sm"
-                style={{ background: c.value }}
-              />
-              {c.label}
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => chain().unsetHighlight().run()}>
-            None
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <ToolButton
-        label="Code block"
-        active={state.codeBlock}
-        onClick={() => chain().toggleCodeBlock().run()}
-      >
-        <Code2 />
-      </ToolButton>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <ToolButton menu label="Table" active={state.table}>
-            <TableIcon />
-          </ToolButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-auto min-w-44">
-          <DropdownMenuItem
-            onSelect={() =>
-              chain()
-                .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-                .run()
-            }
-          >
-            Insert table
-          </DropdownMenuItem>
-          {state.table && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => chain().addRowAfter().run()}>
-                Add row
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => chain().addColumnAfter().run()}>
-                Add column
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => chain().deleteRow().run()}>
-                Delete row
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => chain().deleteColumn().run()}>
-                Delete column
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+            </ToolButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-auto min-w-44">
+            {TEXT_COLORS.map((c) => (
               <DropdownMenuItem
-                variant="destructive"
-                onSelect={() => chain().deleteTable().run()}
+                key={c.value}
+                onSelect={() => chain().setColor(c.value).run()}
               >
-                Delete table
+                <span
+                  className="size-3 rounded-full"
+                  style={{ background: c.value }}
+                />
+                {c.label}
               </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => chain().unsetColor().run()}>
+              Default
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <ToolButton menu label="Highlight" active={state.highlight}>
+              <Highlighter />
+            </ToolButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-auto min-w-44">
+            {HIGHLIGHT_COLORS.map((c) => (
+              <DropdownMenuItem
+                key={c.value}
+                onSelect={() => chain().setHighlight({ color: c.value }).run()}
+              >
+                <span
+                  className="size-3 rounded-sm"
+                  style={{ background: c.value }}
+                />
+                {c.label}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => chain().unsetHighlight().run()}>
+              None
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <ToolButton
+          label="Code block"
+          active={state.codeBlock}
+          onClick={() => chain().toggleCodeBlock().run()}
+        >
+          <Code2 />
+        </ToolButton>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <ToolButton menu label="Table" active={state.table}>
+              <TableIcon />
+            </ToolButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-auto min-w-44">
+            <DropdownMenuItem
+              onSelect={() =>
+                chain()
+                  .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                  .run()
+              }
+            >
+              Insert table
+            </DropdownMenuItem>
+            {state.table && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => chain().addRowAfter().run()}>
+                  Add row
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => chain().addColumnAfter().run()}
+                >
+                  Add column
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => chain().deleteRow().run()}>
+                  Delete row
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => chain().deleteColumn().run()}>
+                  Delete column
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={() => chain().deleteTable().run()}
+                >
+                  Delete table
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </fieldset>
   );
 }
 

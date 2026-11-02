@@ -59,8 +59,26 @@ export type BookIcon = keyof typeof BOOK_ICONS;
 export const DEFAULT_BOOK_COLOR: BookColor = "blue";
 export const DEFAULT_BOOK_ICON: BookIcon = "book";
 
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/** A book color is a preset key or a custom `#rrggbb` hex (M5.3, same check in firestore.rules). */
+export function isValidBookColor(color: string): boolean {
+  return Object.hasOwn(BOOK_COLORS, color) || HEX_COLOR.test(color);
+}
+
+export function isCustomColor(color: string): boolean {
+  return HEX_COLOR.test(color);
+}
+
+/** Tailwind class for preset colors; empty for custom colors (use bookColorStyle). */
 export function bookColorClass(color: string): string {
+  if (isCustomColor(color)) return "";
   return (BOOK_COLORS[color as BookColor] ?? BOOK_COLORS.gray).text;
+}
+
+/** Inline style for custom hex colors; undefined for presets. */
+export function bookColorStyle(color: string) {
+  return isCustomColor(color) ? { color } : undefined;
 }
 
 export function bookIcon(icon: string): LucideIcon {

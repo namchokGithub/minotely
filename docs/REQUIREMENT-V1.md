@@ -24,26 +24,26 @@ My Library
 
 ## Core Features
 
-| Feature           | Requirement                                | Priority |
-| ----------------- | ------------------------------------------ | -------- |
-| Authentication    | GoogleSign-inเฉพาะอีเมลเจ้าของ (Allowlist) | P0       |
-| BookManagement    | Create,Rename,Delete,Color                 | P0       |
-| NoteManagement    | Create,Edit,Delete,Move                    | P0       |
-| Markdown          | Heading,List,Table,CodeBlock               | P0       |
-| RichText          | Bold,Italic,Highlight,TextColor            | P0       |
-| EditorMode        | Edit WYSIWYG                               | P0       |
-| AutoSave          | บันทึกอัตโนมัติ                            | P0       |
-| Search            | ค้นหาTitleและContent                       | P0       |
-| Responsive        | Desktop,Tablet,Mobile                      | P0       |
-| PaperStyles       | Lined,Grid,Plain,Dotted                    | P1       |
-| Pin/Favorite      | ปักหมุดNoteสำคัญ                           | P1       |
-| Tags              | ติดTagให้Note                              | P1       |
-| Sorting           | Updated,Created,A–Z,Custom                 | P1       |
-| Import/Export     | Markdown,JSON                              | P1       |
-| Trash             | กู้คืนNoteที่ลบ                            | P1       |
-| OfflineMode       | อ่าน/แก้ไขเมื่อไม่มีอินเทอร์เน็ต           | P2       |
-| VersionHistory    | ดูประวัติการแก้ไขNote                      | P2       |
-| KeyboardShortcuts | ควบคุมEditorด้วยคีย์บอร์ด                  | P2       |
+| Feature           | Requirement                              | Priority |
+| ----------------- | ---------------------------------------- | -------- |
+| Authentication    | GoogleSign-in (ทุกบัญชี, ข้อมูลแยกต่อคน) | P0       |
+| BookManagement    | Create,Rename,Delete,Color               | P0       |
+| NoteManagement    | Create,Edit,Delete,Move                  | P0       |
+| Markdown          | Heading,List,Table,CodeBlock             | P0       |
+| RichText          | Bold,Italic,Highlight,TextColor          | P0       |
+| EditorMode        | Edit WYSIWYG                             | P0       |
+| AutoSave          | บันทึกอัตโนมัติ                          | P0       |
+| Search            | ค้นหาTitleและContent                     | P0       |
+| Responsive        | Desktop,Tablet,Mobile                    | P0       |
+| PaperStyles       | Lined,Grid,Plain,Dotted                  | P1       |
+| Pin/Favorite      | ปักหมุดNoteสำคัญ                         | P1       |
+| Tags              | ติดTagให้Note                            | P1       |
+| Sorting           | Updated,Created,A–Z,Custom               | P1       |
+| Import/Export     | Markdown,JSON                            | P1       |
+| Trash             | กู้คืนNoteที่ลบ                          | P1       |
+| OfflineMode       | อ่าน/แก้ไขเมื่อไม่มีอินเทอร์เน็ต         | P2       |
+| VersionHistory    | ดูประวัติการแก้ไขNote                    | P2       |
+| KeyboardShortcuts | ควบคุมEditorด้วยคีย์บอร์ด                | P2       |
 
 ## UX/UI Design
 
@@ -106,7 +106,7 @@ users/
     books/
       {bookId}/
         name
-        color
+        color (preset key or #rrggbb)
         icon
         order
         createdAt
@@ -119,6 +119,7 @@ users/
         plainText
         tags
         isPinned
+        isLocked
         paperStyle
         order
         createdAt
@@ -128,7 +129,7 @@ users/
 
 ## Access & Routing
 
-- Sign-in ได้เฉพาะ Google Account ของเจ้าของ (Email Allowlist) บังคับใน Firestore Security Rules บัญชีอื่นถูกปฏิเสธ
+- Sign-in ได้ทุก Google Account แต่ละบัญชีอ่าน/เขียนได้เฉพาะข้อมูลของตัวเอง (`users/{uid}`) บังคับใน Firestore Security Rules
 - Routing ใช้ `BrowserRouter` และ Firebase Hosting rewrite ทุก path ไปที่ `index.html` (URL ไม่มี `#`)
 
 ## Development Roadmap

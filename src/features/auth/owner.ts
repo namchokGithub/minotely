@@ -1,4 +1,6 @@
 /**
+ * Unused since D22 (any Google account may sign in); kept with its test until the owner removes them.
+ *
  * Client-side owner check (UX only). Firestore Security Rules are the real
  * access boundary — see D2 in docs/DECISIONS.md.
  */

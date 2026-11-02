@@ -7,7 +7,7 @@ Non-obvious architectural choices. Newest last.
 The editor is inline WYSIWYG and always editable. The roadmap's "Edit/Preview" item is removed because it
 contradicts the editor requirement. No raw Markdown source editing.
 
-## D2 — Owner-only sign-in (2026-11-01)
+## D2 — Owner-only sign-in (2026-11-01) — superseded by D22
 
 Only the owner's Google account may use the app. Enforced in Firestore Security Rules
 (`request.auth.token.email == <owner email>` and `email_verified == true`, plus `request.auth.uid == uid`).
@@ -123,5 +123,26 @@ Replaces GitHub Pages + GitHub Actions (D3, M1.6). The site is hosted on Firebas
 owner with `firebase deploy --only hosting` from a local machine; the build reads `.env.local`, so no secrets
 live in GitHub. `firebase.json` rewrites every path to `index.html` (clean `BrowserRouter` URLs at `/`, no
 `basename`, no `404.html` copy) and caches hashed files under `/assets/` for a year. Rules deploy separately with
-`firebase deploy --only firestore:rules` after `OWNER_EMAIL` is replaced. The GitHub Actions workflow and the
+`firebase deploy --only firestore:rules`. The GitHub Actions workflow and the
 `BASE_PATH` build option were removed.
+
+## D20 — Custom book colors (2026-11-02)
+
+`books.color` is a preset key (`gray` … `pink`) or a custom `#rrggbb` chosen with the native color input.
+Presets render with Tailwind classes, custom colors with an inline `color` style (`bookColorStyle`). Rules and
+backup import accept only those two forms; anything else falls back to `gray` on import.
+
+## D21 — Note lock is read-only editing, not security (2026-11-02)
+
+`notes.isLocked` makes the editor, title, tags and formatting toolbar read-only until the owner unlocks it, to
+prevent accidental edits. Paper style, pin, move and delete stay available. Rules only check it is a boolean
+(missing on older notes); they do not block edits to locked notes, because only the owner can write anyway.
+Toggling lock does not change `updatedAt`.
+
+## D22 — Any Google account, private data per user (2026-11-02)
+
+Replaces D2. Any Google account can sign in; there is no owner email in the rules, the app or `.env`. Rules
+allow a request only when `request.auth.uid` matches the `users/{uid}` path and the sign-in provider is
+`google.com`, so each account sees only its own books, notes and settings. Trade-off: strangers who find the URL
+can create their own data and use the project's quota. `src/features/auth/owner.ts` and its test are unused and
+kept until the owner decides to remove them.

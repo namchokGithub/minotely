@@ -37,6 +37,7 @@ export function toNote(snap: QueryDocumentSnapshot): Note {
     plainText: data.plainText ?? "",
     tags: data.tags ?? [],
     isPinned: data.isPinned ?? false,
+    isLocked: data.isLocked ?? false,
     paperStyle: data.paperStyle ?? "plain",
     order: data.order ?? createdAt.getTime(),
     createdAt,
@@ -95,6 +96,7 @@ function newNoteData(
     ...fields,
     tags: [],
     isPinned: false,
+    isLocked: false,
     paperStyle: "plain",
     order,
     createdAt: serverTimestamp(),
@@ -145,6 +147,10 @@ export function saveNoteContent(
 
 export function setNotePinned(uid: string, noteId: string, isPinned: boolean) {
   return updateDoc(doc(notesCol(uid), noteId), { isPinned });
+}
+
+export function setNoteLocked(uid: string, noteId: string, isLocked: boolean) {
+  return updateDoc(doc(notesCol(uid), noteId), { isLocked });
 }
 
 export function setNoteTags(uid: string, noteId: string, tags: string[]) {

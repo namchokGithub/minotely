@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firestore";
 import { booksCol, toBook } from "@/features/books/api";
+import { isValidBookColor } from "@/features/books/appearance";
 import { BATCH_LIMIT, EMPTY_DOC, notesCol, toNote } from "@/features/notes/api";
 import { normalizeTag } from "@/features/notes/tags";
 
@@ -38,6 +39,7 @@ type BackupNote = {
   plainText: string;
   tags: string[];
   isPinned: boolean;
+  isLocked?: boolean;
   paperStyle: string;
   order: number;
   createdAt: string;
@@ -75,6 +77,7 @@ export async function exportBackup(uid: string): Promise<Backup> {
       plainText: n.plainText,
       tags: n.tags,
       isPinned: n.isPinned,
+      isLocked: n.isLocked,
       paperStyle: n.paperStyle,
       order: n.order,
       createdAt: n.createdAt.toISOString(),
@@ -129,7 +132,7 @@ export async function importBackup(uid: string, backup: Backup) {
     writes.push((batch) =>
       batch.set(ref, {
         name: str(book.name).trim().slice(0, MAX_BOOK_NAME) || "Untitled",
-        color: str(book.color, "gray"),
+        color: isValidBookColor(str(book.color)) ? str(book.color) : "gray",
         icon: str(book.icon, "book"),
         order: num(book.order, 0),
         createdAt: time(book.createdAt),
@@ -162,6 +165,7 @@ export async function importBackup(uid: string, backup: Backup) {
             ].slice(0, MAX_TAGS)
           : [],
         isPinned: note.isPinned === true,
+        isLocked: note.isLocked === true,
         paperStyle: PAPER_STYLES.includes(str(note.paperStyle))
           ? note.paperStyle
           : "plain",

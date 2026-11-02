@@ -13,10 +13,10 @@ Every item not `Done`. Keep in sync with the sections below.
 | M4.4 | Release                                                                                        | Todo        |
 | M5.1 | Bug: import (JSON / Markdown) does nothing, no error shown                                     | In progress |
 | M5.2 | Export file names lowercase, no spaces                                                         | In progress |
-| M5.3 | Book color: custom color picker (any color)                                                    | Todo        |
+| M5.3 | Book color: custom color picker (any color)                                                    | In progress |
 | M5.4 | Resizable panels: Library / Notes / Editor                                                     | Todo        |
 | M5.5 | Editor: checklist (task list) tool                                                             | Todo        |
-| M5.6 | Note Pin + Lock (read-only) from the note itself                                               | Todo        |
+| M5.6 | Note Pin + Lock (read-only) from the note itself                                               | In progress |
 | M5.7 | Links: hyperlink insert/edit UI + light-yellow `#fff200` link style                            | Todo        |
 | M5.8 | Drag and drop: reorder books, move note to another book                                        | Todo        |
 | M5.9 | Keyboard and context menu: Ctrl/⌘+S saves the note, app right-click menu, a11y pass on buttons | Todo        |
@@ -33,11 +33,11 @@ Every item not `Done`. Keep in sync with the sections below.
   error in a dialog. JSON import had no known defect: owner to retest both.
 - M5.2 (approved, done in code): `My Note` → `my-note.md`; any run of non-letter/digit characters becomes `-`;
   Thai and other scripts are kept; empty → `untitled.md`. Backup name unchanged.
-- M5.3 (approved): keep the preset swatches and add a free color picker; `color` then also accepts a hex value (rules,
+- M5.3 (approved, done in code — publish rules): keep the preset swatches and add a free color picker; `color` then also accepts a hex value (rules,
   backup clamping and `bookColorClass` must follow).
 - M5.4: drag the borders between Library, Notes and Editor on desktop/tablet; remember widths per device.
 - M5.5: Markdown shortcut `[ ]` plus a toolbar button; Markdown import/export as `- [ ]` / `- [x]`.
-- M5.6 (approved): Pin already exists in the note list menu; add Pin and Lock to the note header. Lock = read-only editor
+- M5.6 (approved, done in code — publish rules): Pin already exists in the note list menu; add Pin and Lock to the note header. Lock = read-only editor
   until unlocked; new stored field `isLocked` (rules, types, backup, requirement schema).
 - M5.7 (approved, spec from the owner's reference image): clicking or placing the cursor in a link shows a
   floating bar above it with, left to right:
@@ -68,7 +68,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M1.2 | Theme tokens, Light/Dark                                     | Done   |
 | M1.3 | Responsive shell                                             | Done   |
 | M1.4 | Routing (SPA rewrite since D19)                              | Done   |
-| M1.5 | Google Sign-in + owner allowlist + guard                     | Done   |
+| M1.5 | Google Sign-in + guard (any account since D22)               | Done   |
 | M1.6 | Firebase Hosting (manual deploy, D19)                        | Done   |
 | M2.1 | Firestore data layer                                         | Done   |
 | M2.2 | Security Rules (real project)                                | Done   |

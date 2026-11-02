@@ -1,15 +1,14 @@
 rules_version = '2';
 
-// Owner-only access (D2) with shape checks (D17). Replace OWNER_EMAIL with the
-// owner's Google account email, then publish in Firebase Console → Firestore → Rules.
+// Any Google account may sign in; each user reads and writes only their own
+// users/{uid} data (D22), with shape checks (D17).
 // Anything not matched below is denied.
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isOwner(uid) {
+    function isUser(uid) {
       return request.auth != null
         && request.auth.uid == uid
-        && request.auth.token.email == "OWNER_EMAIL"
-        && request.auth.token.email_verified == true;
+        && request.auth.token.firebase.sign_in_provider == "google.com";
     }
 
     function keepsCreatedAt() {
@@ -19,7 +18,10 @@ service cloud.firestore {
     function validBook(d) {
       return d.keys().hasOnly(["name", "color", "icon", "order", "createdAt", "updatedAt"])
         && d.name is string && d.name.size() > 0 && d.name.size() <= 80
-        && d.color is string && d.color.size() <= 20
+        // Preset key or custom #rrggbb (M5.3).
+        && d.color is string
+        && (d.color in ["gray", "red", "orange", "amber", "green", "teal", "blue", "indigo", "purple", "pink"]
+          || d.color.matches("^#[0-9a-fA-F]{6}$"))
         && d.icon is string && d.icon.size() <= 40
         && d.order is number
         && d.createdAt is timestamp
@@ -28,7 +30,7 @@ service cloud.firestore {
 
     function validNote(d) {
       return d.keys().hasOnly([
-          "bookId", "title", "content", "plainText", "tags", "isPinned",
+          "bookId", "title", "content", "plainText", "tags", "isPinned", "isLocked",
           "paperStyle", "order", "createdAt", "updatedAt", "deletedAt"
         ])
         && d.bookId is string && d.bookId.size() > 0
@@ -37,6 +39,8 @@ service cloud.firestore {
         && d.plainText is string
         && d.tags is list && d.tags.size() <= 20
         && d.isPinned is bool
+        // Notes created before M5.6 have no `isLocked`.
+        && d.get("isLocked", false) is bool
         && d.paperStyle in ["plain", "lined", "grid", "dotted"]
         // Notes created before custom sort have no `order`.
         && d.get("order", 0) is number
@@ -52,20 +56,20 @@ service cloud.firestore {
     }
 
     match /users/{uid}/books/{bookId} {
-      allow read, delete: if isOwner(uid);
-      allow create: if isOwner(uid) && validBook(request.resource.data);
-      allow update: if isOwner(uid) && validBook(request.resource.data) && keepsCreatedAt();
+      allow read, delete: if isUser(uid);
+      allow create: if isUser(uid) && validBook(request.resource.data);
+      allow update: if isUser(uid) && validBook(request.resource.data) && keepsCreatedAt();
     }
 
     match /users/{uid}/notes/{noteId} {
-      allow read, delete: if isOwner(uid);
-      allow create: if isOwner(uid) && validNote(request.resource.data);
-      allow update: if isOwner(uid) && validNote(request.resource.data) && keepsCreatedAt();
+      allow read, delete: if isUser(uid);
+      allow create: if isUser(uid) && validNote(request.resource.data);
+      allow update: if isUser(uid) && validNote(request.resource.data) && keepsCreatedAt();
     }
 
     match /users/{uid}/preferences/{docId} {
-      allow read: if isOwner(uid) && docId == "settings";
-      allow write: if isOwner(uid) && docId == "settings"
+      allow read: if isUser(uid) && docId == "settings";
+      allow write: if isUser(uid) && docId == "settings"
         && validSettings(request.resource.data);
     }
   }

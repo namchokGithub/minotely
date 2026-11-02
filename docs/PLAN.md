@@ -23,7 +23,7 @@ Baseline already done: Vite + React 19 + TypeScript + Tailwind CSS v4 + ESLint +
    - Mobile: one screen at a time, Books → Notes → Editor, clear Back button.
 4. Routing: `BrowserRouter` at `/`; Firebase Hosting rewrites all paths to `index.html` (D19).
    Routes: `/login`, `/books/:bookId`, `/books/:bookId/notes/:noteId`.
-5. Firebase Authentication: Google Sign-in, owner-email allowlist, route guard, sign-out.
+5. Firebase Authentication: Google Sign-in, route guard, sign-out (any Google account since D22).
 6. Firebase Hosting: `firebase.json`, manual deploy with `firebase deploy --only hosting` (D19).
 
 Done when: the owner signs in and sees the empty layout on the deployed URL; any other Google account is rejected.
@@ -31,7 +31,7 @@ Done when: the owner signs in and sees the empty layout on the deployed URL; any
 ## M2 — Core Notebook
 
 1. Firestore data layer under `users/{uid}/…` (schema in requirement), TanStack Query hooks per feature.
-2. Firestore Security Rules: `request.auth.uid == uid` and owner email verified. Verified against the real Firebase project (no emulator, no mocks) — see D6.
+2. Firestore Security Rules: `request.auth.uid == uid` and Google sign-in (D22). Verified against the real Firebase project (no emulator, no mocks) — see D6.
 3. Books: Create, Rename, Delete (confirmation), Color + Icon picker, `order`.
 4. Notes: Create, Delete (soft delete via `deletedAt`, confirmation), Move to another Book, Pin.
 5. Sorting: Updated, Created, A–Z.

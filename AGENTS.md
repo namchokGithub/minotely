@@ -4,7 +4,7 @@ Instructions for AI coding agents working in the Minotely repository. Applies to
 
 ## Project Summary
 
-Minotely is a private notebook web app for one owner: `Library → Books → Notes`, an inline WYSIWYG editor with live Markdown shortcuts, paper-style backgrounds, reliable Auto Save, and cross-device sync. Requirements: `docs/REQUIREMENT-V1.md`. Plan: `docs/PLAN.md`.
+Minotely is a private notebook web app (any Google account; each user's data is private): `Library → Books → Notes`, an inline WYSIWYG editor with live Markdown shortcuts, paper-style backgrounds, reliable Auto Save, and cross-device sync. Requirements: `docs/REQUIREMENT-V1.md`. Plan: `docs/PLAN.md`.
 
 ## Tech Stack
 
@@ -39,7 +39,7 @@ src/
     firestore.ts    # Firestore, loaded only after sign-in (D18)
     db.ts           # Dexie (drafts, cache)
   stores/           # Zustand UI stores
-firestore.rules     # owner-only + shape checks (D17); publish after replacing OWNER_EMAIL
+firestore.rules     # per-user access (D22) + shape checks (D17)
 firebase.json       # Hosting (dist, SPA rewrite, asset caching) + rules path (D19)
 ```
 
@@ -47,7 +47,7 @@ firebase.json       # Hosting (dist, SPA rewrite, asset caching) + rules path (D
 
 - All user data lives under `users/{uid}/…` in Firestore (schema in `docs/REQUIREMENT-V1.md`).
 - Keep heavy modules (Firestore, Tiptap, Markdown) behind `React.lazy` / dynamic `import()` so the sign-in screen stays small (D18).
-- Firestore Security Rules are the security boundary: owner email allowlist + `request.auth.uid == uid`. Client checks are UX only (D2 in `docs/DECISIONS.md`).
+- Firestore Security Rules are the security boundary: Google sign-in + `request.auth.uid == uid` (D22 in `docs/DECISIONS.md`).
 - Firebase connects to the real project only. Do not add the Firebase Emulator, mock servers, or mocked Firebase SDKs (D6). Config comes from `.env.local` (template: `.env.example`).
 - Components do not call Firestore directly. Each feature exposes data access through its own `api.ts` (plain write functions + realtime `useSnapshotQuery` hooks, D11).
 - Server data lives in TanStack Query; Zustand holds UI state only (sidebar, selection, filters).

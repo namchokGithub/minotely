@@ -10,6 +10,8 @@ export type Note = {
   plainText: string;
   tags: string[];
   isPinned: boolean;
+  /** Read-only in the editor until unlocked (M5.6). */
+  isLocked: boolean;
   paperStyle: PaperStyle;
   /** Custom sort position, ascending. Falls back to createdAt (ms) for older notes. */
   order: number;

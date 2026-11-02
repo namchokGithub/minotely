@@ -5,7 +5,7 @@ A private, modern notebook web app for organizing books and notes, featuring ric
 ## Getting started
 
 1. `pnpm install`
-2. Copy `.env.example` to `.env.local` and fill in the Firebase web app config and `VITE_OWNER_EMAIL`.
+2. Copy `.env.example` to `.env.local` and fill in the Firebase web app config.
 3. In Firebase Console → Authentication → Sign-in method, enable Google.
 4. `pnpm dev`
 
@@ -25,14 +25,13 @@ Deploy:
 firebase deploy --only hosting          # runs `pnpm build`, uploads dist/
 ```
 
-Security Rules are deployed separately, after replacing `OWNER_EMAIL` in `firestore.rules`:
+Security Rules are deployed separately:
 
 ```bash
 firebase deploy --only firestore:rules
 ```
 
-Do not run a plain `firebase deploy` while `firestore.rules` still contains `OWNER_EMAIL`: it would publish rules
-that deny every request.
+Any Google account can sign in; each account sees only its own data (D22).
 
 The site is served at `https://<project-id>.web.app` and `https://<project-id>.firebaseapp.com`; both are already
 authorized domains for Firebase Auth.

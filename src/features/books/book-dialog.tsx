@@ -15,6 +15,8 @@ import {
   DEFAULT_BOOK_COLOR,
   DEFAULT_BOOK_ICON,
   bookColorClass,
+  bookColorStyle,
+  isCustomColor,
   type BookColor,
   type BookIcon,
 } from "./appearance";
@@ -101,6 +103,26 @@ function BookForm({
               )}
             />
           ))}
+          <label
+            title="Custom color"
+            className={cn(
+              "relative size-7 cursor-pointer overflow-hidden rounded-full ring-offset-2 ring-offset-background transition-shadow focus-within:ring-2 focus-within:ring-ring/50",
+              isCustomColor(color) && "ring-2 ring-ring",
+            )}
+            style={{
+              background: isCustomColor(color)
+                ? color
+                : "conic-gradient(#ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444)",
+            }}
+          >
+            <input
+              type="color"
+              aria-label="Custom color"
+              value={isCustomColor(color) ? color : "#3b82f6"}
+              onChange={(event) => setColor(event.target.value.toLowerCase())}
+              className="absolute inset-0 size-full cursor-pointer opacity-0"
+            />
+          </label>
         </div>
       </fieldset>
 
@@ -121,7 +143,10 @@ function BookForm({
                   icon === key && "bg-muted",
                 )}
               >
-                <Icon className={cn("size-4", bookColorClass(color))} />
+                <Icon
+                  className={cn("size-4", bookColorClass(color))}
+                  style={bookColorStyle(color)}
+                />
               </button>
             );
           })}

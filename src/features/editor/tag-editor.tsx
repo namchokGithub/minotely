@@ -7,7 +7,13 @@ import type { Note } from "@/features/notes/types";
 
 const MAX_TAGS = 20;
 
-export function TagEditor({ note }: { note: Note }) {
+export function TagEditor({
+  note,
+  readOnly = false,
+}: {
+  note: Note;
+  readOnly?: boolean;
+}) {
   const uid = useUid();
   const [input, setInput] = useState("");
 
@@ -31,37 +37,41 @@ export function TagEditor({ note }: { note: Note }) {
           className="inline-flex items-center gap-0.5 rounded-full bg-muted py-0.5 pr-1 pl-2 text-xs"
         >
           #{tag}
-          <button
-            type="button"
-            aria-label={`Remove tag ${tag}`}
-            className="flex size-5 items-center justify-center rounded-full transition-colors duration-150 hover:bg-foreground/10"
-            onClick={() => void save(note.tags.filter((t) => t !== tag))}
-          >
-            <X className="size-3" />
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              aria-label={`Remove tag ${tag}`}
+              className="flex size-5 items-center justify-center rounded-full transition-colors duration-150 hover:bg-foreground/10"
+              onClick={() => void save(note.tags.filter((t) => t !== tag))}
+            >
+              <X className="size-3" />
+            </button>
+          )}
         </span>
       ))}
-      <input
-        value={input}
-        placeholder={note.tags.length ? "Add tag" : "Add tags…"}
-        aria-label="Add tag"
-        maxLength={40}
-        className="min-w-24 flex-1 bg-transparent py-0.5 text-base text-muted-foreground outline-none placeholder:text-muted-foreground/60 sm:text-xs"
-        onChange={(event) => setInput(event.target.value)}
-        onBlur={add}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === ",") {
-            event.preventDefault();
-            add();
-          } else if (
-            event.key === "Backspace" &&
-            !input &&
-            note.tags.length > 0
-          ) {
-            void save(note.tags.slice(0, -1));
-          }
-        }}
-      />
+      {!readOnly && (
+        <input
+          value={input}
+          placeholder={note.tags.length ? "Add tag" : "Add tags…"}
+          aria-label="Add tag"
+          maxLength={40}
+          className="min-w-24 flex-1 bg-transparent py-0.5 text-base text-muted-foreground outline-none placeholder:text-muted-foreground/60 sm:text-xs"
+          onChange={(event) => setInput(event.target.value)}
+          onBlur={add}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === ",") {
+              event.preventDefault();
+              add();
+            } else if (
+              event.key === "Backspace" &&
+              !input &&
+              note.tags.length > 0
+            ) {
+              void save(note.tags.slice(0, -1));
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -9,10 +9,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { AuthContext, type AuthStatus } from "./auth-context";
-import { isOwnerEmail } from "./owner";
 
-const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL;
-const NOT_OWNER_MESSAGE = "This Google account cannot use Minotely.";
 const IGNORED_POPUP_ERRORS = new Set([
   "auth/popup-closed-by-user",
   "auth/cancelled-popup-request",
@@ -25,14 +22,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     return onAuthStateChanged(auth, (next) => {
-      if (
-        next &&
-        !(next.emailVerified && isOwnerEmail(next.email, OWNER_EMAIL))
-      ) {
-        setError(NOT_OWNER_MESSAGE);
-        void firebaseSignOut(auth);
-        return;
-      }
       setUser(next);
       setStatus(next ? "signed-in" : "signed-out");
     });
