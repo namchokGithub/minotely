@@ -14,7 +14,7 @@ Only the owner's Google account may use the app. Enforced in Firestore Security 
 The client also checks `VITE_OWNER_EMAIL` to sign out other accounts with a clear message; this is UX only,
 the rules are the security boundary.
 
-## D3 — BrowserRouter with 404.html fallback (2026-11-01)
+## D3 — BrowserRouter with 404.html fallback (2026-11-01) — superseded by D19
 
 GitHub Pages has no SPA rewrites. Use `BrowserRouter` (`basename` = `import.meta.env.BASE_URL`) and copy `index.html` to `404.html` at deploy time,
 so Pages serves the app for any path and the router resolves it. Clean URLs instead of `HashRouter`. The build
@@ -40,7 +40,8 @@ All verification is manual by the owner; agents do not write automated tests (se
 ## D7 — Popup sign-in (2026-11-01)
 
 Use `signInWithPopup`, not `signInWithRedirect`. Redirect sign-in on a domain other than the Firebase Hosting
-`authDomain` (here GitHub Pages) breaks in browsers that block third-party storage.
+`authDomain` breaks in browsers that block third-party storage. Since D19 the app is served from the same
+Firebase Hosting domain, so redirect would also work; popup stays because it keeps the editor state intact.
 
 ## D8 — shadcn/ui generated code (2026-11-01)
 
@@ -112,3 +113,12 @@ Firestore is initialised in `src/lib/firestore.ts`, apart from Auth in `src/lib/
 the sign-in screen loads React, the router and Firebase Auth only (~480 kB, ~153 kB gzip; was 1.72 MB).
 Manual vendor chunk groups were tried and dropped: Rolldown pulled shared dependencies into them, so the entry
 chunk imported them again.
+
+## D19 — Firebase Hosting with manual deploy (2026-11-02)
+
+Replaces GitHub Pages + GitHub Actions (D3, M1.6). The site is hosted on Firebase Hosting and deployed by the
+owner with `firebase deploy --only hosting` from a local machine; the build reads `.env.local`, so no secrets
+live in GitHub. `firebase.json` rewrites every path to `index.html` (clean `BrowserRouter` URLs at `/`, no
+`basename`, no `404.html` copy) and caches hashed files under `/assets/` for a year. Rules deploy separately with
+`firebase deploy --only firestore:rules` after `OWNER_EMAIL` is replaced. The GitHub Actions workflow and the
+`BASE_PATH` build option were removed.

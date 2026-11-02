@@ -6,7 +6,7 @@ milestones. Status lives in `docs/PROGRESS.md`; architectural choices live in
 
 | Milestone              | Merged from                        | Why merged                                                       |
 | ---------------------- | ---------------------------------- | ---------------------------------------------------------------- |
-| M1 Foundation & Deploy | Phase 1 + deploy part of Phase 6   | Ship the pipeline first; catch Pages / SPA routing issues early. |
+| M1 Foundation & Deploy | Phase 1 + deploy part of Phase 6   | Set up hosting first; catch SPA routing issues early.            |
 | M2 Core Notebook       | Phase 2 + 3 + sync part of Phase 5 | Auto Save needs the editor; drafts and sync status are its core. |
 | M3 Reading & Data      | Phase 4 + rest of Phase 5 + Tags   | Features over the same data, no dependency between them.         |
 | M4 Hardening & Release | Rest of Phase 6                    | Final verification before release.                               |
@@ -21,10 +21,10 @@ Baseline already done: Vite + React 19 + TypeScript + Tailwind CSS v4 + ESLint +
    - Desktop: 3 columns — Books / Notes / Editor.
    - Tablet: collapsible Books sidebar + Notes + Editor.
    - Mobile: one screen at a time, Books → Notes → Editor, clear Back button.
-4. Routing: `BrowserRouter` with `basename` from `import.meta.env.BASE_URL`, `404.html` copied from `index.html` at deploy.
+4. Routing: `BrowserRouter` at `/`; Firebase Hosting rewrites all paths to `index.html` (D19).
    Routes: `/login`, `/books/:bookId`, `/books/:bookId/notes/:noteId`.
 5. Firebase Authentication: Google Sign-in, owner-email allowlist, route guard, sign-out.
-6. GitHub Actions: build and deploy to GitHub Pages on push to branch `production` only.
+6. Firebase Hosting: `firebase.json`, manual deploy with `firebase deploy --only hosting` (D19).
 
 Done when: the owner signs in and sees the empty layout on the deployed URL; any other Google account is rejected.
 
@@ -62,7 +62,7 @@ Verification: manual by the owner against the real Firebase project.
 1. Performance: code-split Tiptap, check bundle size.
 2. Accessibility: full keyboard use, focus states, contrast.
 3. Security Rules review against the real project.
-4. Release to `production`.
+4. Release: `firebase deploy --only hosting` (and rules).
 
 ## Post-MVP (P2)
 

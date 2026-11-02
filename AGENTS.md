@@ -8,7 +8,7 @@ Minotely is a private notebook web app for one owner: `Library → Books → Not
 
 ## Tech Stack
 
-React + Vite + TypeScript, Tailwind CSS v4, shadcn/ui + Radix UI, Tiptap (+ `@tiptap/markdown`), Lucide React, React Router, TanStack Query (server state), Zustand (UI state), Firebase Authentication (Google), Cloud Firestore, Dexie (IndexedDB), Vitest, GitHub Pages + GitHub Actions. Package manager: `pnpm`.
+React + Vite + TypeScript, Tailwind CSS v4, shadcn/ui + Radix UI, Tiptap (+ `@tiptap/markdown`), Lucide React, React Router, TanStack Query (server state), Zustand (UI state), Firebase Authentication (Google), Cloud Firestore, Dexie (IndexedDB), Vitest, Firebase Hosting (manual deploy with the Firebase CLI). Package manager: `pnpm`.
 
 Libraries beyond the Vite/Tailwind baseline are added per milestone (see `docs/PROGRESS.md`); do not assume one is installed until it is in `package.json`.
 
@@ -20,6 +20,7 @@ pnpm dev           # run the app locally
 pnpm build         # type-check and production build
 pnpm test          # run Vitest (user-run only; agents do not write tests)
 pnpm lint          # run ESLint
+firebase deploy --only hosting   # owner only: build and publish to Firebase Hosting
 pnpm exec prettier --write <files>
 ```
 
@@ -39,7 +40,7 @@ src/
     db.ts           # Dexie (drafts, cache)
   stores/           # Zustand UI stores
 firestore.rules     # owner-only + shape checks (D17); publish after replacing OWNER_EMAIL
-.github/workflows/  # deploy on branch `production`
+firebase.json       # Hosting (dist, SPA rewrite, asset caching) + rules path (D19)
 ```
 
 ## Architecture Rules
@@ -56,7 +57,8 @@ firestore.rules     # owner-only + shape checks (D17); publish after replacing O
 - Auto Save debounces writes, shows Saving / Saved / Error, and keeps a local draft in Dexie until the write succeeds.
 - Paper Style is an editor background only; text is not snapped to lines.
 - Motion stays at 150–250 ms, uses CSS transitions (D15), and respects `prefers-reduced-motion`.
-- Routing uses `BrowserRouter` with `basename` from `import.meta.env.BASE_URL` and a `404.html` fallback for GitHub Pages (D3).
+- Routing uses `BrowserRouter` at `/`; Firebase Hosting rewrites every path to `index.html` (D19).
+- Deployment is manual by the owner (`firebase deploy`). Agents never run `firebase deploy` or change the live Firebase project.
 
 ## Working Conventions
 

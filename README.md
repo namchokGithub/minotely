@@ -9,13 +9,33 @@ A private, modern notebook web app for organizing books and notes, featuring ric
 3. In Firebase Console → Authentication → Sign-in method, enable Google.
 4. `pnpm dev`
 
-## Deploy (GitHub Pages)
+## Deploy (Firebase Hosting)
 
-Pushing to branch `production` runs `.github/workflows/deploy.yml`. One-time setup:
+Deploys are manual from your machine. The build reads `.env.local`.
 
-1. Repository Settings → Pages → Source: **GitHub Actions**.
-2. Repository Settings → Secrets and variables → Actions → **Variables**: add every key from `.env.example`.
-3. Firebase Console → Authentication → Settings → Authorized domains: add `<user>.github.io`.
+One-time setup:
+
+1. `npm install -g firebase-tools`, then `firebase login`.
+2. `firebase use --add` and pick the Firebase project (writes `.firebaserc`).
+3. Firebase Console → Hosting → Get started (once per project).
+
+Deploy:
+
+```bash
+firebase deploy --only hosting          # runs `pnpm build`, uploads dist/
+```
+
+Security Rules are deployed separately, after replacing `OWNER_EMAIL` in `firestore.rules`:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+Do not run a plain `firebase deploy` while `firestore.rules` still contains `OWNER_EMAIL`: it would publish rules
+that deny every request.
+
+The site is served at `https://<project-id>.web.app` and `https://<project-id>.firebaseapp.com`; both are already
+authorized domains for Firebase Auth.
 
 ## Roadmap
 

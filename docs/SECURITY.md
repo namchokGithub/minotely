@@ -35,8 +35,10 @@ backup — every action must succeed. A failure shows as an Auto Save error or a
 ## Recommended project settings
 
 - Google Cloud Console → APIs & Services → Credentials: restrict the browser API key to HTTP referrers
-  `https://<user>.github.io/*` and `http://localhost:*/*`.
-- Firebase Console → Authentication → Settings → Authorized domains: only `localhost` and `<user>.github.io`.
+  `https://<project-id>.web.app/*`, `https://<project-id>.firebaseapp.com/*` and `http://localhost:*/*`.
+- Firebase Console → Authentication → Settings → Authorized domains: only `localhost`, `<project-id>.web.app`
+  and `<project-id>.firebaseapp.com`.
+- Deploy rules only with `firebase deploy --only firestore:rules` after replacing `OWNER_EMAIL`.
 - Optional: Firebase App Check (reCAPTCHA Enterprise) to block scripted traffic to Firestore.
 
 ## Known limits

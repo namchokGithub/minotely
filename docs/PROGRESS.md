@@ -9,7 +9,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | ID   | Item                                     | Status      |
 | ---- | ---------------------------------------- | ----------- |
 | M1.5 | Google Sign-in + owner allowlist + guard | In progress |
-| M1.6 | GitHub Actions deploy on `production`    | In progress |
+| M1.6 | Firebase Hosting (manual deploy)         | In progress |
 | M2.1 | Firestore data layer                     | In progress |
 | M2.2 | Security Rules (real project)            | In progress |
 | M2.3 | Book management                          | In progress |
@@ -34,7 +34,7 @@ Every item not `Done`. Keep in sync with the sections below.
 ## Notes
 
 - M1.5: code done; needs a manual check with the owner account and a non-owner account after `.env.local` is filled in.
-- M1.6: workflow added; needs GitHub Pages source set to GitHub Actions, repository variables, and a first push to `production`.
+- M1.6: switched to Firebase Hosting (D19); `firebase.json` added; needs `firebase use --add` and a first `firebase deploy --only hosting`.
 
 - M2: code done for M2.1–M2.7; needs manual testing with the real project after publishing `firestore.rules` (replace `OWNER_EMAIL` first).
 - M3: code done for M3.1–M3.9; needs manual testing. Custom sort uses Move up / Move down, not drag (D14).
@@ -51,4 +51,4 @@ Every item not `Done`. Keep in sync with the sections below.
 | M1.1 | Install remaining dependencies + Vitest                      | Done   |
 | M1.2 | Theme tokens, Light/Dark                                     | Done   |
 | M1.3 | Responsive shell                                             | Done   |
-| M1.4 | Routing + Pages 404 fallback                                 | Done   |
+| M1.4 | Routing (SPA rewrite since D19)                              | Done   |

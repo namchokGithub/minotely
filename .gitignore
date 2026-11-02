@@ -18,3 +18,8 @@ dist/
 .vite/
 .prettiercache
 .superpowers/
+
+# Firebase CLI
+.firebase/
+firebase-debug.log
+firestore-debug.log

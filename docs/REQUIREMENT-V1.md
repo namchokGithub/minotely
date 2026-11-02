@@ -74,21 +74,21 @@ Layout ตามขนาดหน้าจอ
 
 ## Recommended Tech Stack
 
-| Category       | Technology                | เหตุผล                          |
-| -------------- | ------------------------- | ------------------------------- |
-| Frontend       | React+Vite+TypeScript     | เหมาะกับSPAและStaticHosting     |
-| Styling        | TailwindCSSv4             | จัดการResponsiveและTheme        |
-| UIComponents   | shadcn/ui+RadixUI         | ใช้งานสะดวกและปรับแต่งได้       |
-| Editor         | Tiptap                    | RichTextEditorที่ปรับแต่งได้มาก |
-| Animation      | Motion                    | TransitionและMicro-interaction  |
-| Icons          | LucideReact               | Iconเรียบง่าย                   |
-| Router         | ReactRouter               | จัดการหน้าและURL                |
-| ServerState    | TanStackQuery             | จัดการFetchingและCache          |
-| LocalState     | Zustand                   | จัดการUIState                   |
-| Authentication | FirebaseAuthentication    | GoogleSign-in                   |
-| Database       | CloudFirestore            | SyncNotesข้ามอุปกรณ์            |
-| LocalCache     | IndexedDB/Dexie           | CacheและDraftในBrowser          |
-| Deployment     | GitHubPages+GitHubActions | DeployอัตโนมัติจากGit           |
+| Category       | Technology             | เหตุผล                          |
+| -------------- | ---------------------- | ------------------------------- |
+| Frontend       | React+Vite+TypeScript  | เหมาะกับSPAและStaticHosting     |
+| Styling        | TailwindCSSv4          | จัดการResponsiveและTheme        |
+| UIComponents   | shadcn/ui+RadixUI      | ใช้งานสะดวกและปรับแต่งได้       |
+| Editor         | Tiptap                 | RichTextEditorที่ปรับแต่งได้มาก |
+| Animation      | Motion                 | TransitionและMicro-interaction  |
+| Icons          | LucideReact            | Iconเรียบง่าย                   |
+| Router         | ReactRouter            | จัดการหน้าและURL                |
+| ServerState    | TanStackQuery          | จัดการFetchingและCache          |
+| LocalState     | Zustand                | จัดการUIState                   |
+| Authentication | FirebaseAuthentication | GoogleSign-in                   |
+| Database       | CloudFirestore         | SyncNotesข้ามอุปกรณ์            |
+| LocalCache     | IndexedDB/Dexie        | CacheและDraftในBrowser          |
+| Deployment     | FirebaseHosting        | Deployเองด้วยFirebaseCLI        |
 
 Package Manager: `pnpm`
 
@@ -129,7 +129,7 @@ users/
 ## Access & Routing
 
 - Sign-in ได้เฉพาะ Google Account ของเจ้าของ (Email Allowlist) บังคับใน Firestore Security Rules บัญชีอื่นถูกปฏิเสธ
-- Routing ใช้ `BrowserRouter` + `404.html` fallback สำหรับ GitHub Pages (URL ไม่มี `#`)
+- Routing ใช้ `BrowserRouter` และ Firebase Hosting rewrite ทุก path ไปที่ `index.html` (URL ไม่มี `#`)
 
 ## Development Roadmap
 
@@ -137,7 +137,7 @@ users/
 
 M1 — Foundation & Deploy (Phase 1 + Deploy จาก Phase 6)
 
-Project setup, Theme (Light/Dark tokens), Responsive Layout, Sidebar, Routing, Firebase Authentication, GitHub Actions → GitHub Pages (deploy เฉพาะ branch `production`)
+Project setup, Theme (Light/Dark tokens), Responsive Layout, Sidebar, Routing, Firebase Authentication, Firebase Hosting (deploy เองด้วย `firebase deploy --only hosting`)
 
 M2 — Core Notebook (Phase 2 + 3 + Sync จาก Phase 5)
 
