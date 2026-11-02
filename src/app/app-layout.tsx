@@ -7,6 +7,7 @@ import { NotesPanel } from "@/features/notes/notes-panel";
 import { SearchDialog } from "@/features/search/search-dialog";
 import { TrashPanel } from "@/features/trash/trash-panel";
 import { useUiStore } from "@/stores/ui-store";
+import { LibraryDnd } from "./library-dnd";
 import { useRouteIds } from "./use-route-ids";
 
 // Tiptap is the largest dependency; load it with the editor column.
@@ -63,30 +64,32 @@ export function AppLayout() {
       >
         Skip to editor
       </a>
-      <aside
-        id="books-sidebar"
-        aria-label="Library"
-        inert={sidebarCollapsed}
-        className={cn(
-          "w-full flex-col overflow-hidden md:flex md:shrink-0 md:border-r md:transition-[width] md:duration-200 md:ease-out lg:w-60",
-          mobileScreen === "books" ? "flex" : "hidden",
-          sidebarCollapsed ? "md:w-0 md:border-r-0" : "md:w-60",
-        )}
-      >
-        <div className="h-full w-full md:w-60">
-          <BooksPanel />
-        </div>
-      </aside>
+      <LibraryDnd>
+        <aside
+          id="books-sidebar"
+          aria-label="Library"
+          inert={sidebarCollapsed}
+          className={cn(
+            "w-full flex-col overflow-hidden md:flex md:shrink-0 md:border-r md:transition-[width] md:duration-200 md:ease-out lg:w-60",
+            mobileScreen === "books" ? "flex" : "hidden",
+            sidebarCollapsed ? "md:w-0 md:border-r-0" : "md:w-60",
+          )}
+        >
+          <div className="h-full w-full md:w-60">
+            <BooksPanel />
+          </div>
+        </aside>
 
-      <section
-        aria-label={isTrash ? "Trash" : "Notes"}
-        className={cn(
-          "w-full flex-col md:flex md:w-64 md:shrink-0 md:border-r lg:w-80",
-          mobileScreen === "notes" ? "flex" : "hidden",
-        )}
-      >
-        {isTrash ? <TrashPanel /> : <NotesPanel bookId={bookId} />}
-      </section>
+        <section
+          aria-label={isTrash ? "Trash" : "Notes"}
+          className={cn(
+            "w-full flex-col md:flex md:w-64 md:shrink-0 md:border-r lg:w-80",
+            mobileScreen === "notes" ? "flex" : "hidden",
+          )}
+        >
+          {isTrash ? <TrashPanel /> : <NotesPanel bookId={bookId} />}
+        </section>
+      </LibraryDnd>
 
       <main
         id="editor"

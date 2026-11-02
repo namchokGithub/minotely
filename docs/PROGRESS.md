@@ -18,7 +18,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M5.5 | Editor: checklist (task list) tool                                                             | In progress |
 | M5.6 | Note Pin + Lock (read-only) from the note itself                                               | In progress |
 | M5.7 | Links: hyperlink insert/edit UI + light-yellow `#fff200` link style                            | In progress |
-| M5.8 | Drag and drop: reorder books, move note to another book                                        | Todo        |
+| M5.8 | Drag and drop: reorder books, move note to another book                                        | In progress |
 | M5.9 | Keyboard and context menu: Ctrl/⌘+S saves the note, app right-click menu, a11y pass on buttons | Todo        |
 
 ## Notes
@@ -51,7 +51,7 @@ Every item not `Done`. Keep in sync with the sections below.
   Link color (owner chose option ก): `#fff200` as a light background tint/underline on links in both themes;
   link text keeps the normal readable text color (`#fff200` text on white is about 1.1:1).
 
-- M5.8 (approved: `@dnd-kit`): replaces Move up / Move down (D14) for books, and adds dropping a note onto a
+- M5.8 (approved: `@dnd-kit`, done in code, D24): replaces Move up / Move down (D14) for books, and adds dropping a note onto a
   book to move it. Must work with mouse, touch and keyboard.
 - M5.9: Ctrl/⌘+S flushes Auto Save instead of the browser's Save Page. First right-click opens the app menu
   (note/book actions, editor formatting); a second right-click on the open menu falls through to the browser

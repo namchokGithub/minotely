@@ -1,4 +1,7 @@
 import { useState, type ReactNode } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { bookDragId, type DragData } from "@/app/dnd-ids";
 import { Spinner } from "@/components/spinner";
 import { NavLink, useNavigate } from "react-router";
 import { useRouteIds } from "@/app/use-route-ids";
@@ -160,6 +163,20 @@ function BookItem({ book, previous, next }: BookItemProps) {
   const { bookId: activeBookId } = useRouteIds();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const {
+    setNodeRef,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+    active,
+  } = useSortable({
+    id: bookDragId(book.id),
+    data: { type: "book", book } satisfies DragData,
+  });
+  const noteOver =
+    isOver && (active?.data.current as DragData | undefined)?.type === "note";
 
   const handleDelete = () => {
     if (activeBookId === book.id) navigate("/");
@@ -169,12 +186,25 @@ function BookItem({ book, previous, next }: BookItemProps) {
   };
 
   return (
-    <li className="group relative">
+    <li
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+      }}
+      className={cn(
+        "group relative rounded-md",
+        isDragging && "opacity-40",
+        noteOver && "ring-2 ring-primary/60",
+      )}
+    >
       <NavLink
         to={`/books/${book.id}`}
+        // Drag from the row; keyboard and screen-reader users reorder from the ⋯ menu.
+        {...listeners}
         className={({ isActive }) =>
           cn(
-            "flex h-9 items-center gap-2 rounded-md px-2 pr-9 text-sm transition-colors duration-150 hover:bg-sidebar-accent outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+            "flex h-9 touch-manipulation items-center select-none [-webkit-touch-callout:none] gap-2 rounded-md px-2 pr-9 text-sm transition-colors duration-150 hover:bg-sidebar-accent outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
             isActive && "bg-sidebar-accent font-medium",
           )
         }

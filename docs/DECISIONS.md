@@ -81,7 +81,7 @@ hidden or the note is closed.
 (`background-attachment: local`), not aligned to text lines. Font family and size are one setting for all notes,
 stored in `users/{uid}/preferences/settings` so they follow the owner across devices.
 
-## D14 — Custom sort with Move up / Move down (2026-11-01)
+## D14 — Custom sort with Move up / Move down (2026-11-01) — books: drag added by D24
 
 Books and notes have a numeric `order` (notes created before M3 fall back to `createdAt` in ms). Reordering swaps
 the `order` of two neighbors in one batch, from the item menu. It works with mouse, keyboard and touch without a
@@ -158,3 +158,13 @@ editable, so links there open as normal anchors.
 
 Checklists use `TaskList` / `TaskItem` from `@tiptap/extension-list` (nested allowed); `[ ] ` starts one, and
 Markdown import/export uses `- [ ]` / `- [x]`.
+
+## D24 — Drag and drop with @dnd-kit (2026-11-02)
+
+One `DndContext` (`src/app/library-dnd.tsx`) spans the Library and Notes columns. Books are sortable; a dropped
+book gets the midpoint `order` of its new neighbours (one write, no renumbering; float precision allows many
+moves before ties, and ties only fall back to list order). Notes are draggable and drop onto a book under the
+pointer to move there. Mouse drags start after 6 px and touch drags after a 250 ms press, so clicks, links and
+scrolling keep working. Move up / Move down (books) and Move to (notes) stay in the ⋯ menus as the keyboard and
+screen-reader path, so the rows keep their link semantics instead of becoming drag buttons. On mobile the two
+columns are separate screens, so moving a note between books uses Move to.

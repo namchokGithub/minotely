@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useDraggable } from "@dnd-kit/core";
+import { noteDragId, type DragData } from "@/app/dnd-ids";
 import { NavLink, useNavigate } from "react-router";
 import {
   ArrowDown,
@@ -67,6 +69,11 @@ export function NoteItem({
   const navigate = useNavigate();
   const { noteId: activeNoteId } = useRouteIds();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  // Drop on a book in the Library to move the note (D24); "Move to" in the ⋯ menu does the same.
+  const { setNodeRef, listeners, isDragging } = useDraggable({
+    id: noteDragId(note.id),
+    data: { type: "note", note } satisfies DragData,
+  });
   const title = note.title.trim() || "Untitled";
   const snippet = note.plainText.trim().split("\n")[0];
   const otherBooks = books.filter((b) => b.id !== note.bookId);
@@ -95,12 +102,16 @@ export function NoteItem({
   };
 
   return (
-    <li className="group relative">
+    <li
+      ref={setNodeRef}
+      className={cn("group relative", isDragging && "opacity-40")}
+    >
       <NavLink
         to={`/books/${note.bookId}/notes/${note.id}`}
+        {...listeners}
         className={({ isActive }) =>
           cn(
-            "grid grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+            "grid touch-manipulation select-none [-webkit-touch-callout:none] grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
             isActive && "bg-muted",
           )
         }

@@ -62,6 +62,11 @@ export function updateBook(uid: string, bookId: string, input: BookInput) {
   });
 }
 
+/** Places a book at a new position (drag and drop, D24). */
+export function setBookOrder(uid: string, bookId: string, order: number) {
+  return updateDoc(doc(booksCol(uid), bookId), { order });
+}
+
 /** Swaps the order of two books. */
 export function swapBookOrder(uid: string, a: Book, b: Book) {
   const batch = writeBatch(db);
