@@ -118,7 +118,7 @@ the sign-in screen loads React, the router and Firebase Auth only (~480 kB, ~153
 Manual vendor chunk groups were tried and dropped: Rolldown pulled shared dependencies into them, so the entry
 chunk imported them again.
 
-## D19 — Firebase Hosting with manual deploy (2026-11-02)
+## D19 — Firebase Hosting with manual deploy (2026-11-02) — deploy trigger replaced by D31
 
 Replaces GitHub Pages + GitHub Actions (D3, M1.6). The site is hosted on Firebase Hosting and deployed by the
 owner with `firebase deploy --only hosting` from a local machine; the build reads `.env.local`, so no secrets
@@ -227,3 +227,13 @@ or, if there is none or it was deleted, `/notes` ("Select a book" + Browse books
 Theme, editor font and size (the synced setting from D13), and a link to Trash; on 768 px and up `/settings`
 redirects to `/`, where the sidebar footer and the Aa menu cover the same controls. Account, sign out and backup
 stay in the Library footer on every size. Toasts sit above the bottom menu on phones.
+
+## D31 — Deploy from GitHub Actions on push to `production` (2026-11-02)
+
+Replaces D19's manual-only deploy (hosting choice, rewrites and caching from D19 stay). Pushing to `production`
+runs `.github/workflows/deploy-production.yml`: install, `pnpm lint`, then `FirebaseExtended/action-hosting-deploy`
+to the live channel; `firebase.json`'s `predeploy` does the single `pnpm build`. Build config comes from repository
+**variables** (`VITE_FIREBASE_*`, public web config); deploy access comes from the **secret**
+`FIREBASE_SERVICE_ACCOUNT_MINOTELY`, created by `firebase init hosting:github`. Security Rules are still deployed by
+hand (`firebase deploy --only firestore:rules`) so a merge cannot change access rules unnoticed. No PR preview
+channels. Manual `firebase deploy --only hosting` still works for emergencies.

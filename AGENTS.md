@@ -8,7 +8,7 @@ Minotely is a private notebook web app (any Google account; each user's data is 
 
 ## Tech Stack
 
-React + Vite + TypeScript, Tailwind CSS v4, shadcn/ui + Radix UI, Tiptap (+ `@tiptap/markdown`), Lucide React, React Router, TanStack Query (server state), Zustand (UI state), Firebase Authentication (Google), Cloud Firestore, Dexie (IndexedDB), Vitest, Firebase Hosting (manual deploy with the Firebase CLI). Package manager: `pnpm`.
+React + Vite + TypeScript, Tailwind CSS v4, shadcn/ui + Radix UI, Tiptap (+ `@tiptap/markdown`), Lucide React, React Router, TanStack Query (server state), Zustand (UI state), Firebase Authentication (Google), Cloud Firestore, Dexie (IndexedDB), Vitest, Firebase Hosting (deployed by GitHub Actions on push to `production`). Package manager: `pnpm`.
 
 Libraries beyond the Vite/Tailwind baseline are added per milestone (see `docs/PROGRESS.md`); do not assume one is installed until it is in `package.json`.
 
@@ -20,7 +20,7 @@ pnpm dev           # run the app locally
 pnpm build         # type-check and production build
 pnpm test          # run Vitest (user-run only; agents do not write tests)
 pnpm lint          # run ESLint
-firebase deploy --only hosting   # owner only: build and publish to Firebase Hosting
+firebase deploy --only firestore:rules   # owner only: publish Security Rules
 pnpm exec prettier --write <files>
 ```
 
@@ -40,7 +40,8 @@ src/
     db.ts           # Dexie (drafts, cache)
   stores/           # Zustand UI stores
 firestore.rules     # per-user access (D22) + shape checks (D17)
-firebase.json       # Hosting (dist, SPA rewrite, asset caching) + rules path (D19)
+firebase.json       # Hosting (dist, SPA rewrite, caching) + rules path (D19)
+.github/workflows/  # deploy-production.yml: deploy on push to `production` (D31)
 ```
 
 ## Architecture Rules
@@ -59,7 +60,7 @@ firebase.json       # Hosting (dist, SPA rewrite, asset caching) + rules path (D
 - Motion stays at 150–250 ms, uses CSS transitions (D15), and respects `prefers-reduced-motion`.
 - Row actions are defined once per row type and rendered in both the ⋯ menu and the right-click menu via `MenuKit` (D26). Add new actions there, not to one menu only.
 - Routing uses `BrowserRouter` at `/`; Firebase Hosting rewrites every path to `index.html` (D19).
-- Deployment is manual by the owner (`firebase deploy`). Agents never run `firebase deploy` or change the live Firebase project.
+- Deployment: pushing to `production` deploys Hosting via `.github/workflows/deploy-production.yml` (D31); Security Rules are deployed by hand. Agents never push to `production`, run `firebase deploy`, or change the live Firebase project.
 
 ## Working Conventions
 

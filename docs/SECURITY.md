@@ -37,7 +37,9 @@ backup — every action must succeed. A failure shows as an Auto Save error or a
   `https://<project-id>.web.app/*`, `https://<project-id>.firebaseapp.com/*` and `http://localhost:*/*`.
 - Firebase Console → Authentication → Settings → Authorized domains: only `localhost`, `<project-id>.web.app`
   and `<project-id>.firebaseapp.com`.
-- Deploy rules with `firebase deploy --only firestore:rules`.
+- Deploy rules with `firebase deploy --only firestore:rules` (never from CI, D31).
+- The GitHub secret `FIREBASE_SERVICE_ACCOUNT_MINOTELY` can deploy Hosting: keep `production` protected
+  (GitHub → Settings → Branches: require a pull request) and rotate the key if it leaks.
 - Watch usage in Firebase Console → Usage and billing; set a budget alert if the project is on the Blaze plan,
   since anyone with a Google account can create data.
 - Optional: Firebase App Check (reCAPTCHA Enterprise) to block scripted traffic to Firestore.

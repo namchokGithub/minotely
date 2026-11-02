@@ -33,7 +33,7 @@ Sign in with any Google account; each account sees only its own books and notes.
 | State         | TanStack Query (server data), Zustand (UI state)            |
 | Backend       | Firebase Authentication (Google), Cloud Firestore           |
 | Local storage | Dexie (IndexedDB drafts)                                    |
-| Hosting       | Firebase Hosting (manual deploy with the Firebase CLI)      |
+| Hosting       | Firebase Hosting, deployed by GitHub Actions                |
 | Tooling       | pnpm, ESLint, Prettier, Vitest                              |
 
 ## Project structure
@@ -76,23 +76,34 @@ Architecture rules and working conventions: `AGENTS.md`. Design decisions: `docs
 
 ## Deploy (Firebase Hosting)
 
-Deploys are manual from your machine. The build reads `.env.local`.
+Pushing to the `production` branch deploys the site (`.github/workflows/deploy-production.yml`): install, lint,
+build, deploy to the live channel.
 
 One-time setup:
 
-1. `npm install -g firebase-tools`, then `firebase login`.
-2. `firebase use --add` and pick the Firebase project (writes `.firebaserc`).
-3. Firebase Console → Hosting → Get started (once per project).
+1. `npm install -g firebase-tools`, `firebase login`, then `firebase use --add` (pick `minotely`).
+2. Firebase Console → Hosting → Get started (once per project).
+3. `firebase init hosting:github` — connects the repo and creates the secret
+   `FIREBASE_SERVICE_ACCOUNT_MINOTELY`. Do not let it overwrite or add workflow files (delete any it creates).
+4. GitHub → Settings → Secrets and variables → Actions → **Variables**: add the six `VITE_FIREBASE_*` keys from
+   `.env.example` with your values.
 
-Deploy:
+Release:
 
 ```bash
-firebase deploy --only hosting          # runs `pnpm build`, uploads dist/
-firebase deploy --only firestore:rules  # Security Rules
+git switch production
+git merge develop
+git push origin production              # starts the deploy
 ```
 
-The site is served at `https://<project-id>.web.app` and `https://<project-id>.firebaseapp.com`; both are already
-authorized domains for Firebase Auth. Security notes: `docs/SECURITY.md`.
+Security Rules are not deployed by the workflow; publish them by hand when `firestore.rules` changes:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+The site is served at `https://minotely.web.app` and `https://minotely.firebaseapp.com`; both are already authorized
+domains for Firebase Auth. Security notes: `docs/SECURITY.md`.
 
 ## Roadmap
 
