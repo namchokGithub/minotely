@@ -1,15 +1,7 @@
 import { useRef, useState } from "react";
 import { Download, Settings2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { MessageDialog, type Message } from "@/components/message-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +12,6 @@ import {
 import { useUid } from "@/features/auth/auth-context";
 import { exportBackup, importBackup, parseBackup } from "./backup";
 import { downloadFile } from "./download";
-
-type Message = { title: string; body: string };
 
 /** Library-wide JSON backup: export everything, import as new books and notes. */
 export function DataMenu() {
@@ -104,20 +94,7 @@ export function DataMenu() {
         }}
       />
 
-      <AlertDialog
-        open={message !== null}
-        onOpenChange={(open) => !open && setMessage(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{message?.title}</AlertDialogTitle>
-            <AlertDialogDescription>{message?.body}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction>OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <MessageDialog message={message} onClose={() => setMessage(null)} />
     </>
   );
 }

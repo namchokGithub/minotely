@@ -82,14 +82,12 @@ export function useTrashNotes() {
   return useNotesQuery(["trash"], [where("deletedAt", "!=", null)]);
 }
 
-/** Creates the note locally right away and returns its id; the write syncs in the background. */
-export function createNote(
-  uid: string,
+function newNoteData(
   bookId: string,
   fields?: Partial<NoteContentFields>,
+  order = Date.now(),
 ) {
-  const ref = doc(notesCol(uid));
-  setDoc(ref, {
+  return {
     bookId,
     title: "",
     content: EMPTY_DOC,
@@ -98,12 +96,40 @@ export function createNote(
     tags: [],
     isPinned: false,
     paperStyle: "plain",
-    order: Date.now(),
+    order,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     deletedAt: null,
-  }).catch((error) => console.error("Create note failed", error));
+  };
+}
+
+/** Creates the note locally right away and returns its id; the write syncs in the background. */
+export function createNote(
+  uid: string,
+  bookId: string,
+  fields?: Partial<NoteContentFields>,
+) {
+  const ref = doc(notesCol(uid));
+  setDoc(ref, newNoteData(bookId, fields)).catch((error) =>
+    console.error("Create note failed", error),
+  );
   return ref.id;
+}
+
+/** Creates several notes and waits for Firestore, so failures reach the caller. */
+export async function importNotes(
+  uid: string,
+  bookId: string,
+  notes: NoteContentFields[],
+) {
+  const start = Date.now();
+  for (let i = 0; i < notes.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    notes.slice(i, i + BATCH_LIMIT).forEach((fields, j) => {
+      batch.set(doc(notesCol(uid)), newNoteData(bookId, fields, start + i + j));
+    });
+    await batch.commit();
+  }
 }
 
 export function saveNoteContent(

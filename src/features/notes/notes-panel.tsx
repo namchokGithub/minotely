@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MessageDialog, type Message } from "@/components/message-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +29,7 @@ import { useUid } from "@/features/auth/auth-context";
 import { useBooks } from "@/features/books/api";
 import { BookGlyph } from "@/features/books/book-glyph";
 import { useUiStore } from "@/stores/ui-store";
-import { createNote, useNotes } from "./api";
+import { createNote, importNotes, useNotes } from "./api";
 import { NoteItem } from "./note-item";
 import { sortNotes } from "./sort";
 import { collectTags } from "./tags";
@@ -49,6 +50,7 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
   const noteSort = useUiStore((state) => state.noteSort);
   const setNoteSort = useUiStore((state) => state.setNoteSort);
   const markdownInput = useRef<HTMLInputElement>(null);
+  const [message, setMessage] = useState<Message | null>(null);
   // Tag filter belongs to one book; switching books clears it.
   const [filter, setFilter] = useState<{ bookId?: string; tag: string }>();
   const tagFilter = filter?.bookId === bookId ? filter?.tag : undefined;
@@ -62,16 +64,34 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
     noteSort,
   );
 
-  const importMarkdown = async (files: FileList) => {
+  const importMarkdown = async (files: File[]) => {
     if (!book) return;
-    // Loaded on demand: pulls in the Tiptap schema and Markdown parser.
-    const { markdownToNote } = await import("@/features/data/markdown");
-    for (const file of Array.from(files)) {
-      try {
-        createNote(uid, book.id, markdownToNote(await file.text(), file.name));
-      } catch (error) {
-        console.error(`Import of ${file.name} failed`, error);
+    const failed: string[] = [];
+    try {
+      // Loaded on demand: pulls in the Tiptap schema and Markdown parser.
+      const { markdownToNote } = await import("@/features/data/markdown");
+      const notes = [];
+      for (const file of files) {
+        try {
+          notes.push(markdownToNote(await file.text(), file.name));
+        } catch (error) {
+          console.error(`Reading ${file.name} failed`, error);
+          failed.push(file.name);
+        }
       }
+      await importNotes(uid, book.id, notes);
+      setMessage({
+        title: notes.length ? "Import complete" : "Nothing imported",
+        body:
+          `Added ${notes.length} note(s) to “${book.name}”.` +
+          (failed.length ? `\nCould not read: ${failed.join(", ")}` : ""),
+      });
+    } catch (error) {
+      console.error("Markdown import failed", error);
+      setMessage({
+        title: "Import failed",
+        body: error instanceof Error ? error.message : "Please try again.",
+      });
     }
   };
 
@@ -179,9 +199,10 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
               multiple
               hidden
               onChange={(event) => {
-                const files = event.target.files;
-                if (files) void importMarkdown(files);
+                // Copy first: clearing the input empties the live FileList.
+                const files = Array.from(event.target.files ?? []);
                 event.target.value = "";
+                if (files.length) void importMarkdown(files);
               }}
             />
           </>
@@ -244,6 +265,7 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
           </ul>
         )}
       </div>
+      <MessageDialog message={message} onClose={() => setMessage(null)} />
     </div>
   );
 }

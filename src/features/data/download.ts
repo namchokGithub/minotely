@@ -7,11 +7,17 @@ export function downloadFile(filename: string, text: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-/** Safe file name from a note or book title. */
+/**
+ * Lowercase file name without spaces: "My Golang Notes!" → "my-golang-notes.md".
+ * Letters and digits of any script (e.g. Thai) are kept.
+ */
 export function toFileName(name: string, extension: string) {
   const base = name
-    .trim()
-    .replace(/[\\/:*?"<>|]+/g, "-")
-    .slice(0, 80);
-  return `${base || "Untitled"}.${extension}`;
+    .normalize("NFC")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80)
+    .replace(/-+$/, "");
+  return `${base || "untitled"}.${extension}`;
 }

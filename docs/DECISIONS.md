@@ -99,6 +99,9 @@ installed; add it only if an interaction needs more than CSS.
   documents with new ids (never overwrites); notes whose book is not in the file are skipped.
 - Markdown: per-note export and multi-file import into the current book through `@tiptap/markdown`. A leading
   `# Heading` becomes the title. Text colors have no Markdown form and are dropped; highlights use `==text==`.
+- Export file names are lowercase with `-` instead of spaces and symbols (Thai letters kept), e.g. `my-note.md`.
+- Imports wait for the Firestore write and always end with a result dialog (count, unreadable files, or the
+  error), never silently.
 
 ## D17 — Security Rules check paths and shapes (2026-11-01)
 
