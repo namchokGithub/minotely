@@ -272,3 +272,11 @@ is parsed into Tiptap JSON and sent through the existing local draft and Auto Sa
 shows the parsed content. Markdown cannot represent text colors or every custom highlight, so editing Raw may
 remove those styles. Locked notes are read-only in both modes. The existing import/export converter supplies
 the body conversion, with no new stored field or Firestore rule change.
+
+## D35 — Copy rich-text selections as Markdown (2026-11-06)
+
+Inside the WYSIWYG note body, Ctrl/⌘+C and the right-click Copy action serialize the selected Tiptap fragment
+to Markdown and write only `text/plain` to the clipboard. This keeps the selected block structure (headings,
+lists, links, code blocks) when pasting into a text editor. Copy from the Raw Markdown textarea or note title
+uses the browser's native selection. Cut keeps its existing behavior. Markdown cannot represent text colors and
+every custom highlight, so those styles are omitted from the copied text.

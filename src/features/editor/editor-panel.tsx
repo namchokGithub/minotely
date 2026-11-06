@@ -40,6 +40,7 @@ import { useSettings } from "@/features/settings/api";
 import { setNoteLocked, setNotePinned, useNotes } from "@/features/notes/api";
 import type { Note, NoteContentFields } from "@/features/notes/types";
 import { AppearanceMenu } from "./appearance-menu";
+import { copySelectionAsMarkdown } from "./copy-markdown";
 import { AppContextMenu } from "@/components/app-context-menu";
 import { isSaveShortcut } from "@/lib/shortcuts";
 import { EditorContextItems } from "./editor-context-menu";
@@ -140,6 +141,9 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
       attributes: {
         class: "minotely-editor",
         "aria-label": "Note content",
+      },
+      handleDOMEvents: {
+        copy: copySelectionAsMarkdown,
       },
     },
     onUpdate: ({ editor: e }) => {

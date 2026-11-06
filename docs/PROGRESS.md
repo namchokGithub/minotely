@@ -13,6 +13,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M6.1 | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
 | M6.2 | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
 | M6.3 | Raw Markdown editor toggle                                           | In progress |
+| M6.4 | Copy WYSIWYG selections as Markdown                                  | In progress |
 
 ## Notes
 
@@ -31,6 +32,8 @@ Every item not `Done`. Keep in sync with the sections below.
 - M6.3 (approved, done in code, D34; owner to test): switch a note body between WYSIWYG and editable Raw Markdown.
   Viewing Raw without edits preserves the original rich formatting. Raw edits use the existing local draft and
   Auto Save flow; unsupported colors and custom highlights may be lost after a Raw edit.
+- M6.4 (approved, done in code, D35; owner to test): Ctrl/⌘+C and the editor's Copy menu put the selected WYSIWYG
+  content on the clipboard as plain Markdown rather than rich HTML. Raw Markdown and title inputs keep native copy.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

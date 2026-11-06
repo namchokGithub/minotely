@@ -26,7 +26,7 @@ import { insertOrEditLink } from "./links";
 export function EditorContextItems({ editor }: { editor: Editor }) {
   const editable = editor.isEditable;
   const { empty } = editor.state.selection;
-  // Focus first so the editor restores its DOM selection; the browser then copies rich content.
+  // Focus first so the editor restores its DOM selection; Copy uses the editor's Markdown handler.
   const clipboard = (command: "copy" | "cut") => {
     editor.commands.focus();
     document.execCommand(command);
@@ -53,7 +53,7 @@ export function EditorContextItems({ editor }: { editor: Editor }) {
         </ContextMenuItem>
       )}
       <ContextMenuItem disabled={empty} onSelect={() => clipboard("copy")}>
-        <Copy /> Copy {hint("Mod+C")}
+        <Copy /> Copy as Markdown {hint("Mod+C")}
       </ContextMenuItem>
       {editable && (
         <ContextMenuItem onSelect={() => void paste()}>
