@@ -3,7 +3,7 @@
 - A private, modern notebook web app for organizing books and notes, customizable paper styles, and seamless cross-device access.
 - Private by Data Access — เว็บเปิด URL ได้ แต่บุคคลอื่นไม่มีสิทธิ์อ่านหรือเขียน Note จาก Firestore
 - Auto Save ที่เชื่อถือได้ — มีสถานะ Saved on this device / Syncing / Synced / Offline / Error, sync หลังหยุดพิมพ์ 30 วินาที (อย่างน้อยทุก 5 นาที) และ Draft ในเครื่อง เพื่อไม่ให้ข้อความหายระหว่างพิมพ์หรือสลับอุปกรณ์
-- แบบที่ต้องการคือ WYSIWYG Editor (What You See Is What You Get) ที่รองรับ Markdown Shortcuts แบบ Real-time ไม่ใช่ Markdown Source Editor
+- Editor หลักเป็น WYSIWYG (What You See Is What You Get) ที่รองรับ Markdown Shortcuts แบบ Real-time และสลับไปแก้ Raw Markdown ได้
 - UX/UI Modern สวย ทันสมัยและใช้งานง่าย
 
 ## Notebook Structure
@@ -31,7 +31,7 @@ My Library
 | NoteManagement    | Create,Edit,Delete,Move                  | P0       |
 | Markdown          | Heading,List,Table,CodeBlock             | P0       |
 | RichText          | Bold,Italic,Highlight,TextColor          | P0       |
-| EditorMode        | Edit WYSIWYG                             | P0       |
+| EditorMode        | Edit WYSIWYG / Raw Markdown              | P0       |
 | AutoSave          | บันทึกอัตโนมัติ                          | P0       |
 | Search            | ค้นหาTitleและContent                     | P0       |
 | Responsive        | Desktop,Tablet,Mobile                    | P0       |
@@ -59,12 +59,13 @@ Layout ตามขนาดหน้าจอ
 
 ### Editor และ Paper Style
 
-- Editor Type: Inline WYSIWYG
+- Editor Type: Inline WYSIWYG พร้อมปุ่มสลับ Raw Markdown
 - Editing: Always Editable
 - Markdown: Live Formatting Shortcuts
 - Storage: Tiptap JSON
 - No Edit / Preview Toggle
-- ไม่มี Raw Markdown Source Editing
+- แก้ Raw Markdown แล้วแปลงกลับเป็น Tiptap JSON เพื่อ Auto Save; สีข้อความและสีไฮไลต์บางแบบอาจหายไปเมื่อแก้ Raw
+- เปิดดู Raw แล้วสลับกลับโดยไม่แก้ ต้องคง Tiptap JSON เดิม
 
 ![1793520550973](image/REQUIREMENT-V1/1793520550973.png)
 

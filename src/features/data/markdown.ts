@@ -8,6 +8,15 @@ let manager: MarkdownManager | null = null;
 const getManager = () =>
   (manager ??= new MarkdownManager({ extensions: editorExtensions }));
 
+/** Convert only the note body; the title stays in its own field. */
+export function contentToMarkdown(content: JSONContent): string {
+  return getManager().serialize(content);
+}
+
+export function markdownToContent(markdown: string): JSONContent {
+  return getManager().parse(markdown);
+}
+
 /** Note → Markdown file text. Text colors are not representable and are dropped. */
 export function noteToMarkdown(note: Pick<Note, "title" | "content">): string {
   const body = getManager().serialize(parseContent(note.content)).trim();

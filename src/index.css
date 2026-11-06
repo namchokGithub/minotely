@@ -140,6 +140,13 @@ body {
     /* Long URLs and unbroken strings wrap instead of scrolling sideways. */
     overflow-wrap: anywhere;
   }
+  .minotely-editor .spelling-error {
+    text-decoration-line: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: #dc2626;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
   .minotely-editor > * + * {
     @apply mt-3;
   }

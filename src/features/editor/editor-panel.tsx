@@ -1,12 +1,21 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Spinner } from "@/components/spinner";
 import { Link } from "react-router";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { toast } from "sonner";
 import {
   AlertCircle,
   Check,
   ChevronLeft,
   CloudOff,
+  Code2,
+  FileText,
   HardDrive,
   Loader2,
   Lock,
@@ -32,19 +41,36 @@ import { useSettings } from "@/features/settings/api";
 import { setNoteLocked, setNotePinned, useNotes } from "@/features/notes/api";
 import type { Note, NoteContentFields } from "@/features/notes/types";
 import { AppearanceMenu } from "./appearance-menu";
+import { copySelectionAsMarkdown } from "./copy-markdown";
+import { copySelectionAsText } from "./copy-text";
 import { AppContextMenu } from "@/components/app-context-menu";
-import { isSaveShortcut } from "@/lib/shortcuts";
+import { isPlainTextCopyShortcut, isSaveShortcut } from "@/lib/shortcuts";
 import { EditorContextItems } from "./editor-context-menu";
 import { EditorToolbar } from "./editor-toolbar";
+import {
+  NoteSpellcheck,
+  getSpellcheckEnabled,
+  saveSpellcheckEnabled,
+  startNoteSpellcheck,
+  type NoteSpellcheckController,
+  type SpellingTarget,
+} from "./spellcheck";
 import { LinkBubble } from "./link-bubble";
 import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
 import { useAutoSave, type SaveStatus } from "./use-auto-save";
+import {
+  contentToMarkdown,
+  markdownToContent,
+  plainTextOf,
+} from "@/features/data/markdown";
 
 type EditorPanelProps = {
   bookId: string | undefined;
   noteId: string | undefined;
 };
+
+const spellingExtensions = [...editorExtensions, NoteSpellcheck];
 
 export function EditorPanel({ bookId, noteId }: EditorPanelProps) {
   const notes = useNotes(bookId);
@@ -114,16 +140,40 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     plainText: initial.plainText,
   });
   const [title, setTitle] = useState(initial.title);
+  const [mode, setMode] = useState<"wysiwyg" | "markdown">("wysiwyg");
+  const [rawMarkdown, setRawMarkdown] = useState("");
+  const [spellcheck, setSpellcheck] = useState<NoteSpellcheckController | null>(
+    null,
+  );
+  const [spellcheckEnabled, setSpellcheckEnabled] = useState(() =>
+    getSpellcheckEnabled(uid),
+  );
+  const [spellingTarget, setSpellingTarget] = useState<SpellingTarget | null>(
+    null,
+  );
+  const rawTextarea = useRef<HTMLTextAreaElement>(null);
   const settings = useSettings();
 
   const editor = useEditor({
-    extensions: editorExtensions,
+    extensions: spellingExtensions,
     content: parseContent(initial.content),
     editable: !note.isLocked,
     editorProps: {
       attributes: {
         class: "minotely-editor",
         "aria-label": "Note content",
+        spellcheck: "false",
+        lang: "en-US",
+      },
+      handleDOMEvents: {
+        copy: copySelectionAsMarkdown,
+      },
+      handleKeyDown: (view, event) => {
+        if (!isPlainTextCopyShortcut(event) || view.state.selection.empty)
+          return false;
+        event.preventDefault();
+        void copySelectionAsText(view);
+        return true;
       },
     },
     onUpdate: ({ editor: e }) => {
@@ -136,10 +186,71 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     },
   });
 
+  useEffect(() => {
+    let active = true;
+    let controller: NoteSpellcheckController | null = null;
+    startNoteSpellcheck(editor, uid)
+      .then((loaded) => {
+        if (!active) loaded?.destroy();
+        else {
+          controller = loaded;
+          setSpellcheck(loaded);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Spellcheck failed to load", error);
+        if (active) toast.error("Spellcheck could not load");
+      });
+    return () => {
+      active = false;
+      controller?.destroy();
+    };
+  }, [editor, uid]);
+
+  useEffect(() => {
+    spellcheck?.setEnabled(spellcheckEnabled);
+  }, [spellcheck, spellcheckEnabled]);
+
+  const toggleSpellcheck = () => {
+    const next = !spellcheckEnabled;
+    if (!saveSpellcheckEnabled(uid, next)) {
+      toast.error("Could not save spell check setting");
+      return;
+    }
+    setSpellcheckEnabled(next);
+    spellcheck?.setEnabled(next);
+    if (!next) setSpellingTarget(null);
+  };
+
   // Lock is read-only editing (M5.6). `false`: toggling it is not a content change to save.
   useEffect(() => {
     editor.setEditable(!note.isLocked, false);
   }, [editor, note.isLocked]);
+
+  useEffect(() => {
+    if (mode === "markdown") rawTextarea.current?.focus();
+  }, [mode]);
+
+  useLayoutEffect(() => {
+    if (mode !== "markdown") return;
+    const textarea = rawTextarea.current;
+    if (!textarea) return;
+    const resize = () => {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    };
+    resize();
+    const container = textarea.parentElement;
+    if (!container) return;
+    let width = container.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (container.clientWidth === width) return;
+      width = container.clientWidth;
+      resize();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [mode, rawMarkdown]);
 
   const logError = (action: string) => (error: unknown) =>
     console.error(`${action} failed`, error);
@@ -169,14 +280,59 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     editor.commands.setContent(parseContent(remote.content), {
       emitUpdate: false,
     });
+    if (mode === "markdown") {
+      setRawMarkdown(contentToMarkdown(parseContent(remote.content)));
+    }
+  };
+
+  const toggleMode = () => {
+    if (mode === "wysiwyg") {
+      setRawMarkdown(contentToMarkdown(editor.getJSON()));
+      setMode("markdown");
+      return;
+    }
+    // When Raw was only viewed, latest still holds the original JSON, including
+    // formatting that Markdown cannot represent.
+    editor.commands.setContent(parseContent(latest.current.content), {
+      emitUpdate: false,
+    });
+    setMode("wysiwyg");
+  };
+
+  const editMarkdown = (markdown: string) => {
+    setRawMarkdown(markdown);
+    const content = markdownToContent(markdown);
+    latest.current = {
+      ...latest.current,
+      content: JSON.stringify(content),
+      plainText: plainTextOf(content),
+    };
+    change(latest.current);
   };
 
   return (
     <div className="flex min-h-0 flex-1 animate-in flex-col duration-200 fade-in-0">
       <div className="flex shrink-0 items-center gap-2 border-b px-2 py-1.5 sm:px-3">
         <div className="min-w-0 flex-1 overflow-x-auto">
-          <EditorToolbar editor={editor} disabled={note.isLocked} />
+          {mode === "wysiwyg" && (
+            <EditorToolbar editor={editor} disabled={note.isLocked} />
+          )}
         </div>
+        <Button
+          variant={mode === "markdown" ? "secondary" : "ghost"}
+          size="sm"
+          className="shrink-0 gap-1.5"
+          aria-pressed={mode === "markdown"}
+          aria-label={
+            mode === "markdown" ? "Switch to rich text" : "Edit raw Markdown"
+          }
+          onClick={toggleMode}
+        >
+          {mode === "markdown" ? <FileText /> : <Code2 />}
+          <span className="hidden sm:inline">
+            {mode === "markdown" ? "Rich text" : "Markdown"}
+          </span>
+        </Button>
         <SaveIndicator status={status} />
         <Button
           variant="ghost"
@@ -220,7 +376,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
       >
         <div
           className={cn(
-            "mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8",
+            "mx-auto w-full max-w-3xl px-4 pt-6 pb-[50dvh] sm:px-6 sm:pt-8",
             // Lined paper: red margin line left of the text, full height (D13).
             note.paperStyle === "lined" &&
               "relative min-h-full pl-14 before:absolute before:inset-y-0 before:left-9 before:w-0.5 before:bg-red-500/75 sm:pl-20 sm:before:left-12 dark:before:bg-red-400/60",
@@ -241,20 +397,67 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
-                editor.commands.focus("start");
+                if (mode === "markdown") rawTextarea.current?.focus();
+                else editor.commands.focus("start");
               }
             }}
           />
           <TagEditor note={note} readOnly={note.isLocked} />
-          <AppContextMenu
-            label="Editor actions"
-            menu={<EditorContextItems editor={editor} />}
-          >
-            <div>
-              <EditorContent editor={editor} />
-            </div>
-          </AppContextMenu>
-          <LinkBubble editor={editor} />
+          {mode === "markdown" ? (
+            <>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Editing Markdown may remove text colors and custom highlights.
+              </p>
+              <textarea
+                ref={rawTextarea}
+                value={rawMarkdown}
+                onChange={(event) => editMarkdown(event.target.value)}
+                readOnly={note.isLocked}
+                aria-label="Raw Markdown content"
+                spellCheck={false}
+                className="min-h-[50vh] w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-mono text-sm leading-6 shadow-none outline-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
+                placeholder="Write Markdown…"
+              />
+            </>
+          ) : (
+            <>
+              <AppContextMenu
+                label="Editor actions"
+                menu={
+                  <EditorContextItems
+                    editor={editor}
+                    spellingTarget={spellingTarget}
+                    spellcheck={spellcheck}
+                    spellcheckEnabled={spellcheckEnabled}
+                    onToggleSpellcheck={toggleSpellcheck}
+                    onSpellingAction={() => setSpellingTarget(null)}
+                  />
+                }
+              >
+                <div
+                  onContextMenuCapture={(event) => {
+                    if (!spellcheck || !spellcheckEnabled) {
+                      setSpellingTarget(null);
+                      return;
+                    }
+                    const position =
+                      event.clientX === 0 && event.clientY === 0
+                        ? editor.state.selection.from
+                        : editor.view.posAtCoords({
+                            left: event.clientX,
+                            top: event.clientY,
+                          })?.pos;
+                    setSpellingTarget(
+                      position == null ? null : spellcheck.at(position),
+                    );
+                  }}
+                >
+                  <EditorContent editor={editor} />
+                </div>
+              </AppContextMenu>
+              <LinkBubble editor={editor} />
+            </>
+          )}
         </div>
       </div>
 

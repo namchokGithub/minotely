@@ -12,6 +12,12 @@ Every item not `Done`. Keep in sync with the sections below.
 | ---- | -------------------------------------------------------------------- | ----------- |
 | M6.1 | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
 | M6.2 | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
+| M6.3 | Raw Markdown editor toggle                                           | In progress |
+| M6.4 | Copy WYSIWYG selections as Markdown                                  | In progress |
+| M6.5 | English spellcheck in WYSIWYG with custom suggestions                | In progress |
+| M6.6 | Thai dictionary and bilingual spellcheck in WYSIWYG                  | In progress |
+| M6.7 | Copy plain text from the editor menu or keyboard shortcut            | In progress |
+| M6.8 | Toggle spell check from the editor context menu                      | In progress |
 
 ## Notes
 
@@ -27,6 +33,25 @@ Every item not `Done`. Keep in sync with the sections below.
   followed in M6.2.
 - M6.2 (approved, done in code, D33; owner to test): `useNotes(bookId)` filters the all-notes listener instead of
   its own query; Firestore uses a persistent IndexedDB cache shared by tabs.
+- M6.3 (approved, done in code, D34; owner to test): switch a note body between WYSIWYG and editable Raw Markdown.
+  Viewing Raw without edits preserves the original rich formatting. Raw edits use the existing local draft and
+  Auto Save flow; unsupported colors and custom highlights may be lost after a Raw edit.
+- M6.4 (approved, done in code, D35; owner to test): Ctrl/⌘+C puts selected WYSIWYG content on the clipboard as
+  plain Markdown rather than rich HTML. Raw Markdown and title inputs keep native copy. The editor context menu
+  now copies plain text (M6.7).
+- M6.5 (approved, done in code, D36; owner to test): English spelling errors are underlined in WYSIWYG; the
+  right-click menu offers corrections, Add to dictionary (per account on this device), and Ignore word (until
+  the note closes). Raw Markdown and Thai are outside this first pass.
+- M6.6 (approved, done in code, D37; owner to test): add the Thai Hunspell dictionary and use Thai word
+  segmentation alongside English checking. Personal words are separate by language. The public repo credits
+  both dictionary sources and includes the Thai GPLv3 license. Segmentation may miss typos that split into
+  valid smaller words.
+- M6.7 (approved, done in code, D38; owner to test): the editor context menu's Copy as text and
+  Ctrl/⌘+Alt+Shift+C copy only selected characters with line breaks between blocks. Ctrl/⌘+C keeps copying
+  Markdown. The alternate shortcut avoids Chrome's Ctrl/⌘+Shift+C Inspect Element shortcut.
+- M6.8 (approved, done in code, D39; owner to test): a checked Spell check item in the editor's right-click
+  menu turns English and Thai checking on or off for all notes of that account on this device. Off removes
+  underlines and suggestions immediately and pauses checking; on rechecks the open note.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

@@ -2,10 +2,10 @@
 
 Non-obvious architectural choices. Newest last.
 
-## D1 — No Edit/Preview toggle (2026-11-01)
+## D1 — No Edit/Preview toggle (2026-11-01) — raw editing added by D34
 
 The editor is inline WYSIWYG and always editable. The roadmap's "Edit/Preview" item is removed because it
-contradicts the editor requirement. No raw Markdown source editing.
+contradicts the editor requirement. Raw Markdown source editing was added later by D34.
 
 ## D2 — Owner-only sign-in (2026-11-01) — superseded by D22
 
@@ -262,3 +262,57 @@ by tabs): listeners show cached data first and a reload re-reads only changed do
 is valid (about 30 minutes; after that the query is read again in full). Trade-off: note data stays in this
 browser's IndexedDB after sign-out, like Dexie drafts (D12), so the app suits personal devices. The note count
 remains client-side; a stored `noteCount` is the next step only if libraries grow to thousands of notes.
+
+## D34 — Raw Markdown editing alongside WYSIWYG (2026-11-06)
+
+The note editor defaults to WYSIWYG and has a Raw Markdown toggle. Both modes edit the same note body; the
+title remains a separate field, and content remains a Tiptap JSON string (D10). Opening Raw and returning
+without editing preserves the original JSON, including colors and highlights. Once Raw is edited, each change
+is parsed into Tiptap JSON and sent through the existing local draft and Auto Save path (D32); switching back
+shows the parsed content. Markdown cannot represent text colors or every custom highlight, so editing Raw may
+remove those styles. Locked notes are read-only in both modes. The existing import/export converter supplies
+the body conversion, with no new stored field or Firestore rule change.
+
+## D35 — Copy rich-text selections as Markdown (2026-11-06)
+
+Inside the WYSIWYG note body, Ctrl/⌘+C and the right-click Copy action serialize the selected Tiptap fragment
+to Markdown and write only `text/plain` to the clipboard. This keeps the selected block structure (headings,
+lists, links, code blocks) when pasting into a text editor. Copy from the Raw Markdown textarea or note title
+uses the browser's native selection. Cut keeps its existing behavior. Markdown cannot represent text colors and
+every custom highlight, so those styles are omitted from the copied text.
+
+## D36 — Local English spellcheck in WYSIWYG (2026-11-07)
+
+The WYSIWYG editor uses nspell with the packaged English dictionary. Tiptap Decorations draw spelling errors
+without changing the note JSON or triggering Auto Save. The browser's own spellcheck is disabled in WYSIWYG to
+avoid duplicate underlines. A right-click on an error offers up to five corrections, Add to dictionary, and
+Ignore word above the existing actions. Corrections use a Tiptap transaction and reject a stale word range.
+Personal words are kept in localStorage under a key containing the signed-in UID, so they persist across notes
+and reloads on this device but do not sync. Ignored words last only until the current note closes. The checker
+loads with the editor after sign-in, skips code and URLs/email addresses, and checks only English words. Raw
+Markdown and Thai remain outside this first pass; the second right-click still opens the browser menu (D26).
+
+## D37 — Thai dictionary alongside English (2026-11-07)
+
+Extends D36: the WYSIWYG checker now loads separate English and Thai nspell instances because their Hunspell
+affix files cannot be combined. `Intl.Segmenter` with Thai word granularity identifies Thai ranges in mixed
+text; English tokenization stays as in D36. The Thai `.aff` and `.dic` files are pinned to hunspell-th commit
+`a23b0521438f2735dc73efaee61391c6106ae196`. The repository README credits both dictionaries, and the
+Thai GPLv3 license is bundled with its files. Personal words remain per account and device, now in separate
+language keys; existing English personal words retain their key. Thai segmentation can split a misspelling
+into valid smaller words, leaving that typo unmarked. Raw Markdown remains outside the checker.
+
+## D38 — Plain-text Copy in the editor context menu (2026-11-07)
+
+The editor's right-click Copy action now writes selected text with block line breaks to the clipboard, without
+Markdown syntax or HTML. The menu label is "Copy as text" and does not show Ctrl/⌘+C as its shortcut because
+that keyboard shortcut still copies Markdown (D35). Ctrl/⌘+Alt+Shift+C invokes the same plain-text action
+while the WYSIWYG editor has focus; this avoids Chrome's Ctrl/⌘+Shift+C Inspect Element shortcut. The menu
+shows the alternate shortcut.
+
+## D39 — Device-local spell check toggle (2026-11-07)
+
+The editor context menu has a checked Spell check item, including for locked notes. It applies to all notes of
+the current account on this device and is stored in localStorage under a UID-specific key, defaulting to on.
+Turning it off clears Tiptap spelling decorations and suppresses suggestions and background checks; turning it
+on checks the open note again. It does not change note content, Firestore settings, or personal dictionary words.
