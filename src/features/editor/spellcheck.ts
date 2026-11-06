@@ -3,11 +3,13 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type nspell from "nspell";
 
 type SpellEngine = ReturnType<typeof nspell>;
+type Language = "en" | "th";
 
 export type SpellingError = {
   from: number;
   to: number;
   word: string;
+  language: Language;
 };
 
 type SpellcheckStorage = {
@@ -21,11 +23,11 @@ export type SpellingTarget = {
   suggestions: string[];
 };
 
-export const EnglishSpellcheck = Extension.create<
+export const NoteSpellcheck = Extension.create<
   Record<string, never>,
   SpellcheckStorage
 >({
-  name: "englishSpellcheck",
+  name: "noteSpellcheck",
   addStorage() {
     return { checkedDoc: null, errors: [] };
   },
@@ -44,32 +46,37 @@ export const EnglishSpellcheck = Extension.create<
 
 const wordPattern = /\b[A-Za-z]+(?:['’][A-Za-z]+)*\b/g;
 const excludedPattern = /https?:\/\/\S+|www\.\S+|\b[\w.+-]+@[\w.-]+\.\w+\b/g;
-const localWordsKey = (uid: string) => `minotely:english-words:${uid}`;
-let dictionaryPromise: Promise<{ aff: string; dic: string }> | undefined;
+const thaiPattern = /^[\u0e01-\u0e3a\u0e40-\u0e4e]+$/u;
+const localWordsKey = (uid: string, language: Language) =>
+  `minotely:${language === "en" ? "english" : "thai"}-words:${uid}`;
+const dictionaryPromises: Partial<
+  Record<Language, Promise<{ aff: string; dic: string }>>
+> = {};
 
-function loadDictionary() {
-  dictionaryPromise ??= Promise.all(
-    ["en.aff", "en.dic"].map(async (file) => {
+function loadDictionary(language: Language) {
+  dictionaryPromises[language] ??= Promise.all(
+    [`${language}.aff`, `${language}.dic`].map(async (file) => {
       const response = await fetch(
         `${import.meta.env.BASE_URL}dictionaries/${file}`,
       );
       if (!response.ok)
-        throw new Error(`Could not load English dictionary: ${file}`);
+        throw new Error(`Could not load ${language} dictionary: ${file}`);
       return response.text();
     }),
   )
     .then(([aff, dic]) => ({ aff, dic }))
     .catch((error: unknown) => {
-      dictionaryPromise = undefined;
+      dictionaryPromises[language] = undefined;
       throw error;
     });
-  return dictionaryPromise;
+  return dictionaryPromises[language];
 }
 
 function findErrors(
   doc: ProseMirrorNode,
-  spell: SpellEngine,
-  ignored: Set<string>,
+  spells: Record<Language, SpellEngine>,
+  ignored: Record<Language, Set<string>>,
+  thaiSegmenter: Intl.Segmenter,
 ) {
   const errors: SpellingError[] = [];
   doc.descendants((block, blockPos) => {
@@ -94,13 +101,30 @@ function findErrors(
         excluded.some(
           ({ from, to }) => match.index >= from && match.index < to,
         ) ||
-        ignored.has(normalized.toLowerCase()) ||
-        spell.correct(normalized)
+        ignored.en.has(normalized.toLowerCase()) ||
+        spells.en.correct(normalized)
       ) {
         continue;
       }
       const from = blockPos + 1 + match.index;
-      errors.push({ from, to: from + word.length, word });
+      errors.push({ from, to: from + word.length, word, language: "en" });
+    }
+
+    for (const segment of thaiSegmenter.segment(text)) {
+      const word = segment.segment;
+      if (
+        !segment.isWordLike ||
+        !thaiPattern.test(word) ||
+        excluded.some(
+          ({ from, to }) => segment.index >= from && segment.index < to,
+        ) ||
+        ignored.th.has(word) ||
+        spells.th.correct(word)
+      ) {
+        continue;
+      }
+      const from = blockPos + 1 + segment.index;
+      errors.push({ from, to: from + word.length, word, language: "th" });
     }
     return false;
   });
@@ -108,20 +132,23 @@ function findErrors(
 }
 
 function getStorage(editor: Editor): SpellcheckStorage {
-  return (editor.storage as unknown as { englishSpellcheck: SpellcheckStorage })
-    .englishSpellcheck;
+  return (editor.storage as unknown as { noteSpellcheck: SpellcheckStorage })
+    .noteSpellcheck;
 }
 
-function readPersonalWords(uid: string): Set<string> {
+function readPersonalWords(uid: string, language: Language): Set<string> {
   try {
     const stored: unknown = JSON.parse(
-      localStorage.getItem(localWordsKey(uid)) ?? "[]",
+      localStorage.getItem(localWordsKey(uid, language)) ?? "[]",
     );
     if (!Array.isArray(stored)) return new Set();
     return new Set(
       stored.filter(
         (word): word is string =>
-          typeof word === "string" && /^[A-Za-z][A-Za-z'’-]{0,63}$/.test(word),
+          typeof word === "string" &&
+          (language === "en"
+            ? /^[A-Za-z][A-Za-z'’-]{0,63}$/.test(word)
+            : word.length <= 64 && thaiPattern.test(word)),
       ),
     );
   } catch {
@@ -130,17 +157,24 @@ function readPersonalWords(uid: string): Set<string> {
 }
 
 /** Decorations are editor-only state; refreshing them does not change the saved note. */
-export async function startEnglishSpellcheck(editor: Editor, uid: string) {
-  const [{ default: createSpell }, dictionary] = await Promise.all([
+export async function startNoteSpellcheck(editor: Editor, uid: string) {
+  const [{ default: createSpell }, english, thai] = await Promise.all([
     import("nspell"),
-    loadDictionary(),
+    loadDictionary("en"),
+    loadDictionary("th"),
   ]);
   if (editor.isDestroyed) return null;
 
-  const spell = createSpell(dictionary);
-  const personalWords = readPersonalWords(uid);
-  for (const word of personalWords) spell.add(word);
-  const ignored = new Set<string>();
+  const spells = { en: createSpell(english), th: createSpell(thai) };
+  const personalWords = {
+    en: readPersonalWords(uid, "en"),
+    th: readPersonalWords(uid, "th"),
+  };
+  for (const language of ["en", "th"] as const) {
+    for (const word of personalWords[language]) spells[language].add(word);
+  }
+  const ignored = { en: new Set<string>(), th: new Set<string>() };
+  const thaiSegmenter = new Intl.Segmenter("th", { granularity: "word" });
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   const check = () => {
@@ -152,8 +186,8 @@ export async function startEnglishSpellcheck(editor: Editor, uid: string) {
     const checkedDoc = editor.state.doc;
     const storage = getStorage(editor);
     storage.checkedDoc = checkedDoc;
-    storage.errors = findErrors(checkedDoc, spell, ignored);
-    editor.commands.updateDecorations("englishSpellcheck");
+    storage.errors = findErrors(checkedDoc, spells, ignored, thaiSegmenter);
+    editor.commands.updateDecorations("noteSpellcheck");
   };
   const schedule = () => {
     clearTimeout(timer);
@@ -176,7 +210,9 @@ export async function startEnglishSpellcheck(editor: Editor, uid: string) {
       return {
         error,
         checkedDoc,
-        suggestions: spell.suggest(error.word.replaceAll("’", "'")).slice(0, 5),
+        suggestions: spells[error.language]
+          .suggest(error.word.replaceAll("’", "'"))
+          .slice(0, 5),
       };
     },
     replace(target: SpellingTarget, replacement: string) {
@@ -190,22 +226,39 @@ export async function startEnglishSpellcheck(editor: Editor, uid: string) {
       editor.view.dispatch(editor.state.tr.insertText(replacement, from, to));
       editor.commands.focus();
     },
-    ignore(word: string) {
-      ignored.add(word.replaceAll("’", "'").toLowerCase());
+    ignore(error: SpellingError) {
+      ignored[error.language].add(
+        error.language === "en"
+          ? error.word.replaceAll("’", "'").toLowerCase()
+          : error.word,
+      );
       check();
     },
-    add(word: string): boolean {
-      const normalized = word.replaceAll("’", "'").toLowerCase();
-      if (!/^[a-z][a-z'-]{0,63}$/.test(normalized)) return false;
-      const next = new Set([...personalWords, normalized]);
+    add(error: SpellingError): boolean {
+      const { language } = error;
+      const normalized =
+        language === "en"
+          ? error.word.replaceAll("’", "'").toLowerCase()
+          : error.word;
+      if (
+        language === "en"
+          ? !/^[a-z][a-z'-]{0,63}$/.test(normalized)
+          : normalized.length > 64 || !thaiPattern.test(normalized)
+      ) {
+        return false;
+      }
+      const next = new Set([...personalWords[language], normalized]);
       if (next.size > 1000) return false;
       try {
-        localStorage.setItem(localWordsKey(uid), JSON.stringify([...next]));
+        localStorage.setItem(
+          localWordsKey(uid, language),
+          JSON.stringify([...next]),
+        );
       } catch {
         return false;
       }
-      personalWords.add(normalized);
-      spell.add(normalized);
+      personalWords[language].add(normalized);
+      spells[language].add(normalized);
       check();
       return true;
     },
@@ -216,6 +269,6 @@ export async function startEnglishSpellcheck(editor: Editor, uid: string) {
   };
 }
 
-export type EnglishSpellcheckController = NonNullable<
-  Awaited<ReturnType<typeof startEnglishSpellcheck>>
+export type NoteSpellcheckController = NonNullable<
+  Awaited<ReturnType<typeof startNoteSpellcheck>>
 >;

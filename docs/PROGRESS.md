@@ -15,6 +15,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M6.3 | Raw Markdown editor toggle                                           | In progress |
 | M6.4 | Copy WYSIWYG selections as Markdown                                  | In progress |
 | M6.5 | English spellcheck in WYSIWYG with custom suggestions                | In progress |
+| M6.6 | Thai dictionary and bilingual spellcheck in WYSIWYG                  | In progress |
 
 ## Notes
 
@@ -38,6 +39,10 @@ Every item not `Done`. Keep in sync with the sections below.
 - M6.5 (approved, done in code, D36; owner to test): English spelling errors are underlined in WYSIWYG; the
   right-click menu offers corrections, Add to dictionary (per account on this device), and Ignore word (until
   the note closes). Raw Markdown and Thai are outside this first pass.
+- M6.6 (approved, done in code, D37; owner to test): add the Thai Hunspell dictionary and use Thai word
+  segmentation alongside English checking. Personal words are separate by language. The public repo credits
+  both dictionary sources and includes the Thai GPLv3 license. Segmentation may miss typos that split into
+  valid smaller words.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

@@ -12,8 +12,8 @@ Sign in with any Google account; each account sees only its own books and notes.
 - **Editor** — inline WYSIWYG (Tiptap) with live Markdown shortcuts and a Raw Markdown toggle; headings, lists,
   checklists, tables, code blocks, bold/italic, text color, highlight, and links with an edit bar. Editing Raw
   Markdown can remove text colors and custom highlights that Markdown cannot represent. Copying a rich-text
-  selection places Markdown on the clipboard. English spelling suggestions appear in the WYSIWYG right-click
-  menu; personal words are saved on this device.
+  selection places Markdown on the clipboard. English and Thai spelling suggestions appear in the WYSIWYG
+  right-click menu; personal words are saved on this device.
 - **Reliable Auto Save** — every edit saved on the device at once (IndexedDB), synced 30 s after typing stops
   (at least every 5 min), keeps working offline, asks before overwriting a version changed elsewhere; Ctrl/⌘+S
   syncs now.
@@ -40,6 +40,19 @@ Sign in with any Google account; each account sees only its own books and notes.
 | Local storage | Dexie (IndexedDB drafts)                                    |
 | Hosting       | Firebase Hosting, deployed by GitHub Actions                |
 | Tooling       | pnpm, ESLint, Prettier, Vitest                              |
+
+## Dictionary credits
+
+- English: [`dictionary-en`](https://github.com/wooorm/dictionaries/tree/main/dictionaries/en) from
+  wooorm/dictionaries. The bundled dictionary and affix files are MIT AND BSD licensed; their license text is
+  in [`public/dictionaries/LICENSE`](public/dictionaries/LICENSE).
+- Thai: [`hunspell-th`](https://github.com/syafiqhadzir/hunspell-th/tree/a23b0521438f2735dc73efaee61391c6106ae196)
+  by Syafiq Hadzir, using sources credited in its README. The bundled `th.aff` and `th.dic` come from that
+  pinned revision and are GPLv3 licensed; the license text is in
+  [`public/dictionaries/TH-LICENSE`](public/dictionaries/TH-LICENSE).
+
+Thai word boundaries come from `Intl.Segmenter`. Some misspellings split into valid smaller words and may not
+be underlined; the dictionary alone cannot resolve every such case.
 
 ## Project structure
 

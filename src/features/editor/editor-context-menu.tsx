@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/context-menu";
 import { shortcut } from "@/lib/shortcuts";
 import { insertOrEditLink } from "./links";
-import type { EnglishSpellcheckController, SpellingTarget } from "./spellcheck";
+import type { NoteSpellcheckController, SpellingTarget } from "./spellcheck";
 
 /**
  * Right-click menu inside the note (M5.9): clipboard, the most used formatting, Select all. A locked note
@@ -37,7 +37,7 @@ export function EditorContextItems({
 }: {
   editor: Editor;
   spellingTarget: SpellingTarget | null;
-  spellcheck: EnglishSpellcheckController | null;
+  spellcheck: NoteSpellcheckController | null;
   onSpellingAction: () => void;
 }) {
   const editable = editor.isEditable;
@@ -83,7 +83,7 @@ export function EditorContextItems({
           )}
           <ContextMenuItem
             onSelect={() => {
-              if (!spellcheck.add(spellingTarget.error.word)) {
+              if (!spellcheck.add(spellingTarget.error)) {
                 toast.error("Could not add word to this device's dictionary");
               }
               onSpellingAction();
@@ -93,7 +93,7 @@ export function EditorContextItems({
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
-              spellcheck.ignore(spellingTarget.error.word);
+              spellcheck.ignore(spellingTarget.error);
               onSpellingAction();
             }}
           >

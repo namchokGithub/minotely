@@ -47,9 +47,9 @@ import { isSaveShortcut } from "@/lib/shortcuts";
 import { EditorContextItems } from "./editor-context-menu";
 import { EditorToolbar } from "./editor-toolbar";
 import {
-  EnglishSpellcheck,
-  startEnglishSpellcheck,
-  type EnglishSpellcheckController,
+  NoteSpellcheck,
+  startNoteSpellcheck,
+  type NoteSpellcheckController,
   type SpellingTarget,
 } from "./spellcheck";
 import { LinkBubble } from "./link-bubble";
@@ -67,7 +67,7 @@ type EditorPanelProps = {
   noteId: string | undefined;
 };
 
-const spellingExtensions = [...editorExtensions, EnglishSpellcheck];
+const spellingExtensions = [...editorExtensions, NoteSpellcheck];
 
 export function EditorPanel({ bookId, noteId }: EditorPanelProps) {
   const notes = useNotes(bookId);
@@ -139,8 +139,9 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const [title, setTitle] = useState(initial.title);
   const [mode, setMode] = useState<"wysiwyg" | "markdown">("wysiwyg");
   const [rawMarkdown, setRawMarkdown] = useState("");
-  const [spellcheck, setSpellcheck] =
-    useState<EnglishSpellcheckController | null>(null);
+  const [spellcheck, setSpellcheck] = useState<NoteSpellcheckController | null>(
+    null,
+  );
   const [spellingTarget, setSpellingTarget] = useState<SpellingTarget | null>(
     null,
   );
@@ -174,8 +175,8 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
 
   useEffect(() => {
     let active = true;
-    let controller: EnglishSpellcheckController | null = null;
-    startEnglishSpellcheck(editor, uid)
+    let controller: NoteSpellcheckController | null = null;
+    startNoteSpellcheck(editor, uid)
       .then((loaded) => {
         if (!active) loaded?.destroy();
         else {
@@ -185,7 +186,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
       })
       .catch((error: unknown) => {
         console.error("Spellcheck failed to load", error);
-        if (active) toast.error("English spellcheck could not load");
+        if (active) toast.error("Spellcheck could not load");
       });
     return () => {
       active = false;

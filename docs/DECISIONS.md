@@ -291,3 +291,13 @@ Personal words are kept in localStorage under a key containing the signed-in UID
 and reloads on this device but do not sync. Ignored words last only until the current note closes. The checker
 loads with the editor after sign-in, skips code and URLs/email addresses, and checks only English words. Raw
 Markdown and Thai remain outside this first pass; the second right-click still opens the browser menu (D26).
+
+## D37 — Thai dictionary alongside English (2026-11-07)
+
+Extends D36: the WYSIWYG checker now loads separate English and Thai nspell instances because their Hunspell
+affix files cannot be combined. `Intl.Segmenter` with Thai word granularity identifies Thai ranges in mixed
+text; English tokenization stays as in D36. The Thai `.aff` and `.dic` files are pinned to hunspell-th commit
+`a23b0521438f2735dc73efaee61391c6106ae196`. The repository README credits both dictionaries, and the
+Thai GPLv3 license is bundled with its files. Personal words remain per account and device, now in separate
+language keys; existing English personal words retain their key. Thai segmentation can split a misspelling
+into valid smaller words, leaving that typo unmarked. Raw Markdown remains outside the checker.
