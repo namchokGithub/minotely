@@ -301,3 +301,11 @@ text; English tokenization stays as in D36. The Thai `.aff` and `.dic` files are
 Thai GPLv3 license is bundled with its files. Personal words remain per account and device, now in separate
 language keys; existing English personal words retain their key. Thai segmentation can split a misspelling
 into valid smaller words, leaving that typo unmarked. Raw Markdown remains outside the checker.
+
+## D38 — Plain-text Copy in the editor context menu (2026-11-07)
+
+The editor's right-click Copy action now writes selected text with block line breaks to the clipboard, without
+Markdown syntax or HTML. The menu label is "Copy as text" and does not show Ctrl/⌘+C as its shortcut because
+that keyboard shortcut still copies Markdown (D35). Ctrl/⌘+Alt+Shift+C invokes the same plain-text action
+while the WYSIWYG editor has focus; this avoids Chrome's Ctrl/⌘+Shift+C Inspect Element shortcut. The menu
+shows the alternate shortcut.

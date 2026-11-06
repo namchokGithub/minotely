@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/context-menu";
 import { shortcut } from "@/lib/shortcuts";
 import { insertOrEditLink } from "./links";
+import { copySelectionAsText } from "./copy-text";
 import type { NoteSpellcheckController, SpellingTarget } from "./spellcheck";
 
 /**
@@ -42,10 +43,10 @@ export function EditorContextItems({
 }) {
   const editable = editor.isEditable;
   const { empty } = editor.state.selection;
-  // Focus first so the editor restores its DOM selection; Copy uses the editor's Markdown handler.
-  const clipboard = (command: "copy" | "cut") => {
+  // Cut uses the editor's DOM selection and its existing clipboard behavior.
+  const cut = () => {
     editor.commands.focus();
-    document.execCommand(command);
+    document.execCommand("cut");
   };
   const paste = async () => {
     try {
@@ -103,12 +104,16 @@ export function EditorContextItems({
         </>
       )}
       {editable && (
-        <ContextMenuItem disabled={empty} onSelect={() => clipboard("cut")}>
+        <ContextMenuItem disabled={empty} onSelect={cut}>
           <Scissors /> Cut {hint("Mod+X")}
         </ContextMenuItem>
       )}
-      <ContextMenuItem disabled={empty} onSelect={() => clipboard("copy")}>
-        <Copy /> Copy as Markdown {hint("Mod+C")}
+      <ContextMenuItem
+        disabled={empty}
+        aria-keyshortcuts={shortcut("Mod+Alt+Shift+C").aria}
+        onSelect={() => void copySelectionAsText(editor.view)}
+      >
+        <Copy /> Copy as text {hint("Mod+Alt+Shift+C")}
       </ContextMenuItem>
       {editable && (
         <ContextMenuItem onSelect={() => void paste()}>

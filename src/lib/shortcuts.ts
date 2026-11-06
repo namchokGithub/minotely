@@ -27,3 +27,15 @@ export function isSaveShortcut(event: KeyboardEvent) {
     event.key.toLowerCase() === "s"
   );
 }
+
+/** Plain-text copy in the focused WYSIWYG editor. */
+export function isPlainTextCopyShortcut(event: KeyboardEvent) {
+  return (
+    (isMac
+      ? event.metaKey && !event.ctrlKey
+      : event.ctrlKey && !event.metaKey) &&
+    event.altKey &&
+    event.shiftKey &&
+    (event.code === "KeyC" || event.key.toLowerCase() === "c")
+  );
+}

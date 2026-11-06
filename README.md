@@ -11,9 +11,9 @@ Sign in with any Google account; each account sees only its own books and notes.
 - **Library → Books → Notes** — books with color (preset or custom) and icon, drag to reorder, live note count.
 - **Editor** — inline WYSIWYG (Tiptap) with live Markdown shortcuts and a Raw Markdown toggle; headings, lists,
   checklists, tables, code blocks, bold/italic, text color, highlight, and links with an edit bar. Editing Raw
-  Markdown can remove text colors and custom highlights that Markdown cannot represent. Copying a rich-text
-  selection places Markdown on the clipboard. English and Thai spelling suggestions appear in the WYSIWYG
-  right-click menu; personal words are saved on this device.
+  Markdown can remove text colors and custom highlights that Markdown cannot represent. Ctrl/⌘+C copies a
+  rich-text selection as Markdown; the right-click menu or Ctrl/⌘+Alt+Shift+C copies plain text. English and
+  Thai spelling suggestions appear in the WYSIWYG right-click menu; personal words are saved on this device.
 - **Reliable Auto Save** — every edit saved on the device at once (IndexedDB), synced 30 s after typing stops
   (at least every 5 min), keeps working offline, asks before overwriting a version changed elsewhere; Ctrl/⌘+S
   syncs now.
