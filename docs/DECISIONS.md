@@ -280,3 +280,14 @@ to Markdown and write only `text/plain` to the clipboard. This keeps the selecte
 lists, links, code blocks) when pasting into a text editor. Copy from the Raw Markdown textarea or note title
 uses the browser's native selection. Cut keeps its existing behavior. Markdown cannot represent text colors and
 every custom highlight, so those styles are omitted from the copied text.
+
+## D36 — Local English spellcheck in WYSIWYG (2026-11-07)
+
+The WYSIWYG editor uses nspell with the packaged English dictionary. Tiptap Decorations draw spelling errors
+without changing the note JSON or triggering Auto Save. The browser's own spellcheck is disabled in WYSIWYG to
+avoid duplicate underlines. A right-click on an error offers up to five corrections, Add to dictionary, and
+Ignore word above the existing actions. Corrections use a Tiptap transaction and reject a stale word range.
+Personal words are kept in localStorage under a key containing the signed-in UID, so they persist across notes
+and reloads on this device but do not sync. Ignored words last only until the current note closes. The checker
+loads with the editor after sign-in, skips code and URLs/email addresses, and checks only English words. Raw
+Markdown and Thai remain outside this first pass; the second right-click still opens the browser menu (D26).

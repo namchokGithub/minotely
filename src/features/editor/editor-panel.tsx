@@ -8,6 +8,7 @@ import {
 import { Spinner } from "@/components/spinner";
 import { Link } from "react-router";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { toast } from "sonner";
 import {
   AlertCircle,
   Check,
@@ -45,6 +46,12 @@ import { AppContextMenu } from "@/components/app-context-menu";
 import { isSaveShortcut } from "@/lib/shortcuts";
 import { EditorContextItems } from "./editor-context-menu";
 import { EditorToolbar } from "./editor-toolbar";
+import {
+  EnglishSpellcheck,
+  startEnglishSpellcheck,
+  type EnglishSpellcheckController,
+  type SpellingTarget,
+} from "./spellcheck";
 import { LinkBubble } from "./link-bubble";
 import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
@@ -59,6 +66,8 @@ type EditorPanelProps = {
   bookId: string | undefined;
   noteId: string | undefined;
 };
+
+const spellingExtensions = [...editorExtensions, EnglishSpellcheck];
 
 export function EditorPanel({ bookId, noteId }: EditorPanelProps) {
   const notes = useNotes(bookId);
@@ -130,17 +139,24 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const [title, setTitle] = useState(initial.title);
   const [mode, setMode] = useState<"wysiwyg" | "markdown">("wysiwyg");
   const [rawMarkdown, setRawMarkdown] = useState("");
+  const [spellcheck, setSpellcheck] =
+    useState<EnglishSpellcheckController | null>(null);
+  const [spellingTarget, setSpellingTarget] = useState<SpellingTarget | null>(
+    null,
+  );
   const rawTextarea = useRef<HTMLTextAreaElement>(null);
   const settings = useSettings();
 
   const editor = useEditor({
-    extensions: editorExtensions,
+    extensions: spellingExtensions,
     content: parseContent(initial.content),
     editable: !note.isLocked,
     editorProps: {
       attributes: {
         class: "minotely-editor",
         "aria-label": "Note content",
+        spellcheck: "false",
+        lang: "en-US",
       },
       handleDOMEvents: {
         copy: copySelectionAsMarkdown,
@@ -155,6 +171,27 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
       change(latest.current);
     },
   });
+
+  useEffect(() => {
+    let active = true;
+    let controller: EnglishSpellcheckController | null = null;
+    startEnglishSpellcheck(editor, uid)
+      .then((loaded) => {
+        if (!active) loaded?.destroy();
+        else {
+          controller = loaded;
+          setSpellcheck(loaded);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Spellcheck failed to load", error);
+        if (active) toast.error("English spellcheck could not load");
+      });
+    return () => {
+      active = false;
+      controller?.destroy();
+    };
+  }, [editor, uid]);
 
   // Lock is read-only editing (M5.6). `false`: toggling it is not a content change to save.
   useEffect(() => {
@@ -357,9 +394,33 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
             <>
               <AppContextMenu
                 label="Editor actions"
-                menu={<EditorContextItems editor={editor} />}
+                menu={
+                  <EditorContextItems
+                    editor={editor}
+                    spellingTarget={spellingTarget}
+                    spellcheck={spellcheck}
+                    onSpellingAction={() => setSpellingTarget(null)}
+                  />
+                }
               >
-                <div>
+                <div
+                  onContextMenuCapture={(event) => {
+                    if (!spellcheck) {
+                      setSpellingTarget(null);
+                      return;
+                    }
+                    const position =
+                      event.clientX === 0 && event.clientY === 0
+                        ? editor.state.selection.from
+                        : editor.view.posAtCoords({
+                            left: event.clientX,
+                            top: event.clientY,
+                          })?.pos;
+                    setSpellingTarget(
+                      position == null ? null : spellcheck.at(position),
+                    );
+                  }}
+                >
                   <EditorContent editor={editor} />
                 </div>
               </AppContextMenu>

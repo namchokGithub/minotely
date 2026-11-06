@@ -14,6 +14,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M6.2 | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
 | M6.3 | Raw Markdown editor toggle                                           | In progress |
 | M6.4 | Copy WYSIWYG selections as Markdown                                  | In progress |
+| M6.5 | English spellcheck in WYSIWYG with custom suggestions                | In progress |
 
 ## Notes
 
@@ -34,6 +35,9 @@ Every item not `Done`. Keep in sync with the sections below.
   Auto Save flow; unsupported colors and custom highlights may be lost after a Raw edit.
 - M6.4 (approved, done in code, D35; owner to test): Ctrl/⌘+C and the editor's Copy menu put the selected WYSIWYG
   content on the clipboard as plain Markdown rather than rich HTML. Raw Markdown and title inputs keep native copy.
+- M6.5 (approved, done in code, D36; owner to test): English spelling errors are underlined in WYSIWYG; the
+  right-click menu offers corrections, Add to dictionary (per account on this device), and Ignore word (until
+  the note closes). Raw Markdown and Thai are outside this first pass.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

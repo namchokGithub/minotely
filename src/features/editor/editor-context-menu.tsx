@@ -1,10 +1,14 @@
 import type { Editor } from "@tiptap/react";
+import { toast } from "sonner";
 import {
   Bold,
+  BookPlus,
+  Check,
   ClipboardPaste,
   Code2,
   Copy,
   Highlighter,
+  EyeOff,
   Italic,
   Link2,
   ListTodo,
@@ -13,17 +17,29 @@ import {
 } from "lucide-react";
 import {
   ContextMenuItem,
+  ContextMenuLabel,
   ContextMenuSeparator,
   ContextMenuShortcut,
 } from "@/components/ui/context-menu";
 import { shortcut } from "@/lib/shortcuts";
 import { insertOrEditLink } from "./links";
+import type { EnglishSpellcheckController, SpellingTarget } from "./spellcheck";
 
 /**
  * Right-click menu inside the note (M5.9): clipboard, the most used formatting, Select all. A locked note
  * offers only Copy and Select all.
  */
-export function EditorContextItems({ editor }: { editor: Editor }) {
+export function EditorContextItems({
+  editor,
+  spellingTarget,
+  spellcheck,
+  onSpellingAction,
+}: {
+  editor: Editor;
+  spellingTarget: SpellingTarget | null;
+  spellcheck: EnglishSpellcheckController | null;
+  onSpellingAction: () => void;
+}) {
   const editable = editor.isEditable;
   const { empty } = editor.state.selection;
   // Focus first so the editor restores its DOM selection; Copy uses the editor's Markdown handler.
@@ -47,6 +63,45 @@ export function EditorContextItems({ editor }: { editor: Editor }) {
 
   return (
     <>
+      {editable && spellingTarget && spellcheck && (
+        <>
+          <ContextMenuLabel>Spelling suggestions</ContextMenuLabel>
+          {spellingTarget.suggestions.length ? (
+            spellingTarget.suggestions.map((suggestion) => (
+              <ContextMenuItem
+                key={suggestion}
+                onSelect={() => {
+                  spellcheck.replace(spellingTarget, suggestion);
+                  onSpellingAction();
+                }}
+              >
+                <Check /> {suggestion}
+              </ContextMenuItem>
+            ))
+          ) : (
+            <ContextMenuItem disabled>No suggestions</ContextMenuItem>
+          )}
+          <ContextMenuItem
+            onSelect={() => {
+              if (!spellcheck.add(spellingTarget.error.word)) {
+                toast.error("Could not add word to this device's dictionary");
+              }
+              onSpellingAction();
+            }}
+          >
+            <BookPlus /> Add to dictionary
+          </ContextMenuItem>
+          <ContextMenuItem
+            onSelect={() => {
+              spellcheck.ignore(spellingTarget.error.word);
+              onSpellingAction();
+            }}
+          >
+            <EyeOff /> Ignore word
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+        </>
+      )}
       {editable && (
         <ContextMenuItem disabled={empty} onSelect={() => clipboard("cut")}>
           <Scissors /> Cut {hint("Mod+X")}
