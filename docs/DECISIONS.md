@@ -309,3 +309,10 @@ Markdown syntax or HTML. The menu label is "Copy as text" and does not show Ctrl
 that keyboard shortcut still copies Markdown (D35). Ctrl/⌘+Alt+Shift+C invokes the same plain-text action
 while the WYSIWYG editor has focus; this avoids Chrome's Ctrl/⌘+Shift+C Inspect Element shortcut. The menu
 shows the alternate shortcut.
+
+## D39 — Device-local spell check toggle (2026-11-07)
+
+The editor context menu has a checked Spell check item, including for locked notes. It applies to all notes of
+the current account on this device and is stored in localStorage under a UID-specific key, defaulting to on.
+Turning it off clears Tiptap spelling decorations and suppresses suggestions and background checks; turning it
+on checks the open note again. It does not change note content, Firestore settings, or personal dictionary words.

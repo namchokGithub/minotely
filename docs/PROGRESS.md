@@ -17,6 +17,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M6.5 | English spellcheck in WYSIWYG with custom suggestions                | In progress |
 | M6.6 | Thai dictionary and bilingual spellcheck in WYSIWYG                  | In progress |
 | M6.7 | Copy plain text from the editor menu or keyboard shortcut            | In progress |
+| M6.8 | Toggle spell check from the editor context menu                      | In progress |
 
 ## Notes
 
@@ -48,6 +49,9 @@ Every item not `Done`. Keep in sync with the sections below.
 - M6.7 (approved, done in code, D38; owner to test): the editor context menu's Copy as text and
   Ctrl/⌘+Alt+Shift+C copy only selected characters with line breaks between blocks. Ctrl/⌘+C keeps copying
   Markdown. The alternate shortcut avoids Chrome's Ctrl/⌘+Shift+C Inspect Element shortcut.
+- M6.8 (approved, done in code, D39; owner to test): a checked Spell check item in the editor's right-click
+  menu turns English and Thai checking on or off for all notes of that account on this device. Off removes
+  underlines and suggestions immediately and pauses checking; on rechecks the open note.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

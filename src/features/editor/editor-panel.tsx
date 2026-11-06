@@ -49,6 +49,8 @@ import { EditorContextItems } from "./editor-context-menu";
 import { EditorToolbar } from "./editor-toolbar";
 import {
   NoteSpellcheck,
+  getSpellcheckEnabled,
+  saveSpellcheckEnabled,
   startNoteSpellcheck,
   type NoteSpellcheckController,
   type SpellingTarget,
@@ -143,6 +145,9 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const [spellcheck, setSpellcheck] = useState<NoteSpellcheckController | null>(
     null,
   );
+  const [spellcheckEnabled, setSpellcheckEnabled] = useState(() =>
+    getSpellcheckEnabled(uid),
+  );
   const [spellingTarget, setSpellingTarget] = useState<SpellingTarget | null>(
     null,
   );
@@ -201,6 +206,21 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
       controller?.destroy();
     };
   }, [editor, uid]);
+
+  useEffect(() => {
+    spellcheck?.setEnabled(spellcheckEnabled);
+  }, [spellcheck, spellcheckEnabled]);
+
+  const toggleSpellcheck = () => {
+    const next = !spellcheckEnabled;
+    if (!saveSpellcheckEnabled(uid, next)) {
+      toast.error("Could not save spell check setting");
+      return;
+    }
+    setSpellcheckEnabled(next);
+    spellcheck?.setEnabled(next);
+    if (!next) setSpellingTarget(null);
+  };
 
   // Lock is read-only editing (M5.6). `false`: toggling it is not a content change to save.
   useEffect(() => {
@@ -408,13 +428,15 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                     editor={editor}
                     spellingTarget={spellingTarget}
                     spellcheck={spellcheck}
+                    spellcheckEnabled={spellcheckEnabled}
+                    onToggleSpellcheck={toggleSpellcheck}
                     onSpellingAction={() => setSpellingTarget(null)}
                   />
                 }
               >
                 <div
                   onContextMenuCapture={(event) => {
-                    if (!spellcheck) {
+                    if (!spellcheck || !spellcheckEnabled) {
                       setSpellingTarget(null);
                       return;
                     }

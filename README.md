@@ -13,7 +13,8 @@ Sign in with any Google account; each account sees only its own books and notes.
   checklists, tables, code blocks, bold/italic, text color, highlight, and links with an edit bar. Editing Raw
   Markdown can remove text colors and custom highlights that Markdown cannot represent. Ctrl/⌘+C copies a
   rich-text selection as Markdown; the right-click menu or Ctrl/⌘+Alt+Shift+C copies plain text. English and
-  Thai spelling suggestions appear in the WYSIWYG right-click menu; personal words are saved on this device.
+  Thai spelling suggestions appear in the WYSIWYG right-click menu, where spell check can be turned on or off;
+  personal words and the spell check setting are saved on this device.
 - **Reliable Auto Save** — every edit saved on the device at once (IndexedDB), synced 30 s after typing stops
   (at least every 5 min), keeps working offline, asks before overwriting a version changed elsewhere; Ctrl/⌘+S
   syncs now.

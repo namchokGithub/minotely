@@ -13,9 +13,11 @@ import {
   Link2,
   ListTodo,
   Scissors,
+  SpellCheck2,
   TextSelect,
 } from "lucide-react";
 import {
+  ContextMenuCheckboxItem,
   ContextMenuItem,
   ContextMenuLabel,
   ContextMenuSeparator,
@@ -34,11 +36,15 @@ export function EditorContextItems({
   editor,
   spellingTarget,
   spellcheck,
+  spellcheckEnabled,
+  onToggleSpellcheck,
   onSpellingAction,
 }: {
   editor: Editor;
   spellingTarget: SpellingTarget | null;
   spellcheck: NoteSpellcheckController | null;
+  spellcheckEnabled: boolean;
+  onToggleSpellcheck: () => void;
   onSpellingAction: () => void;
 }) {
   const editable = editor.isEditable;
@@ -64,7 +70,7 @@ export function EditorContextItems({
 
   return (
     <>
-      {editable && spellingTarget && spellcheck && (
+      {editable && spellcheckEnabled && spellingTarget && spellcheck && (
         <>
           <ContextMenuLabel>Spelling suggestions</ContextMenuLabel>
           {spellingTarget.suggestions.length ? (
@@ -148,6 +154,13 @@ export function EditorContextItems({
       <ContextMenuItem onSelect={() => chain().selectAll().run()}>
         <TextSelect /> Select all {hint("Mod+A")}
       </ContextMenuItem>
+      <ContextMenuSeparator />
+      <ContextMenuCheckboxItem
+        checked={spellcheckEnabled}
+        onCheckedChange={onToggleSpellcheck}
+      >
+        <SpellCheck2 /> Spell check
+      </ContextMenuCheckboxItem>
     </>
   );
 }

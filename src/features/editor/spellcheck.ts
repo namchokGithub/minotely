@@ -13,6 +13,7 @@ export type SpellingError = {
 };
 
 type SpellcheckStorage = {
+  enabled: boolean;
   checkedDoc: ProseMirrorNode | null;
   errors: SpellingError[];
 };
@@ -29,13 +30,14 @@ export const NoteSpellcheck = Extension.create<
 >({
   name: "noteSpellcheck",
   addStorage() {
-    return { checkedDoc: null, errors: [] };
+    return { enabled: true, checkedDoc: null, errors: [] };
   },
   addDecorations() {
     return {
       update: "document",
       create: ({ state }) => {
-        if (this.storage.checkedDoc !== state.doc) return [];
+        if (!this.storage.enabled || this.storage.checkedDoc !== state.doc)
+          return [];
         return this.storage.errors.map(({ from, to }) =>
           Decoration.Inline(from, to, { class: "spelling-error" }),
         );
@@ -49,6 +51,7 @@ const excludedPattern = /https?:\/\/\S+|www\.\S+|\b[\w.+-]+@[\w.-]+\.\w+\b/g;
 const thaiPattern = /^[\u0e01-\u0e3a\u0e40-\u0e4e]+$/u;
 const localWordsKey = (uid: string, language: Language) =>
   `minotely:${language === "en" ? "english" : "thai"}-words:${uid}`;
+const enabledKey = (uid: string) => `minotely:spellcheck-enabled:${uid}`;
 const dictionaryPromises: Partial<
   Record<Language, Promise<{ aff: string; dic: string }>>
 > = {};
@@ -136,6 +139,23 @@ function getStorage(editor: Editor): SpellcheckStorage {
     .noteSpellcheck;
 }
 
+export function getSpellcheckEnabled(uid: string): boolean {
+  try {
+    return localStorage.getItem(enabledKey(uid)) !== "false";
+  } catch {
+    return true;
+  }
+}
+
+export function saveSpellcheckEnabled(uid: string, enabled: boolean): boolean {
+  try {
+    localStorage.setItem(enabledKey(uid), String(enabled));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function readPersonalWords(uid: string, language: Language): Set<string> {
   try {
     const stored: unknown = JSON.parse(
@@ -176,29 +196,42 @@ export async function startNoteSpellcheck(editor: Editor, uid: string) {
   const ignored = { en: new Set<string>(), th: new Set<string>() };
   const thaiSegmenter = new Intl.Segmenter("th", { granularity: "word" });
   let timer: ReturnType<typeof setTimeout> | undefined;
+  const storage = getStorage(editor);
+  storage.enabled = getSpellcheckEnabled(uid);
 
   const check = () => {
-    if (editor.isDestroyed) return;
+    if (editor.isDestroyed || !storage.enabled) return;
     if (editor.view.composing) {
       schedule();
       return;
     }
     const checkedDoc = editor.state.doc;
-    const storage = getStorage(editor);
     storage.checkedDoc = checkedDoc;
     storage.errors = findErrors(checkedDoc, spells, ignored, thaiSegmenter);
     editor.commands.updateDecorations("noteSpellcheck");
   };
   const schedule = () => {
+    if (!storage.enabled) return;
     clearTimeout(timer);
     timer = setTimeout(check, 300);
   };
   editor.on("update", schedule);
-  check();
+  if (storage.enabled) check();
 
   return {
+    setEnabled(enabled: boolean) {
+      if (storage.enabled === enabled) return;
+      storage.enabled = enabled;
+      clearTimeout(timer);
+      if (enabled) check();
+      else {
+        storage.checkedDoc = null;
+        storage.errors = [];
+        editor.commands.updateDecorations("noteSpellcheck");
+      }
+    },
     at(position: number): SpellingTarget | null {
-      const storage = getStorage(editor);
+      if (!storage.enabled) return null;
       if (storage.checkedDoc !== editor.state.doc) check();
       const checkedDoc = storage.checkedDoc;
       if (!checkedDoc || checkedDoc !== editor.state.doc) return null;
