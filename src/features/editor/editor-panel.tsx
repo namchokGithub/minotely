@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Spinner } from "@/components/spinner";
 import { Link } from "react-router";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -154,6 +160,27 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   useEffect(() => {
     if (mode === "markdown") rawTextarea.current?.focus();
   }, [mode]);
+
+  useLayoutEffect(() => {
+    if (mode !== "markdown") return;
+    const textarea = rawTextarea.current;
+    if (!textarea) return;
+    const resize = () => {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    };
+    resize();
+    const container = textarea.parentElement;
+    if (!container) return;
+    let width = container.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (container.clientWidth === width) return;
+      width = container.clientWidth;
+      resize();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [mode, rawMarkdown]);
 
   const logError = (action: string) => (error: unknown) =>
     console.error(`${action} failed`, error);
@@ -318,7 +345,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                 readOnly={note.isLocked}
                 aria-label="Raw Markdown content"
                 spellCheck={false}
-                className="min-h-[50vh] w-full resize-y bg-transparent font-mono text-sm leading-6 outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring"
+                className="min-h-[50vh] w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-mono text-sm leading-6 shadow-none outline-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
                 placeholder="Write Markdown…"
               />
             </>
