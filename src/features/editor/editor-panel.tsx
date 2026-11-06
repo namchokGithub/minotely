@@ -7,6 +7,8 @@ import {
   Check,
   ChevronLeft,
   CloudOff,
+  Code2,
+  FileText,
   HardDrive,
   Loader2,
   Lock,
@@ -40,6 +42,11 @@ import { LinkBubble } from "./link-bubble";
 import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
 import { useAutoSave, type SaveStatus } from "./use-auto-save";
+import {
+  contentToMarkdown,
+  markdownToContent,
+  plainTextOf,
+} from "@/features/data/markdown";
 
 type EditorPanelProps = {
   bookId: string | undefined;
@@ -114,6 +121,9 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     plainText: initial.plainText,
   });
   const [title, setTitle] = useState(initial.title);
+  const [mode, setMode] = useState<"wysiwyg" | "markdown">("wysiwyg");
+  const [rawMarkdown, setRawMarkdown] = useState("");
+  const rawTextarea = useRef<HTMLTextAreaElement>(null);
   const settings = useSettings();
 
   const editor = useEditor({
@@ -140,6 +150,10 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   useEffect(() => {
     editor.setEditable(!note.isLocked, false);
   }, [editor, note.isLocked]);
+
+  useEffect(() => {
+    if (mode === "markdown") rawTextarea.current?.focus();
+  }, [mode]);
 
   const logError = (action: string) => (error: unknown) =>
     console.error(`${action} failed`, error);
@@ -169,14 +183,59 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     editor.commands.setContent(parseContent(remote.content), {
       emitUpdate: false,
     });
+    if (mode === "markdown") {
+      setRawMarkdown(contentToMarkdown(parseContent(remote.content)));
+    }
+  };
+
+  const toggleMode = () => {
+    if (mode === "wysiwyg") {
+      setRawMarkdown(contentToMarkdown(editor.getJSON()));
+      setMode("markdown");
+      return;
+    }
+    // When Raw was only viewed, latest still holds the original JSON, including
+    // formatting that Markdown cannot represent.
+    editor.commands.setContent(parseContent(latest.current.content), {
+      emitUpdate: false,
+    });
+    setMode("wysiwyg");
+  };
+
+  const editMarkdown = (markdown: string) => {
+    setRawMarkdown(markdown);
+    const content = markdownToContent(markdown);
+    latest.current = {
+      ...latest.current,
+      content: JSON.stringify(content),
+      plainText: plainTextOf(content),
+    };
+    change(latest.current);
   };
 
   return (
     <div className="flex min-h-0 flex-1 animate-in flex-col duration-200 fade-in-0">
       <div className="flex shrink-0 items-center gap-2 border-b px-2 py-1.5 sm:px-3">
         <div className="min-w-0 flex-1 overflow-x-auto">
-          <EditorToolbar editor={editor} disabled={note.isLocked} />
+          {mode === "wysiwyg" && (
+            <EditorToolbar editor={editor} disabled={note.isLocked} />
+          )}
         </div>
+        <Button
+          variant={mode === "markdown" ? "secondary" : "ghost"}
+          size="sm"
+          className="shrink-0 gap-1.5"
+          aria-pressed={mode === "markdown"}
+          aria-label={
+            mode === "markdown" ? "Switch to rich text" : "Edit raw Markdown"
+          }
+          onClick={toggleMode}
+        >
+          {mode === "markdown" ? <FileText /> : <Code2 />}
+          <span className="hidden sm:inline">
+            {mode === "markdown" ? "Rich text" : "Markdown"}
+          </span>
+        </Button>
         <SaveIndicator status={status} />
         <Button
           variant="ghost"
@@ -241,20 +300,41 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
-                editor.commands.focus("start");
+                if (mode === "markdown") rawTextarea.current?.focus();
+                else editor.commands.focus("start");
               }
             }}
           />
           <TagEditor note={note} readOnly={note.isLocked} />
-          <AppContextMenu
-            label="Editor actions"
-            menu={<EditorContextItems editor={editor} />}
-          >
-            <div>
-              <EditorContent editor={editor} />
-            </div>
-          </AppContextMenu>
-          <LinkBubble editor={editor} />
+          {mode === "markdown" ? (
+            <>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Editing Markdown may remove text colors and custom highlights.
+              </p>
+              <textarea
+                ref={rawTextarea}
+                value={rawMarkdown}
+                onChange={(event) => editMarkdown(event.target.value)}
+                readOnly={note.isLocked}
+                aria-label="Raw Markdown content"
+                spellCheck={false}
+                className="min-h-[50vh] w-full resize-y bg-transparent font-mono text-sm leading-6 outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring"
+                placeholder="Write Markdown…"
+              />
+            </>
+          ) : (
+            <>
+              <AppContextMenu
+                label="Editor actions"
+                menu={<EditorContextItems editor={editor} />}
+              >
+                <div>
+                  <EditorContent editor={editor} />
+                </div>
+              </AppContextMenu>
+              <LinkBubble editor={editor} />
+            </>
+          )}
         </div>
       </div>
 

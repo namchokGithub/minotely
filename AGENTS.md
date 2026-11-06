@@ -53,7 +53,7 @@ firebase.json       # Hosting (dist, SPA rewrite, caching) + rules path (D19)
 - Components do not call Firestore directly. Each feature exposes data access through its own `api.ts` (plain write functions + realtime `useSnapshotQuery` hooks, D11).
 - Server data lives in TanStack Query; Zustand holds UI state only (sidebar, selection, filters).
 - Note content is stored as a Tiptap JSON string (D10). `plainText` is derived from it on save and used for search.
-- The editor is always-editable inline WYSIWYG. No Edit/Preview toggle, no raw Markdown source editor (D1).
+- The editor defaults to inline WYSIWYG and can switch to editable Raw Markdown (D34). There is no Edit/Preview toggle.
 - Notes are soft-deleted with `deletedAt`; Trash restores or permanently deletes.
 - Auto Save debounces writes, shows Saving / Saved / Error, and keeps a local draft in Dexie until the write succeeds.
 - Paper Style is an editor background only; text is not snapped to lines.

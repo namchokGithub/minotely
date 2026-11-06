@@ -12,6 +12,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | ---- | -------------------------------------------------------------------- | ----------- |
 | M6.1 | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
 | M6.2 | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
+| M6.3 | Raw Markdown editor toggle                                           | In progress |
 
 ## Notes
 
@@ -27,6 +28,9 @@ Every item not `Done`. Keep in sync with the sections below.
   followed in M6.2.
 - M6.2 (approved, done in code, D33; owner to test): `useNotes(bookId)` filters the all-notes listener instead of
   its own query; Firestore uses a persistent IndexedDB cache shared by tabs.
+- M6.3 (approved, done in code, D34; owner to test): switch a note body between WYSIWYG and editable Raw Markdown.
+  Viewing Raw without edits preserves the original rich formatting. Raw edits use the existing local draft and
+  Auto Save flow; unsupported colors and custom highlights may be lost after a Raw edit.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

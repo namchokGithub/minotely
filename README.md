@@ -9,8 +9,9 @@ Sign in with any Google account; each account sees only its own books and notes.
 ## Features
 
 - **Library → Books → Notes** — books with color (preset or custom) and icon, drag to reorder, live note count.
-- **Editor** — inline WYSIWYG (Tiptap) with live Markdown shortcuts, headings, lists, checklists, tables, code
-  blocks, bold/italic, text color, highlight, and links with an edit bar.
+- **Editor** — inline WYSIWYG (Tiptap) with live Markdown shortcuts and a Raw Markdown toggle; headings, lists,
+  checklists, tables, code blocks, bold/italic, text color, highlight, and links with an edit bar. Editing Raw
+  Markdown can remove text colors and custom highlights that Markdown cannot represent.
 - **Reliable Auto Save** — every edit saved on the device at once (IndexedDB), synced 30 s after typing stops
   (at least every 5 min), keeps working offline, asks before overwriting a version changed elsewhere; Ctrl/⌘+S
   syncs now.

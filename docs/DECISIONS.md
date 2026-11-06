@@ -2,10 +2,10 @@
 
 Non-obvious architectural choices. Newest last.
 
-## D1 — No Edit/Preview toggle (2026-11-01)
+## D1 — No Edit/Preview toggle (2026-11-01) — raw editing added by D34
 
 The editor is inline WYSIWYG and always editable. The roadmap's "Edit/Preview" item is removed because it
-contradicts the editor requirement. No raw Markdown source editing.
+contradicts the editor requirement. Raw Markdown source editing was added later by D34.
 
 ## D2 — Owner-only sign-in (2026-11-01) — superseded by D22
 
@@ -262,3 +262,13 @@ by tabs): listeners show cached data first and a reload re-reads only changed do
 is valid (about 30 minutes; after that the query is read again in full). Trade-off: note data stays in this
 browser's IndexedDB after sign-out, like Dexie drafts (D12), so the app suits personal devices. The note count
 remains client-side; a stored `noteCount` is the next step only if libraries grow to thousands of notes.
+
+## D34 — Raw Markdown editing alongside WYSIWYG (2026-11-06)
+
+The note editor defaults to WYSIWYG and has a Raw Markdown toggle. Both modes edit the same note body; the
+title remains a separate field, and content remains a Tiptap JSON string (D10). Opening Raw and returning
+without editing preserves the original JSON, including colors and highlights. Once Raw is edited, each change
+is parsed into Tiptap JSON and sent through the existing local draft and Auto Save path (D32); switching back
+shows the parsed content. Markdown cannot represent text colors or every custom highlight, so editing Raw may
+remove those styles. Locked notes are read-only in both modes. The existing import/export converter supplies
+the body conversion, with no new stored field or Firestore rule change.
