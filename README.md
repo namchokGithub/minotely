@@ -23,6 +23,7 @@ Sign in with any Google account; each account sees only its own books and notes.
 - **Find** — search titles, content and `#tags` across all books (Ctrl/⌘+K).
 - **Reading** — paper styles (plain, margin, lined, grid, dotted), editor font and size, light/dark theme.
 - **Data** — JSON backup export/import, Markdown export/import per note.
+- **Version history** — Auto and Manual versions of each note, kept on this device, with a read-only preview.
 - **Responsive** — 3 resizable columns on desktop, collapsible Library on tablet, one screen at a time with a
   bottom menu on mobile.
 - **Keyboard and accessibility** — shortcuts with hints, app right-click menus (a second right-click opens the
@@ -70,6 +71,7 @@ src/
     trash/        Trash
     settings/     synced editor settings, mobile Settings screen
     data/         JSON backup, Markdown import/export
+    versions/     local version history
   lib/            Firebase, Firestore, Dexie, shared hooks
   stores/         Zustand UI store
 docs/             requirements, plan, progress, decisions, security
@@ -132,7 +134,7 @@ domains for Firebase Auth. Security notes: `docs/SECURITY.md`.
 
 ## Roadmap
 
-- **Post-MVP:** version history.
+- **Post-MVP:** version history synced across devices (today it is kept on each device only).
 
 Status details: `docs/PROGRESS.md`.
 

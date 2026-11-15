@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Spinner } from "@/components/spinner";
 import { Link } from "react-router";
 import {
@@ -35,8 +35,10 @@ import {
   deleteNoteForever,
   emptyTrash,
   restoreNote,
+  useAllNotes,
   useTrashNotes,
 } from "@/features/notes/api";
+import { deleteVersionsExcept } from "@/lib/db";
 import type { Note } from "@/features/notes/types";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
@@ -48,6 +50,7 @@ function logError(action: string) {
 export function TrashPanel() {
   const uid = useUid();
   const notes = useTrashNotes();
+  const { data: liveNotes } = useAllNotes();
   const { data: books } = useBooks();
   const [emptyOpen, setEmptyOpen] = useState(false);
   const toggleBooksSidebar = useUiStore((state) => state.toggleBooksSidebar);
@@ -55,6 +58,19 @@ export function TrashPanel() {
   const sorted = [...(notes.data ?? [])].sort(
     (a, b) => (b.deletedAt?.getTime() ?? 0) - (a.deletedAt?.getTime() ?? 0),
   );
+
+  // Local versions of notes deleted forever on another device (D42). Here both
+  // lists are loaded, so every existing note is known. Skipped offline or with
+  // no notes at all, when the lists may be an incomplete cache.
+  const trashNotes = notes.data;
+  useEffect(() => {
+    if (!liveNotes || !trashNotes || !navigator.onLine) return;
+    const existing = new Set(
+      [...liveNotes, ...trashNotes].map((note) => note.id),
+    );
+    if (existing.size === 0) return;
+    deleteVersionsExcept(uid, existing).catch(logError("Version cleanup"));
+  }, [uid, liveNotes, trashNotes]);
 
   return (
     <div className="flex h-full flex-col">

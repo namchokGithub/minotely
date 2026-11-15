@@ -17,6 +17,7 @@ import {
   Code2,
   FileText,
   HardDrive,
+  History,
   Loader2,
   Lock,
   LockOpen,
@@ -60,6 +61,7 @@ import { LinkBubble } from "./link-bubble";
 import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
 import { useAutoSave, type SaveStatus } from "./use-auto-save";
+import { VersionHistory } from "@/features/versions/version-history";
 import {
   contentToMarkdown,
   markdownToContent,
@@ -129,7 +131,7 @@ function DraftLoader({ note }: { note: Note }) {
 
 function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const uid = useUid();
-  const { status, conflict, change, saveNow, keepMine, takeTheirs } =
+  const { status, conflict, change, saveNow, syncNow, keepMine, takeTheirs } =
     useAutoSave(uid, note.id, {
       title: draft?.baseTitle ?? note.title,
       content: draft?.baseContent ?? note.content,
@@ -153,6 +155,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     null,
   );
   const rawTextarea = useRef<HTMLTextAreaElement>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const settings = useSettings();
 
   const editor = useEditor({
@@ -365,6 +368,16 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
         >
           {note.isLocked ? <Lock /> : <LockOpen />}
         </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0"
+          aria-label="Version history"
+          title="Version history"
+          onClick={() => setHistoryOpen(true)}
+        >
+          <History />
+        </Button>
         <AppearanceMenu note={note} />
       </div>
 
@@ -462,6 +475,14 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
           )}
         </div>
       </div>
+
+      <VersionHistory
+        uid={uid}
+        noteId={note.id}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        syncNow={syncNow}
+      />
 
       {/* Must choose: Esc and outside clicks do not close it (D32). */}
       <AlertDialog open={conflict !== null}>

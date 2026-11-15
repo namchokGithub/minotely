@@ -340,3 +340,26 @@ would join multi-line text into one paragraph. Not converted: clipboard content 
 Ctrl/⌘+Shift+V, pastes inside a code block, and a bare URL (still becomes a link). The context menu's Paste calls
 the same parser (`view.pasteText` alone is always plain), so it follows the same rules. The detection is a heuristic; Undo or Ctrl/⌘+Shift+V gives the
 raw text.
+
+## D42 — Version history kept on the device (2026-11-15)
+
+First step of Version History, deliberately local: versions live in the Dexie table `versions` (title, Tiptap
+JSON, kind `auto` | `manual`, created time, per `uid`), not in Firestore, so there are no reads, writes, rules or
+backup changes. Consequences: history is per browser, is lost when site data is cleared, stays after sign-out
+like drafts (D12), and is not in the JSON backup.
+
+- **Auto:** on the first edit after a note opens, the content it had before the edit is kept if the newest
+  version does not already hold it; after that, a successful sync is kept at most once per 10 minutes. Only
+  synced content is stored, never an unsynced draft.
+- **Manual:** Save version (in the dialog) syncs pending edits first and stores what Firestore now holds; it
+  refuses and says why when offline, on a sync error, or while a conflict (D32) is open.
+- **No duplicates:** nothing is stored when the newest version has the same title and content (a Manual version
+  of content that only an Auto version holds is still stored), or when the note is empty.
+- **Retention:** 10 Auto and 10 Manual per note; the oldest of the same kind is dropped.
+- **Timeline:** History button in the note header opens a dialog, newest first, with a read-only Tiptap preview.
+  There is no restore; the owner copies from the preview.
+- **Cleanup:** deleting a note forever or emptying Trash deletes its versions. Versions of notes deleted forever
+  on another device are removed when the Trash page opens, where the live and trashed note lists together name
+  every existing note; skipped offline or when both lists are empty, because a cold cache could look like that.
+
+Moving history to `users/{uid}/notes/{noteId}/versions` (rules, backup, cross-device) is the later step.

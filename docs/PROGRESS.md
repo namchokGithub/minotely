@@ -8,16 +8,19 @@ Plan: `docs/PLAN.md`. Statuses: `Todo`, `In progress`, `Blocked`, `Done`.
 
 Every item not `Done`. Keep in sync with the sections below.
 
-| ID   | Item                                                                 | Status      |
-| ---- | -------------------------------------------------------------------- | ----------- |
-| M6.1 | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
-| M6.2 | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
-| M6.3 | Raw Markdown editor toggle                                           | In progress |
-| M6.4 | Copy WYSIWYG selections as Markdown                                  | In progress |
-| M6.5 | English spellcheck in WYSIWYG with custom suggestions                | In progress |
-| M6.6 | Thai dictionary and bilingual spellcheck in WYSIWYG                  | In progress |
-| M6.7 | Copy plain text from the editor menu or keyboard shortcut            | In progress |
-| M6.8 | Toggle spell check from the editor context menu                      | In progress |
+| ID    | Item                                                                 | Status      |
+| ----- | -------------------------------------------------------------------- | ----------- |
+| M6.1  | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
+| M6.2  | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
+| M6.3  | Raw Markdown editor toggle                                           | In progress |
+| M6.4  | Copy WYSIWYG selections as Markdown                                  | In progress |
+| M6.5  | English spellcheck in WYSIWYG with custom suggestions                | In progress |
+| M6.6  | Thai dictionary and bilingual spellcheck in WYSIWYG                  | In progress |
+| M6.7  | Copy plain text from the editor menu or keyboard shortcut            | In progress |
+| M6.8  | Toggle spell check from the editor context menu                      | In progress |
+| M6.9  | Margin paper style; Lined paper text sits on the lines               | In progress |
+| M6.10 | Pasted Markdown becomes rich text                                    | In progress |
+| M6.11 | Local version history (Auto and Manual, this device only)            | In progress |
 
 ## Notes
 
@@ -52,6 +55,15 @@ Every item not `Done`. Keep in sync with the sections below.
 - M6.8 (approved, done in code, D39; owner to test): a checked Spell check item in the editor's right-click
   menu turns English and Thai checking on or off for all notes of that account on this device. Off removes
   underlines and suggestions immediately and pauses checking; on rechecks the open note.
+
+- M6.9 (approved, done in code, D13/D40; publish rules for Margin; owner to test): Margin paper = plain page with
+  the red margin line; on Lined paper every block is a whole number of 2rem rows so text sits on the lines.
+- M6.10 (approved, done in code, D41; owner to test): plain text that looks like Markdown is converted on paste
+  (Ctrl/⌘+V and the context menu); Ctrl/⌘+Shift+V and code blocks paste raw text.
+- M6.11 (approved, done in code, D42; owner to test): History button in the note header opens a dialog with
+  versions kept in IndexedDB only: Auto (content before the first edit, then at most one per 10 min after a
+  successful sync) and Manual (Save version: syncs first, refuses when offline, on a sync error or a conflict);
+  read-only preview; 10 Auto + 10 Manual per note. Not in Firestore, Security Rules or JSON backup.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

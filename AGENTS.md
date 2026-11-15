@@ -33,11 +33,11 @@ src/
   app/              # app root, router, providers, layout shell, theme
   components/ui/    # shadcn/ui components
   features/
-    auth/  books/  notes/  editor/  search/  trash/  settings/  data/ (import/export)
+    auth/  books/  notes/  editor/  search/  trash/  settings/  data/ (import/export)  versions/
   lib/
     firebase.ts     # Firebase app + Auth (real project via .env.local)
     firestore.ts    # Firestore, loaded only after sign-in (D18)
-    db.ts           # Dexie (drafts, cache)
+    db.ts           # Dexie (drafts, local note versions)
   stores/           # Zustand UI stores
 firestore.rules     # per-user access (D22) + shape checks (D17)
 firebase.json       # Hosting (dist, SPA rewrite, caching) + rules path (D19)

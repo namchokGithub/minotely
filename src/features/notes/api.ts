@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 import { useMemo } from "react";
 import { db } from "@/lib/firestore";
-import { deleteDraft } from "@/lib/db";
+import { deleteDraft, deleteVersions } from "@/lib/db";
 import { toDate } from "@/lib/firestore-utils";
 import { useSnapshotQuery } from "@/lib/use-snapshot-query";
 import { useUid } from "@/features/auth/auth-context";
@@ -242,7 +242,7 @@ export function restoreNote(uid: string, noteId: string, bookId?: string) {
 
 export async function deleteNoteForever(uid: string, noteId: string) {
   await deleteDoc(doc(notesCol(uid), noteId));
-  await deleteDraft(noteId);
+  await Promise.all([deleteDraft(noteId), deleteVersions(noteId)]);
 }
 
 export async function emptyTrash(uid: string, noteIds: string[]) {
@@ -253,5 +253,7 @@ export async function emptyTrash(uid: string, noteIds: string[]) {
     }
     await batch.commit();
   }
-  await Promise.all(noteIds.map((id) => deleteDraft(id)));
+  await Promise.all(
+    noteIds.flatMap((id) => [deleteDraft(id), deleteVersions(id)]),
+  );
 }
