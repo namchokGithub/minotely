@@ -120,6 +120,7 @@ function SearchBody({ onDone }: { onDone: () => void }) {
                 <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
                   {book && <BookGlyph icon={book.icon} color={book.color} />}
                   <span className="truncate">
+                    {note.icon && <span aria-hidden="true">{note.icon} </span>}
                     {note.title.trim() || "Untitled"}
                   </span>
                 </span>

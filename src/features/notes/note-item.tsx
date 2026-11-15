@@ -215,6 +215,11 @@ export function NoteItem({
                 aria-label="Pinned"
               />
             )}
+            {note.icon && (
+              <span aria-hidden="true" className="shrink-0">
+                {note.icon}
+              </span>
+            )}
             <span className="truncate">{title}</span>
           </span>
           {snippet && (

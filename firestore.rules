@@ -30,11 +30,13 @@ service cloud.firestore {
 
     function validNote(d) {
       return d.keys().hasOnly([
-          "bookId", "title", "content", "plainText", "tags", "isPinned", "isLocked",
+          "bookId", "title", "icon", "content", "plainText", "tags", "isPinned", "isLocked",
           "paperStyle", "order", "createdAt", "updatedAt", "deletedAt"
         ])
         && d.bookId is string && d.bookId.size() > 0
         && d.title is string && d.title.size() <= 200
+        // Notes created before D46 have no `icon`; one emoji, or "".
+        && d.get("icon", "") is string && d.get("icon", "").size() <= 16
         && d.content is string
         && d.plainText is string
         && d.tags is list && d.tags.size() <= 20

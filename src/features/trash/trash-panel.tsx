@@ -206,7 +206,10 @@ function TrashItem({ note, books }: { note: Note; books: Book[] }) {
     <AppContextMenu label={`Actions for ${title}`} menu={menuItems(contextKit)}>
       <li className="group relative">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted">
-          <span className="truncate text-sm font-medium">{title}</span>
+          <span className="truncate text-sm font-medium">
+            {note.icon && <span aria-hidden="true">{note.icon} </span>}
+            {title}
+          </span>
           <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             {book ? (
               <>

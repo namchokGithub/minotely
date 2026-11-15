@@ -310,26 +310,31 @@ body {
 .paper-lined > div {
   padding-top: var(--paper-row);
 }
-.paper-lined input[aria-label="Note title"] {
+/* Icon and title row (D46): two rows tall; the title fills it so its text keeps its place on the lines. */
+.paper-lined .note-title-row {
   box-sizing: border-box;
   height: calc(var(--paper-row) * 2);
   margin-bottom: 0;
   padding-top: 1.25rem;
+  align-items: stretch;
+}
+.paper-lined .note-title-row > input {
+  height: 100%;
 }
 /* Tags row. */
-.paper-lined input[aria-label="Note title"] + div {
+.paper-lined .note-title-row + div {
   row-gap: 0;
   min-height: var(--paper-row);
   margin-bottom: var(--paper-row);
 }
-.paper-lined input[aria-label="Note title"] + div > span {
+.paper-lined .note-title-row + div > span {
   box-sizing: border-box;
   height: var(--paper-row);
   padding-block: 0;
   border-block: 0.25rem solid transparent;
   background-clip: padding-box;
 }
-.paper-lined input[aria-label="Note title"] + div > input {
+.paper-lined .note-title-row + div > input {
   min-height: var(--paper-row);
   padding-block: 0;
 }

@@ -116,6 +116,7 @@ users/
       {noteId}/
         bookId
         title
+        icon (one emoji, or empty — D46)
         content (Tiptap JSON string — D10)
         plainText
         tags

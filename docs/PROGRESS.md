@@ -24,11 +24,25 @@ Every item not `Done`. Keep in sync with the sections below.
 | M6.12 | Background around the page (color, image URL, opacity, darker/lighter) | In progress |
 | M6.13 | Collapse Library and Notes columns to a rail from their titles         | In progress |
 | M6.14 | Page width presets (Default, A5, A4, Letter, A3, Full 90%)             | In progress |
+| M7.1  | Note icon (one emoji before the title) — publish rules                 | In progress |
+| M7.2  | Table of Contents (Document Outline) at the right of the note          | In progress |
 
 ## Notes
 
 - No open work. M4.4: first release deployed from GitHub Actions on push to `production` (2026-11-02, D31).
 - M1–M4.3 were verified manually by the owner against the real Firebase project (2026-11-02).
+
+### M7 — Notion-like editing (2026-11-15)
+
+Owner's list, split into three projects (not images for now): (1) note icon and Table of Contents, (2) blocks in
+the editor (`/` menu, callout, code block color, floating toolbar, block `+` and `⠿` controls, block drag and
+drop, block actions), (3) nested pages. Markdown shortcuts already exist (input rules).
+
+- M7.1 (approved, done in code, D46; publish rules; owner to test): an icon button before the note title picks
+  one emoji (32 suggestions, or type/paste any) or removes it; shown in the note list, search, Trash and the
+  phone header. New optional note field `icon` in types, rules, backup and the requirement schema.
+- M7.2 (approved, done in code, D47; owner to test): headings (H1–H3) as short bars at the right edge of the
+  editor on 768px and up; hover or focus shows the list, click on the bars pins it, a heading scrolls to it.
 
 ### M6 — Sync cost and offline editing (2026-11-03)
 

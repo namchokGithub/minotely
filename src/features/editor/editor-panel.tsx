@@ -64,6 +64,8 @@ import {
   type SpellingTarget,
 } from "./spellcheck";
 import { LinkBubble } from "./link-bubble";
+import { NoteIconPicker } from "./note-icon-picker";
+import { DocumentOutline } from "./document-outline";
 import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
 import { useAutoSave, type SaveStatus } from "./use-auto-save";
@@ -102,6 +104,7 @@ export function EditorPanel({ bookId, noteId }: EditorPanelProps) {
           </Button>
           {note && (
             <h2 className="min-w-0 flex-1 truncate px-1 font-semibold">
+              {note.icon && <span aria-hidden="true">{note.icon} </span>}
               {note.title.trim() || "Untitled"}
             </h2>
           )}
@@ -453,29 +456,38 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                   "relative min-h-full pl-14 before:absolute before:inset-y-0 before:left-9 before:w-0.5 before:bg-red-500/75 sm:pl-20 sm:before:left-12 dark:before:bg-red-400/60",
               )}
             >
-              <input
-                value={title}
-                placeholder="Untitled"
-                aria-label="Note title"
-                maxLength={200}
-                readOnly={note.isLocked}
-                className="mb-2 w-full bg-transparent text-2xl font-semibold sm:text-3xl tracking-tight outline-none placeholder:text-muted-foreground/60"
-                onChange={(event) => {
-                  setTitle(event.target.value);
-                  latest.current = {
-                    ...latest.current,
-                    title: event.target.value,
-                  };
-                  change(latest.current);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    if (mode === "markdown") rawTextarea.current?.focus();
-                    else editor.commands.focus("start");
-                  }
-                }}
-              />
+              {/* Icon and title (D46). Lined paper sizes this row in CSS (D40). */}
+              <div className="note-title-row mb-2 flex items-center gap-2">
+                <NoteIconPicker
+                  uid={uid}
+                  noteId={note.id}
+                  icon={note.icon}
+                  readOnly={note.isLocked}
+                />
+                <input
+                  value={title}
+                  placeholder="Untitled"
+                  aria-label="Note title"
+                  maxLength={200}
+                  readOnly={note.isLocked}
+                  className="min-w-0 flex-1 bg-transparent text-2xl font-semibold sm:text-3xl tracking-tight outline-none placeholder:text-muted-foreground/60"
+                  onChange={(event) => {
+                    setTitle(event.target.value);
+                    latest.current = {
+                      ...latest.current,
+                      title: event.target.value,
+                    };
+                    change(latest.current);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      if (mode === "markdown") rawTextarea.current?.focus();
+                      else editor.commands.focus("start");
+                    }
+                  }}
+                />
+              </div>
               <TagEditor note={note} readOnly={note.isLocked} />
               {mode === "markdown" ? (
                 <>
@@ -536,6 +548,8 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
             </div>
           </div>
         </AppContextMenu>
+        {/* Table of Contents (D47): over the right edge of the editor area, not inside the page. */}
+        {mode === "wysiwyg" && <DocumentOutline editor={editor} />}
       </div>
 
       <BackgroundDialog

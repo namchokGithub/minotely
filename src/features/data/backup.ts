@@ -11,6 +11,7 @@ import { booksCol, toBook } from "@/features/books/api";
 import { isValidBookColor } from "@/features/books/appearance";
 import { BATCH_LIMIT, EMPTY_DOC, notesCol, toNote } from "@/features/notes/api";
 import { normalizeTag } from "@/features/notes/tags";
+import { toNoteIcon } from "@/features/notes/note-icon";
 
 // Limits match firestore.rules (D17).
 const MAX_BOOK_NAME = 80;
@@ -35,6 +36,8 @@ type BackupNote = {
   id: string;
   bookId: string;
   title: string;
+  /** Missing in backups made before D46. */
+  icon?: string;
   content: string;
   plainText: string;
   tags: string[];
@@ -73,6 +76,7 @@ export async function exportBackup(uid: string): Promise<Backup> {
       id: n.id,
       bookId: n.bookId,
       title: n.title,
+      icon: n.icon,
       content: n.content,
       plainText: n.plainText,
       tags: n.tags,
@@ -152,6 +156,7 @@ export async function importBackup(uid: string, backup: Backup) {
       batch.set(ref, {
         bookId,
         title: str(note.title).slice(0, MAX_TITLE),
+        icon: toNoteIcon(str(note.icon)),
         content: str(note.content, EMPTY_DOC),
         plainText: str(note.plainText),
         tags: Array.isArray(note.tags)

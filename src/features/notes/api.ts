@@ -19,6 +19,7 @@ import { deleteDraft, deleteVersions } from "@/lib/db";
 import { toDate } from "@/lib/firestore-utils";
 import { useSnapshotQuery } from "@/lib/use-snapshot-query";
 import { useUid } from "@/features/auth/auth-context";
+import { toNoteIcon } from "./note-icon";
 import type { Note, NoteContentFields, PaperStyle } from "./types";
 
 export const notesCol = (uid: string) => collection(db, "users", uid, "notes");
@@ -35,6 +36,8 @@ export function toNote(snap: QueryDocumentSnapshot): Note {
     id: snap.id,
     bookId: data.bookId,
     title: data.title ?? "",
+    // Notes created before D46 have no `icon`.
+    icon: typeof data.icon === "string" ? data.icon : "",
     content: data.content ?? EMPTY_DOC,
     plainText: data.plainText ?? "",
     tags: data.tags ?? [],
@@ -197,6 +200,11 @@ export function setNoteTags(uid: string, noteId: string, tags: string[]) {
     tags,
     updatedAt: serverTimestamp(),
   });
+}
+
+/** Sets or clears ("") the note's icon (D46). Like paper style, it does not bump `updatedAt`. */
+export function setNoteIcon(uid: string, noteId: string, icon: string) {
+  return updateDoc(doc(notesCol(uid), noteId), { icon: toNoteIcon(icon) });
 }
 
 export function setNotePaperStyle(

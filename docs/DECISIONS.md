@@ -406,3 +406,24 @@ than the preset, the page shrinks to fit instead of scrolling sideways. It is a 
 one value for all notes, `pageWidth` in the persisted UI store on this device, so no Firestore field, rule or
 backup change. The menu group is "Page width (this device)" in Page appearance (header button and the
 right-click menu on the background, D43/D44).
+
+## D46 — Note icon (2026-11-15)
+
+A note can have one icon, shown before its title in the editor, the note list, search, Trash and the phone
+header. It is an emoji or symbol, not a Lucide icon like books, so it reads as the note's own mark (Notion-like)
+and needs no color. Stored as optional `icon` (string, "" for none) on the note; notes and backups made before
+this have none. `toNoteIcon` keeps only the first grapheme when it is not a letter, digit or space, at most 16
+UTF-16 units; rules accept a string up to 16 characters. Setting it does not bump `updatedAt` (like paper style)
+and is not part of the content conflict check (D32) or version history (D42). The picker is a dropdown with 32
+suggested emojis, a field to type or paste any emoji, and Remove. No emoji library was added. On Lined paper the
+icon and title share the two-row title band (`.note-title-row`, D40).
+
+## D47 — Table of Contents (Document Outline) (2026-11-15)
+
+Called `DocumentOutline` in code and "Table of Contents" in the UI. It lists the open note's H1–H3 headings (empty
+headings skipped), read from the editor state, so it follows edits at once and costs no reads. Collapsed it is a
+column of short bars (width by level, at most 40) fixed at the top right of the editor area, outside the page so
+it does not scroll or take page width. Hover or keyboard focus shows the list; clicking the bars pins it open
+until a click outside, Escape or choosing a heading. Choosing a heading scrolls to it (smooth unless reduced
+motion) and puts the cursor there. Shown on 768px and up in rich-text mode only; hover does not exist on touch
+and phones have no room. No current-heading highlight yet.

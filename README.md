@@ -18,9 +18,10 @@ Sign in with any Google account; each account sees only its own books and notes.
 - **Reliable Auto Save** — every edit saved on the device at once (IndexedDB), synced 30 s after typing stops
   (at least every 5 min), keeps working offline, asks before overwriting a version changed elsewhere; Ctrl/⌘+S
   syncs now.
-- **Organize** — pin, lock (read-only), tags with filter, sort (updated, created, A–Z, custom), move notes by drag
+- **Organize** — note icons (emoji), pin, lock (read-only), tags with filter, sort (updated, created, A–Z, custom), move notes by drag
   and drop, Trash with restore.
-- **Find** — search titles, content and `#tags` across all books (Ctrl/⌘+K).
+- **Find** — search titles, content and `#tags` across all books (Ctrl/⌘+K); a Table of Contents of the open
+  note’s headings.
 - **Reading** — paper styles (plain, margin, lined, grid, dotted), page width (Default, A5, A4, Letter, A3,
   Full), editor font and size, light/dark theme, and a custom background around the page (color or image, per
   device).
