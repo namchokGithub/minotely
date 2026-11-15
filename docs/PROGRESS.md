@@ -73,7 +73,8 @@ Every item not `Done`. Keep in sync with the sections below.
 
 - M6.13 (approved, done in code, D44; owner to test): on 768px and up, clicking the Library title ("Minotely")
   or the Notes/Trash title collapses that column to a 48px rail with one icon button that expands it again;
-  state saved per device. The tablet-only Library toggle button in the Notes header is removed.
+  state saved per device. The tablet-only Library toggle button in the Notes header is removed. The Library
+  rail lists each book's icon (hover shows the name; click opens the book) and Trash.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

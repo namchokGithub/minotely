@@ -15,6 +15,7 @@ export function PanelRail({
   onExpand,
   className,
   children,
+  after,
 }: {
   label: string;
   /** id of the column this expands. */
@@ -23,10 +24,17 @@ export function PanelRail({
   className?: string;
   /** The icon shown on the button. */
   children: ReactNode;
+  /** More of the column, shown under the button (Library: one icon per book). */
+  after?: ReactNode;
 }) {
   return (
-    <div className={cn("hidden h-full w-12 justify-center md:flex", className)}>
-      <div className="flex h-14 items-center">
+    <div
+      className={cn(
+        "hidden h-full w-12 flex-col items-center md:flex",
+        className,
+      )}
+    >
+      <div className="flex h-14 shrink-0 items-center">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -39,6 +47,7 @@ export function PanelRail({
           {children}
         </Button>
       </div>
+      {after}
     </div>
   );
 }

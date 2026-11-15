@@ -103,6 +103,7 @@ export function BooksPanel() {
           controls="books-sidebar"
           onExpand={toggleCollapsed}
           className="bg-sidebar text-sidebar-foreground"
+          after={<BookRailLinks books={books ?? []} noteCounts={noteCounts} />}
         >
           {logo}
         </PanelRail>
@@ -198,6 +199,59 @@ export function BooksPanel() {
           onOpenChange={setCreateOpen}
           onSubmit={handleCreate}
         />
+      </div>
+    </>
+  );
+}
+
+const railLinkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 outline-none hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-ring/50",
+    isActive && "bg-sidebar-accent text-sidebar-foreground",
+  );
+
+/**
+ * Collapsed Library (D44): one icon per book, in Library order, then Trash.
+ * A click opens the book without expanding the column; hovering shows its name.
+ */
+function BookRailLinks({
+  books,
+  noteCounts,
+}: {
+  books: Book[];
+  noteCounts: Map<string, number>;
+}) {
+  return (
+    <>
+      <nav
+        aria-label="Books"
+        className="flex min-h-0 w-full flex-1 flex-col items-center gap-0.5 overflow-y-auto pb-2"
+      >
+        {books.map((book) => {
+          const name = book.name.trim() || "Untitled";
+          const count = noteCounts.get(book.id) ?? 0;
+          return (
+            <NavLink
+              key={book.id}
+              to={`/books/${book.id}`}
+              title={name}
+              aria-label={`${name}, ${count} ${count === 1 ? "note" : "notes"}`}
+              className={railLinkClass}
+            >
+              <BookGlyph icon={book.icon} color={book.color} />
+            </NavLink>
+          );
+        })}
+      </nav>
+      <div className="shrink-0 pb-2">
+        <NavLink
+          to="/trash"
+          title="Trash"
+          aria-label="Trash"
+          className={railLinkClass}
+        >
+          <Trash2 className="size-4" />
+        </NavLink>
       </div>
     </>
   );

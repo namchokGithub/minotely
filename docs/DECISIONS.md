@@ -387,7 +387,9 @@ On 768px and up the Library and Notes columns each collapse on their own, so the
 control is the column's own title: clicking "Minotely" (logo and name) collapses Library; clicking the book
 name (or "Trash") collapses Notes. A collapsed column is not hidden but becomes a 48px rail with one icon
 button (the logo, or the open book's icon) that expands it again; a fully hidden column would take its own
-control away with it. The rail shows nothing else (no icon list of books yet). State is in the persisted UI
+control away with it. The Library rail also lists every book as its icon, in Library order, then Trash: a click
+opens that book without expanding the column, and the native `title` tooltip shows the name (the accessible name
+adds the note count). Notes cannot be dropped on rail icons; expand the Library to move a note by drag and drop. State is in the persisted UI
 store (`booksSidebarOpen`, `notesPanelOpen`), per device. The panel stays mounted while collapsed (`md:hidden`)
 so dialogs, drag and drop and listeners keep their state, and phones, which show one screen at a time, always
 show the full panel. `fitWidths` (D25) counts a collapsed column as the rail width and hides its splitter.
