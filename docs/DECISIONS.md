@@ -77,8 +77,9 @@ hidden or the note is closed. Timing, offline behaviour and the overwrite rule a
 
 ## D13 — Paper style per note, typography per user (2026-11-01)
 
-`paperStyle` is stored on each note and drawn as a CSS background on the editor scroll area
-(`background-attachment: local`), not aligned to text lines. Lined paper also has a red margin line left of
+`paperStyle` is stored on each note and drawn as a CSS background on the page column (the centred block, at most
+768px wide, that holds the text; since 2026-11-15, before that on the whole editor scroll area), so lines stop at
+the page edges; not aligned to text lines. Lined paper also has a red margin line left of
 the text (Margin paper, added 2026-11-15, is that line on a plain background), inside the content column, with extra left padding so the line never crosses text. Font family and size are one setting for all notes,
 stored in `users/{uid}/preferences/settings` so they follow the owner across devices.
 

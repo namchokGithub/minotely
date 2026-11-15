@@ -240,42 +240,48 @@ body {
   }
 }
 
-/* Paper styles: editor background only, scrolls with the text (D13). */
+/*
+ * Paper styles: a background on the page column (the 768px block that holds the
+ * text), not on the whole editor panel, so lines stop at the page edges (D13).
+ */
 @layer components {
   .paper-lined,
   .paper-grid,
   .paper-dotted {
     --paper-line: color-mix(in oklch, var(--foreground) 9%, transparent);
-    background-attachment: local;
   }
+  /* Fill the panel height so a short note still shows a full page. */
+  .paper-lined > div,
+  .paper-grid > div,
+  .paper-dotted > div {
+    min-height: 100%;
+  }
+  /* Lined: one text row per ruled line (D40). The rules that do this are unlayered, below. */
   .paper-lined {
+    --paper-row: 2rem;
+    --paper-shift: -0.3125rem;
+  }
+  .paper-lined > div {
     background-image: linear-gradient(
       to bottom,
-      transparent calc(2rem - 1px),
-      var(--paper-line) calc(2rem - 1px)
+      transparent calc(var(--paper-row) - 1px),
+      var(--paper-line) calc(var(--paper-row) - 1px)
     );
-    background-size: 100% 2rem;
+    background-size: 100% var(--paper-row);
+    background-position-y: var(--paper-shift);
   }
-  .paper-grid {
+  .paper-grid > div {
     background-image:
       linear-gradient(var(--paper-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
     background-size: 1.5rem 1.5rem;
   }
-  .paper-dotted {
+  .paper-dotted > div {
     background-image: radial-gradient(
       color-mix(in oklch, var(--foreground) 22%, transparent) 1px,
       transparent 1.25px
     );
     background-size: 1.25rem 1.25rem;
-  }
-
-  /* Lined paper only: one text row per ruled line (D40). The rules that do this are unlayered, below. */
-  .paper-lined {
-    --paper-row: 2rem;
-    background-size: 100% var(--paper-row);
-    background-position-y: var(--paper-shift);
-    --paper-shift: -0.3125rem;
   }
 
   /* Typography settings (users/{uid}/preferences/settings). */
