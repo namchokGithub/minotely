@@ -380,3 +380,16 @@ has closed, because a closing menu moves focus and a non-modal dialog closes whe
 re-validated on read; the image is loaded from that site on every open, which tells the site the visitor's IP.
 The app has no file storage, so there is no upload. Below 768px the page fills the width and the background is
 not visible.
+
+## D44 — Side columns collapse to a rail (2026-11-15)
+
+On 768px and up the Library and Notes columns each collapse on their own, so the editor can take the width. The
+control is the column's own title: clicking "Minotely" (logo and name) collapses Library; clicking the book
+name (or "Trash") collapses Notes. A collapsed column is not hidden but becomes a 48px rail with one icon
+button (the logo, or the open book's icon) that expands it again; a fully hidden column would take its own
+control away with it. The rail shows nothing else (no icon list of books yet). State is in the persisted UI
+store (`booksSidebarOpen`, `notesPanelOpen`), per device. The panel stays mounted while collapsed (`md:hidden`)
+so dialogs, drag and drop and listeners keep their state, and phones, which show one screen at a time, always
+show the full panel. `fitWidths` (D25) counts a collapsed column as the rail width and hides its splitter.
+Tablet still folds Library automatically while a note is open, now to the rail; the tablet-only toggle button
+in the Notes header is gone because the title does the same. No keyboard shortcut.

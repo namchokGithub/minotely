@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { PanelRail } from "@/components/panel-rail";
 import { shortcut } from "@/lib/shortcuts";
 import { useAuth, useUid } from "@/features/auth/auth-context";
 import { DataMenu } from "@/features/data/data-menu";
@@ -66,6 +67,8 @@ export function BooksPanel() {
   const { data: books, isPending, isError } = useBooks();
   const [createOpen, setCreateOpen] = useState(false);
   const setSearchOpen = useUiStore((state) => state.setSearchOpen);
+  const collapsed = !useUiStore((state) => state.booksSidebarOpen);
+  const toggleCollapsed = useUiStore((state) => state.toggleBooksSidebar);
   // Note count per book (D29): counted from the live list of notes outside Trash.
   const { data: allNotes } = useAllNotes();
   const noteCounts = useMemo(() => {
@@ -81,88 +84,122 @@ export function BooksPanel() {
     navigate(`/books/${createBook(uid, input, order)}`);
   };
 
+  const logo = (
+    <img
+      src="/Kawaii Gold Slime with Embossed N-64x64.png"
+      alt=""
+      width={64}
+      height={64}
+      className="size-5"
+      unselectable="on"
+    />
+  );
+
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <header className="flex h-14 items-center gap-2 px-4">
-        <img
-          src="/Kawaii Gold Slime with Embossed N-64x64.png"
-          alt="Logo"
-          width={64}
-          height={64}
-          className="size-5"
-          unselectable="on"
-        />
-        <h2 className="flex-1 font-semibold">Minotely</h2>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Search"
-          aria-keyshortcuts={shortcut("Mod+K").aria}
-          title={`Search (${shortcut("Mod+K").label})`}
-          onClick={() => setSearchOpen(true)}
+    <>
+      {collapsed && (
+        <PanelRail
+          label="Expand Library"
+          controls="books-sidebar"
+          onExpand={toggleCollapsed}
+          className="bg-sidebar text-sidebar-foreground"
         >
-          <Search />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="New book"
-          title="New book"
-          onClick={() => setCreateOpen(true)}
-        >
-          <Plus />
-        </Button>
-      </header>
-
-      <nav className="flex-1 overflow-y-auto px-2 pb-2" aria-label="Books">
-        {isPending ? (
-          <PanelMessage>
-            <Spinner />
-          </PanelMessage>
-        ) : isError ? (
-          <PanelMessage>Could not load books.</PanelMessage>
-        ) : books.length === 0 ? (
-          <PanelMessage>No books yet.</PanelMessage>
-        ) : (
-          <ul className="grid gap-0.5">
-            {books.map((book, index) => (
-              <BookItem
-                key={book.id}
-                book={book}
-                previous={books[index - 1]}
-                next={books[index + 1]}
-                noteCount={
-                  allNotes ? (noteCounts.get(book.id) ?? 0) : undefined
-                }
-              />
-            ))}
-          </ul>
+          {logo}
+        </PanelRail>
+      )}
+      <div
+        className={cn(
+          "flex h-full flex-col bg-sidebar text-sidebar-foreground",
+          // Collapsed (D44): the rail above replaces the panel on 768px and up; phones keep the panel.
+          collapsed && "md:hidden",
         )}
-      </nav>
+      >
+        <header className="flex h-14 items-center gap-2 px-2">
+          <h2 className="min-w-0 flex-1 font-semibold">
+            {/* The title collapses the column on 768px and up; on phones it is plain text. */}
+            <button
+              type="button"
+              title="Collapse Library"
+              aria-expanded={true}
+              aria-controls="books-sidebar"
+              className="pointer-events-none flex max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left transition-colors duration-150 outline-none hover:bg-sidebar-accent focus-visible:ring-3 focus-visible:ring-ring/50 md:pointer-events-auto"
+              onClick={toggleCollapsed}
+            >
+              {logo}
+              <span className="truncate">Minotely</span>
+            </button>
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Search"
+            aria-keyshortcuts={shortcut("Mod+K").aria}
+            title={`Search (${shortcut("Mod+K").label})`}
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="New book"
+            title="New book"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus />
+          </Button>
+        </header>
 
-      <div className="px-2 pb-2">
-        <NavLink
-          to="/trash"
-          className={({ isActive }) =>
-            cn(
-              "flex h-9 items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-              isActive &&
-                "bg-sidebar-accent font-medium text-sidebar-foreground",
-            )
-          }
-        >
-          <Trash2 className="size-4" /> Trash
-        </NavLink>
+        <nav className="flex-1 overflow-y-auto px-2 pb-2" aria-label="Books">
+          {isPending ? (
+            <PanelMessage>
+              <Spinner />
+            </PanelMessage>
+          ) : isError ? (
+            <PanelMessage>Could not load books.</PanelMessage>
+          ) : books.length === 0 ? (
+            <PanelMessage>No books yet.</PanelMessage>
+          ) : (
+            <ul className="grid gap-0.5">
+              {books.map((book, index) => (
+                <BookItem
+                  key={book.id}
+                  book={book}
+                  previous={books[index - 1]}
+                  next={books[index + 1]}
+                  noteCount={
+                    allNotes ? (noteCounts.get(book.id) ?? 0) : undefined
+                  }
+                />
+              ))}
+            </ul>
+          )}
+        </nav>
+
+        <div className="px-2 pb-2">
+          <NavLink
+            to="/trash"
+            className={({ isActive }) =>
+              cn(
+                "flex h-9 items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                isActive &&
+                  "bg-sidebar-accent font-medium text-sidebar-foreground",
+              )
+            }
+          >
+            <Trash2 className="size-4" /> Trash
+          </NavLink>
+        </div>
+
+        <PanelFooter />
+
+        <BookDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onSubmit={handleCreate}
+        />
       </div>
-
-      <PanelFooter />
-
-      <BookDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onSubmit={handleCreate}
-      />
-    </div>
+    </>
   );
 }
 

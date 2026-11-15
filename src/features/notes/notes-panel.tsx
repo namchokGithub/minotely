@@ -6,12 +6,14 @@ import {
   ChevronLeft,
   FileUp,
   MoreHorizontal,
-  PanelLeft,
+  NotebookText,
   Plus,
   Tag,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PanelRail } from "@/components/panel-rail";
+import { cn } from "@/lib/utils";
 import { MessageDialog, type Message } from "@/components/message-dialog";
 import {
   DropdownMenu,
@@ -45,8 +47,8 @@ const SORT_LABELS: Record<NoteSort, string> = {
 export function NotesPanel({ bookId }: { bookId: string | undefined }) {
   const uid = useUid();
   const navigate = useNavigate();
-  const toggleBooksSidebar = useUiStore((state) => state.toggleBooksSidebar);
-  const booksSidebarOpen = useUiStore((state) => state.booksSidebarOpen);
+  const collapsed = !useUiStore((state) => state.notesPanelOpen);
+  const toggleCollapsed = useUiStore((state) => state.toggleNotesPanel);
   const noteSort = useUiStore((state) => state.noteSort);
   const setNoteSort = useUiStore((state) => state.setNoteSort);
   const markdownInput = useRef<HTMLInputElement>(null);
@@ -95,188 +97,209 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
     }
   };
 
+  const titleIcon = book ? (
+    <BookGlyph icon={book.icon} color={book.color} />
+  ) : (
+    <NotebookText className="size-4" />
+  );
+
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex h-14 items-center gap-1 px-2">
-        <Button variant="ghost" size="icon-sm" asChild className="md:hidden">
-          <Link to="/" aria-label="Back to books">
-            <ChevronLeft />
-          </Link>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Toggle books sidebar"
-          aria-expanded={booksSidebarOpen}
-          aria-controls="books-sidebar"
-          className="hidden md:inline-flex lg:hidden"
-          onClick={toggleBooksSidebar}
+    <>
+      {collapsed && (
+        <PanelRail
+          label="Expand notes list"
+          controls="notes-column"
+          onExpand={toggleCollapsed}
         >
-          <PanelLeft />
-        </Button>
-
-        <h2 className="flex min-w-0 flex-1 items-center gap-2 px-2 font-semibold">
-          {book && <BookGlyph icon={book.icon} color={book.color} />}
-          <span className="truncate">{book?.name ?? "Notes"}</span>
-        </h2>
-
-        {book && (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Notes options"
-                  title="Notes options"
-                >
-                  <MoreHorizontal />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-auto min-w-44">
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <ArrowUpDown /> Sort: {SORT_LABELS[noteSort]}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuRadioGroup
-                      value={noteSort}
-                      onValueChange={(value) => setNoteSort(value as NoteSort)}
-                    >
-                      {(Object.keys(SORT_LABELS) as NoteSort[]).map((key) => (
-                        <DropdownMenuRadioItem key={key} value={key}>
-                          {SORT_LABELS[key]}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger disabled={tags.length === 0}>
-                    <Tag /> Filter by tag
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
-                    <DropdownMenuRadioGroup
-                      value={tagFilter ?? ""}
-                      onValueChange={(tag) =>
-                        setFilter(tag ? { bookId, tag } : undefined)
-                      }
-                    >
-                      <DropdownMenuRadioItem value="">
-                        All notes
-                      </DropdownMenuRadioItem>
-                      {tags.map((tag) => (
-                        <DropdownMenuRadioItem key={tag} value={tag}>
-                          #{tag}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onSelect={() => markdownInput.current?.click()}
-                >
-                  <FileUp /> Import Markdown…
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="New note"
-              title="New note"
-              onClick={() =>
-                navigate(`/books/${book.id}/notes/${createNote(uid, book.id)}`)
-              }
-            >
-              <Plus />
-            </Button>
-            <input
-              ref={markdownInput}
-              type="file"
-              accept=".md,.markdown,.txt,text/markdown,text/plain"
-              multiple
-              hidden
-              onChange={(event) => {
-                // Copy first: clearing the input empties the live FileList.
-                const files = Array.from(event.target.files ?? []);
-                event.target.value = "";
-                if (files.length) void importMarkdown(files);
-              }}
-            />
-          </>
-        )}
-      </header>
-
-      {tagFilter && (
-        <div className="px-3 pb-2">
-          <button
-            type="button"
-            onClick={() => setFilter(undefined)}
-            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs transition-colors duration-150 hover:bg-muted/70"
-            aria-label={`Clear tag filter #${tagFilter}`}
-          >
-            #{tagFilter} <X className="size-3" />
-          </button>
-        </div>
+          {titleIcon}
+        </PanelRail>
       )}
+      {/* Collapsed (D44): the rail above replaces the panel on 768px and up; phones keep the panel. */}
+      <div className={cn("flex h-full flex-col", collapsed && "md:hidden")}>
+        <header className="flex h-14 items-center gap-1 px-2">
+          <Button variant="ghost" size="icon-sm" asChild className="md:hidden">
+            <Link to="/" aria-label="Back to books">
+              <ChevronLeft />
+            </Link>
+          </Button>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-2">
-        {!bookId ? (
-          <PanelMessage>
-            <span className="grid justify-items-center gap-2">
-              Select a book.
-              <Link
-                to="/"
-                className="inline-flex h-10 items-center rounded-md px-4 text-foreground underline underline-offset-4 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 md:hidden"
+          <h2 className="min-w-0 flex-1 font-semibold">
+            {/* The title collapses the column on 768px and up; on phones it is plain text. */}
+            <button
+              type="button"
+              title="Collapse notes list"
+              aria-expanded={true}
+              aria-controls="notes-column"
+              className="pointer-events-none flex max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left transition-colors duration-150 outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 md:pointer-events-auto"
+              onClick={toggleCollapsed}
+            >
+              {book && titleIcon}
+              <span className="truncate">{book?.name ?? "Notes"}</span>
+            </button>
+          </h2>
+
+          {book && (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Notes options"
+                    title="Notes options"
+                  >
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-auto min-w-44">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <ArrowUpDown /> Sort: {SORT_LABELS[noteSort]}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuRadioGroup
+                        value={noteSort}
+                        onValueChange={(value) =>
+                          setNoteSort(value as NoteSort)
+                        }
+                      >
+                        {(Object.keys(SORT_LABELS) as NoteSort[]).map((key) => (
+                          <DropdownMenuRadioItem key={key} value={key}>
+                            {SORT_LABELS[key]}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger disabled={tags.length === 0}>
+                      <Tag /> Filter by tag
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
+                      <DropdownMenuRadioGroup
+                        value={tagFilter ?? ""}
+                        onValueChange={(tag) =>
+                          setFilter(tag ? { bookId, tag } : undefined)
+                        }
+                      >
+                        <DropdownMenuRadioItem value="">
+                          All notes
+                        </DropdownMenuRadioItem>
+                        {tags.map((tag) => (
+                          <DropdownMenuRadioItem key={tag} value={tag}>
+                            #{tag}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={() => markdownInput.current?.click()}
+                  >
+                    <FileUp /> Import Markdown…
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="New note"
+                title="New note"
+                onClick={() =>
+                  navigate(
+                    `/books/${book.id}/notes/${createNote(uid, book.id)}`,
+                  )
+                }
               >
-                Browse books
-              </Link>
-            </span>
-          </PanelMessage>
-        ) : books && !book ? (
-          <PanelMessage>Book not found.</PanelMessage>
-        ) : notes.isPending ? (
-          <PanelMessage>
-            <Spinner />
-          </PanelMessage>
-        ) : notes.isError ? (
-          <PanelMessage>Could not load notes.</PanelMessage>
-        ) : visible.length === 0 ? (
-          <PanelMessage>
-            {tagFilter ? "No notes with this tag." : "No notes yet."}
-          </PanelMessage>
-        ) : (
-          <ul className="grid gap-0.5">
-            {visible.map((note, index) => {
-              const canReorder = noteSort === "custom";
-              const previous = visible[index - 1];
-              const next = visible[index + 1];
-              return (
-                <NoteItem
-                  key={note.id}
-                  note={note}
-                  books={books ?? []}
-                  previous={
-                    canReorder && previous?.isPinned === note.isPinned
-                      ? previous
-                      : undefined
-                  }
-                  next={
-                    canReorder && next?.isPinned === note.isPinned
-                      ? next
-                      : undefined
-                  }
-                  showReorder={canReorder}
-                />
-              );
-            })}
-          </ul>
+                <Plus />
+              </Button>
+              <input
+                ref={markdownInput}
+                type="file"
+                accept=".md,.markdown,.txt,text/markdown,text/plain"
+                multiple
+                hidden
+                onChange={(event) => {
+                  // Copy first: clearing the input empties the live FileList.
+                  const files = Array.from(event.target.files ?? []);
+                  event.target.value = "";
+                  if (files.length) void importMarkdown(files);
+                }}
+              />
+            </>
+          )}
+        </header>
+
+        {tagFilter && (
+          <div className="px-3 pb-2">
+            <button
+              type="button"
+              onClick={() => setFilter(undefined)}
+              className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs transition-colors duration-150 hover:bg-muted/70"
+              aria-label={`Clear tag filter #${tagFilter}`}
+            >
+              #{tagFilter} <X className="size-3" />
+            </button>
+          </div>
         )}
+
+        <div className="flex-1 overflow-y-auto px-2 pb-2">
+          {!bookId ? (
+            <PanelMessage>
+              <span className="grid justify-items-center gap-2">
+                Select a book.
+                <Link
+                  to="/"
+                  className="inline-flex h-10 items-center rounded-md px-4 text-foreground underline underline-offset-4 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 md:hidden"
+                >
+                  Browse books
+                </Link>
+              </span>
+            </PanelMessage>
+          ) : books && !book ? (
+            <PanelMessage>Book not found.</PanelMessage>
+          ) : notes.isPending ? (
+            <PanelMessage>
+              <Spinner />
+            </PanelMessage>
+          ) : notes.isError ? (
+            <PanelMessage>Could not load notes.</PanelMessage>
+          ) : visible.length === 0 ? (
+            <PanelMessage>
+              {tagFilter ? "No notes with this tag." : "No notes yet."}
+            </PanelMessage>
+          ) : (
+            <ul className="grid gap-0.5">
+              {visible.map((note, index) => {
+                const canReorder = noteSort === "custom";
+                const previous = visible[index - 1];
+                const next = visible[index + 1];
+                return (
+                  <NoteItem
+                    key={note.id}
+                    note={note}
+                    books={books ?? []}
+                    previous={
+                      canReorder && previous?.isPinned === note.isPinned
+                        ? previous
+                        : undefined
+                    }
+                    next={
+                      canReorder && next?.isPinned === note.isPinned
+                        ? next
+                        : undefined
+                    }
+                    showReorder={canReorder}
+                  />
+                );
+              })}
+            </ul>
+          )}
+        </div>
+        <MessageDialog message={message} onClose={() => setMessage(null)} />
       </div>
-      <MessageDialog message={message} onClose={() => setMessage(null)} />
-    </div>
+    </>
   );
 }
 

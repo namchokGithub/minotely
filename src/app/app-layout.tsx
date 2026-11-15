@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { Navigate } from "react-router";
+import { PANEL_RAIL_WIDTH } from "@/components/panel-rail";
 import { Spinner } from "@/components/spinner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,8 @@ const EditorPanel = lazy(() =>
 
 /**
  * Desktop (lg+): Books / Notes / Editor columns.
- * Tablet (md): collapsible Books sidebar + Notes + Editor.
+ * Tablet (md): the same; Books folds to a rail while a note is open.
+ * Both side columns collapse to a narrow rail from their header title (D44).
  * Mobile: one screen at a time, chosen by the route.
  */
 export function AppLayout() {
@@ -51,7 +53,9 @@ export function AppLayout() {
   const isTablet = useMediaQuery(
     "(min-width: 768px) and (max-width: 1023.98px)",
   );
-  const sidebarCollapsed = isTablet && !booksSidebarOpen;
+  // Collapsed columns are a rail on 768px and up; the `md:` classes keep phones unaffected (D44).
+  const libraryCollapsed = !booksSidebarOpen;
+  const notesCollapsed = !useUiStore((state) => state.notesPanelOpen);
   const setBooksSidebarOpen = useUiStore((state) => state.setBooksSidebarOpen);
 
   // Resizable columns (M5.4, D25): saved widths, fitted so the editor keeps its minimum.
@@ -64,12 +68,14 @@ export function AppLayout() {
     libraryWidth,
     notesWidth,
     viewport,
-    !sidebarCollapsed,
+    !libraryCollapsed,
+    !notesCollapsed,
+    PANEL_RAIL_WIDTH,
   );
   const [resizing, setResizing] = useState(false);
 
-  // Tablet: fold Books away while a note is open, show it again when no note is open; the toggle still works
-  // in between.
+  // Tablet: fold Books to its rail while a note is open, expand it again when no note is open; the header
+  // title and the rail still toggle it in between.
   useEffect(() => {
     if (isTablet) setBooksSidebarOpen(!noteId);
   }, [isTablet, noteId, setBooksSidebarOpen]);
@@ -119,19 +125,23 @@ export function AppLayout() {
         <aside
           id="books-sidebar"
           aria-label="Library"
-          inert={sidebarCollapsed}
           className={cn(
             "w-full flex-col overflow-hidden md:flex md:shrink-0 md:border-r",
             !resizing && "md:transition-[width] md:duration-200 md:ease-out",
             mobileScreen === "books" ? "flex" : "hidden",
-            sidebarCollapsed ? "md:w-0 md:border-r-0" : "md:w-(--library-w)",
+            libraryCollapsed ? "md:w-12" : "md:w-(--library-w)",
           )}
         >
-          <div className="h-full w-full md:w-(--library-w)">
+          <div
+            className={cn(
+              "h-full w-full",
+              libraryCollapsed ? "md:w-12" : "md:w-(--library-w)",
+            )}
+          >
             <BooksPanel />
           </div>
         </aside>
-        {!sidebarCollapsed && (
+        {!libraryCollapsed && (
           <ResizeHandle
             label="Resize Library"
             controls="books-sidebar"
@@ -148,22 +158,33 @@ export function AppLayout() {
           id="notes-column"
           aria-label={isTrash ? "Trash" : "Notes"}
           className={cn(
-            "w-full flex-col md:flex md:w-(--notes-w) md:shrink-0 md:border-r",
+            "w-full flex-col overflow-hidden md:flex md:shrink-0 md:border-r",
+            !resizing && "md:transition-[width] md:duration-200 md:ease-out",
             mobileScreen === "notes" ? "flex" : "hidden",
+            notesCollapsed ? "md:w-12" : "md:w-(--notes-w)",
           )}
         >
-          {isTrash ? <TrashPanel /> : <NotesPanel bookId={bookId} />}
+          <div
+            className={cn(
+              "h-full w-full",
+              notesCollapsed ? "md:w-12" : "md:w-(--notes-w)",
+            )}
+          >
+            {isTrash ? <TrashPanel /> : <NotesPanel bookId={bookId} />}
+          </div>
         </section>
-        <ResizeHandle
-          label="Resize Notes"
-          controls="notes-column"
-          value={widths.notes}
-          min={NOTES_WIDTH.min}
-          max={NOTES_WIDTH.max}
-          defaultValue={NOTES_WIDTH.default}
-          onChange={setNotesWidth}
-          onResizingChange={setResizing}
-        />
+        {!notesCollapsed && (
+          <ResizeHandle
+            label="Resize Notes"
+            controls="notes-column"
+            value={widths.notes}
+            min={NOTES_WIDTH.min}
+            max={NOTES_WIDTH.max}
+            defaultValue={NOTES_WIDTH.default}
+            onChange={setNotesWidth}
+            onResizingChange={setResizing}
+          />
+        )}
       </LibraryDnd>
 
       <main

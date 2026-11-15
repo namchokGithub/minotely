@@ -22,6 +22,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M6.10 | Pasted Markdown becomes rich text                                      | In progress |
 | M6.11 | Local version history (Auto and Manual, this device only)              | In progress |
 | M6.12 | Background around the page (color, image URL, opacity, darker/lighter) | In progress |
+| M6.13 | Collapse Library and Notes columns to a rail from their titles         | In progress |
 
 ## Notes
 
@@ -69,6 +70,10 @@ Every item not `Done`. Keep in sync with the sections below.
 - M6.12 (approved, done in code, D13/D43; owner to test): paper lines are drawn on the page column only; the
   area around the page can get a color, an https image, an opacity and a darker/lighter level from Page
   appearance → Background…, saved in localStorage per account on this device.
+
+- M6.13 (approved, done in code, D44; owner to test): on 768px and up, clicking the Library title ("Minotely")
+  or the Notes/Trash title collapses that column to a 48px rail with one icon button that expands it again;
+  state saved per device. The tablet-only Library toggle button in the Notes header is removed.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

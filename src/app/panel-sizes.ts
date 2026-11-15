@@ -9,25 +9,30 @@ export const clamp = (value: number, min: number, max: number) =>
 
 /**
  * Widths actually shown: saved widths, clamped to their limits, then shrunk (Notes first, then Library) so
- * the editor keeps EDITOR_MIN_WIDTH on narrow screens. Saved values are not changed.
+ * the editor keeps EDITOR_MIN_WIDTH on narrow screens. Saved values are not changed. A collapsed column is a
+ * rail of `railWidth` and is not shrunk (D44).
  */
 export function fitWidths(
   library: number,
   notes: number,
   viewport: number,
-  libraryVisible: boolean,
+  libraryOpen: boolean,
+  notesOpen: boolean,
+  railWidth: number,
 ) {
-  let lib = libraryVisible
+  let lib = libraryOpen
     ? clamp(library, LIBRARY_WIDTH.min, LIBRARY_WIDTH.max)
-    : 0;
-  let nts = clamp(notes, NOTES_WIDTH.min, NOTES_WIDTH.max);
+    : railWidth;
+  let nts = notesOpen
+    ? clamp(notes, NOTES_WIDTH.min, NOTES_WIDTH.max)
+    : railWidth;
   let overflow = lib + nts + EDITOR_MIN_WIDTH - viewport;
-  if (overflow > 0) {
+  if (overflow > 0 && notesOpen) {
     const fromNotes = Math.min(overflow, nts - NOTES_WIDTH.min);
     nts -= fromNotes;
     overflow -= fromNotes;
   }
-  if (overflow > 0 && libraryVisible) {
+  if (overflow > 0 && libraryOpen) {
     lib -= Math.min(overflow, lib - LIBRARY_WIDTH.min);
   }
   return { library: lib, notes: nts };

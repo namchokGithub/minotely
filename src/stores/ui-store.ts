@@ -7,7 +7,10 @@ export type ThemePreference = "system" | "light" | "dark";
 
 type UiState = {
   theme: ThemePreference;
+  /** Library column expanded; collapsed it is a narrow rail (768px and up, D44). */
   booksSidebarOpen: boolean;
+  /** Notes column expanded; collapsed it is a narrow rail (768px and up, D44). */
+  notesPanelOpen: boolean;
   noteSort: NoteSort;
   searchOpen: boolean;
   /** Saved column widths in px, per device (M5.4). */
@@ -18,6 +21,7 @@ type UiState = {
   setTheme: (theme: ThemePreference) => void;
   toggleBooksSidebar: () => void;
   setBooksSidebarOpen: (booksSidebarOpen: boolean) => void;
+  toggleNotesPanel: () => void;
   setNoteSort: (noteSort: NoteSort) => void;
   setSearchOpen: (searchOpen: boolean) => void;
   setLibraryWidth: (width: number) => void;
@@ -30,6 +34,7 @@ export const useUiStore = create<UiState>()(
     (set) => ({
       theme: "system",
       booksSidebarOpen: true,
+      notesPanelOpen: true,
       noteSort: "updated",
       searchOpen: false,
       libraryWidth: LIBRARY_WIDTH.default,
@@ -38,6 +43,8 @@ export const useUiStore = create<UiState>()(
       setTheme: (theme) => set({ theme }),
       toggleBooksSidebar: () =>
         set((state) => ({ booksSidebarOpen: !state.booksSidebarOpen })),
+      toggleNotesPanel: () =>
+        set((state) => ({ notesPanelOpen: !state.notesPanelOpen })),
       setNoteSort: (noteSort) => set({ noteSort }),
       setBooksSidebarOpen: (booksSidebarOpen) => set({ booksSidebarOpen }),
       setSearchOpen: (searchOpen) => set({ searchOpen }),
@@ -55,6 +62,7 @@ export const useUiStore = create<UiState>()(
       partialize: (state) => ({
         theme: state.theme,
         booksSidebarOpen: state.booksSidebarOpen,
+        notesPanelOpen: state.notesPanelOpen,
         noteSort: state.noteSort,
         libraryWidth: state.libraryWidth,
         notesWidth: state.notesWidth,

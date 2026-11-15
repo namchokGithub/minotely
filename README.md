@@ -25,8 +25,8 @@ Sign in with any Google account; each account sees only its own books and notes.
   custom background around the page (color or image, per device).
 - **Data** — JSON backup export/import, Markdown export/import per note.
 - **Version history** — Auto and Manual versions of each note, kept on this device, with a read-only preview.
-- **Responsive** — 3 resizable columns on desktop, collapsible Library on tablet, one screen at a time with a
-  bottom menu on mobile.
+- **Responsive** — 3 resizable columns on desktop and tablet, each side column collapsible to a narrow rail from
+  its title, one screen at a time with a bottom menu on mobile.
 - **Keyboard and accessibility** — shortcuts with hints, app right-click menus (a second right-click opens the
   browser menu), reduced-motion support.
 
