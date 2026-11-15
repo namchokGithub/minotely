@@ -11,6 +11,7 @@ import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Placeholder } from "@tiptap/extensions";
 import UniqueID from "@tiptap/extension-unique-id";
 import { Callout } from "./callout";
+import { PageLink } from "./page-link";
 import { Extension, type JSONContent } from "@tiptap/react";
 import { insertOrEditLink, openLink } from "./links";
 
@@ -44,6 +45,7 @@ export const BLOCK_TYPES = [
   "taskList",
   "table",
   "horizontalRule",
+  "pageLink",
 ];
 
 /**
@@ -80,6 +82,7 @@ export const editorExtensions = [
   TableHeader,
   TableCell,
   Callout,
+  PageLink,
   // Stable block ids for "Copy link to block" (D48); rendered as data-id.
   UniqueID.configure({ types: BLOCK_TYPES }),
   Placeholder.configure({ placeholder: "Start writing…  Type / for blocks" }),

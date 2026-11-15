@@ -381,3 +381,52 @@ export async function emptyTrash(uid: string, noteIds: string[]) {
     noteIds.flatMap((id) => [deleteDraft(id), deleteVersions(id)]),
   );
 }
+
+/**
+ * Adds a Page line for `child` at the end of `parent`'s content (D50), when the
+ * parent is not open in an editor (see `requestPageLink`). Uses the checked
+ * transaction of D32; a refusal leaves the sub-page in the tree without a line.
+ */
+export async function appendPageLink(
+  uid: string,
+  parent: Note,
+  child: Pick<Note, "id" | "bookId" | "title">,
+) {
+  // Loaded on demand: the Tiptap schema and Markdown live with the editor.
+  const [{ plainTextOf }, { parseContent }] = await Promise.all([
+    import("@/features/data/markdown"),
+    import("@/features/editor/extensions"),
+  ]);
+  const content = parseContent(parent.content);
+  content.content = [
+    ...(content.content ?? []),
+    {
+      type: "pageLink",
+      attrs: { pageId: child.id, bookId: child.bookId, title: child.title },
+    },
+  ];
+  await saveNoteContent(
+    uid,
+    parent.id,
+    {
+      title: parent.title,
+      content: JSON.stringify(content),
+      plainText: plainTextOf(content),
+    },
+    { title: parent.title, content: parent.content },
+  );
+}
+
+/** Renames a note from a Page line (D50), with the conflict check of D32. */
+export function renameNote(uid: string, note: Note, title: string) {
+  return saveNoteContent(
+    uid,
+    note.id,
+    {
+      title: title.slice(0, 200),
+      content: note.content,
+      plainText: note.plainText,
+    },
+    { title: note.title, content: note.content },
+  );
+}

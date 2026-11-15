@@ -487,8 +487,27 @@ the type, size and that a note is not its own parent; cycles and depth are app r
   in one batch; a client time when over one batch). Restore brings back the sub-pages deleted with it; Restore
   to another book also clears the note's parent. A restored note whose parent is still in Trash shows at the top
   level and re-nests when the parent comes back.
-- Editor: a breadcrumb above the title and a Sub-pages list of links after the content (not note content).
-  New sub-pages come from the `/` menu's Sub-page entry (shown while the note can still have one, not on
-  locked notes): it removes the typed `/…`, creates the sub-page and opens it, without a link in the content. Lined paper keeps both on the rows (D40).
+- Editor: a breadcrumb above the title. Sub-pages appear in the content as Page lines (D50). Lined paper keeps both on the rows (D40).
 - Search and Trash show the page path. JSON backup exports `parentId` and import remaps it to the new ids in two
   passes, dropping parents that would break the rules above. Markdown import creates top-level notes.
+
+## D50 — Sub-pages as Page lines in the content (2026-11-15)
+
+Replaces D49's Sub-pages section below the note. A sub-page appears in its parent's content as a `pageLink`
+block: one line with the page's icon and its title in an editable field. The block stores the page id, plus its
+book and a title snapshot used only for Markdown, search text and when the page is missing; the line always
+shows the page's live title, and typing in it renames the page (after 600 ms or on leaving the field) through
+the checked transaction of D32; refused offline or on a conflict. The snapshot is refreshed when the title
+changes, as a non-edit transaction (saved with the next real change, like block ids). The tree is still
+`parentId` (D49); a Page line is an entry point, not the structure.
+
+- `/` → Sub-page creates the page, puts its line at the cursor and focuses its name. Add sub-page and Move into…
+  in the Notes column add a line at the end of the parent: through the parent's open editor when it is open
+  (`requestPageLink`, so Auto Save writes it and no conflict appears), otherwise as a direct checked write;
+  not for locked parents.
+- Deleting a line leaves the page (it stays in the Notes column); Backspace in an empty name removes the line.
+  Pages without a line are shown only in the Notes column. Copying or moving a line elsewhere keeps it a link to
+  the same page; it does not change the page's parent. A line whose page is gone shows its last title crossed out.
+- Icon click or Ctrl/⌘+Enter opens the page; Enter moves below the line.
+- Markdown: `[Title](<origin>/books/{bookId}/notes/{pageId})` on its own line; a tokenizer turns such a line back
+  into a Page line, so Raw mode, copy and paste keep it. Lined paper: one row.

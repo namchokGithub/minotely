@@ -1,7 +1,6 @@
 import { Link } from "react-router";
-import { buildNoteTree, pathOf } from "@/features/notes/tree";
+import { pathOf } from "@/features/notes/tree";
 import type { Note } from "@/features/notes/types";
-import { useUiStore } from "@/stores/ui-store";
 
 const titleOf = (note: Note) => note.title.trim() || "Untitled";
 
@@ -33,34 +32,5 @@ export function PageBreadcrumb({ note, notes }: { note: Note; notes: Note[] }) {
         </span>
       ))}
     </nav>
-  );
-}
-
-/** Links to the open note's sub-pages after its content (D49). Not note content. */
-export function SubPages({ note, notes }: { note: Note; notes: Note[] }) {
-  const noteSort = useUiStore((state) => state.noteSort);
-  const children = buildNoteTree(notes, noteSort).flatMap(
-    function find(node): Note[] {
-      return node.note.id === note.id
-        ? node.children.map((child) => child.note)
-        : node.children.flatMap(find);
-    },
-  );
-  if (children.length === 0) return null;
-
-  return (
-    <section
-      aria-label="Sub-pages"
-      className="sub-pages mt-8 text-sm text-muted-foreground"
-    >
-      <h3 className="font-medium text-foreground">Sub-pages</h3>
-      <ul>
-        {children.map((child) => (
-          <li key={child.id} className="flex min-w-0 py-0.5">
-            <PageLink note={child} />
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }

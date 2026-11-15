@@ -45,6 +45,7 @@ import { BookGlyph } from "@/features/books/book-glyph";
 import type { Book } from "@/features/books/types";
 import { downloadFile, toFileName } from "@/features/data/download";
 import {
+  appendPageLink,
   createSubPage,
   deleteBranch,
   moveBranch,
@@ -55,6 +56,7 @@ import {
   swapNoteOrder,
 } from "./api";
 import type { Note, NoteSort } from "./types";
+import { requestPageLink } from "./page-link-request";
 import { canAddChild, descendantsOf, moveIntoTargets } from "./tree";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
@@ -135,9 +137,22 @@ export function NoteItem({
     );
   };
 
+  /** A Page line for `child` at the end of `parent` (D50); the open editor adds it if it is open. */
+  const linkFromParent = (
+    parent: Note,
+    child: Pick<Note, "id" | "bookId" | "title">,
+  ) => {
+    if (parent.isLocked || requestPageLink(parent.id, child.id)) return;
+    appendPageLink(uid, parent, child).catch((error: unknown) =>
+      console.error("Adding the Page line failed", error),
+    );
+  };
+
   const addSubPage = () => {
     const { id, written } = createSubPage(uid, note);
-    written.catch(parentWriteFailed("Add sub-page"));
+    written
+      .then(() => linkFromParent(note, { id, bookId: note.bookId, title: "" }))
+      .catch(parentWriteFailed("Add sub-page"));
     if (collapsedNotes.includes(note.id)) toggleNoteCollapsed(note.id);
     navigate(`/books/${note.bookId}/notes/${id}`);
   };
@@ -212,11 +227,12 @@ export function NoteItem({
             note={note}
             allNotes={allNotes}
             sort={noteSort}
-            onPick={(parentId) =>
-              setNoteParent(uid, note.id, parentId).catch(
-                parentWriteFailed("Move into"),
-              )
-            }
+            onPick={(parentId) => {
+              const parent = allNotes.find((n) => n.id === parentId);
+              setNoteParent(uid, note.id, parentId)
+                .then(() => parent && linkFromParent(parent, note))
+                .catch(parentWriteFailed("Move into"));
+            }}
           />
         </k.SubContent>
       </k.Sub>

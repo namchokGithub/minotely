@@ -66,7 +66,12 @@ import {
 } from "./spellcheck";
 import { LinkBubble } from "./link-bubble";
 import { NoteIconPicker } from "./note-icon-picker";
-import { PageBreadcrumb, SubPages } from "./page-trail";
+import { PageBreadcrumb } from "./page-trail";
+import { focusPageLinkOnMount } from "./page-link-focus";
+import {
+  PAGE_LINK_EVENT,
+  type PageLinkRequest,
+} from "@/features/notes/page-link-request";
 import { useCreateSubPage } from "./use-create-sub-page";
 import { canAddChild } from "@/features/notes/tree";
 import { DocumentOutline } from "./document-outline";
@@ -209,9 +214,17 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
               label: "Sub-page",
               keywords: ["page", "subpage", "child", "nested"],
               icon: FilePlus,
+              // A Page line at the cursor; the cursor goes to its name (D50).
               run: (e, range) => {
-                e.chain().focus().deleteRange(range).run();
-                createSubPage(note);
+                const id = createSubPage(note);
+                focusPageLinkOnMount(id);
+                e.chain()
+                  .focus()
+                  .insertContentAt(range, {
+                    type: "pageLink",
+                    attrs: { pageId: id, bookId: note.bookId, title: "" },
+                  })
+                  .run();
               },
             },
           ]
@@ -345,6 +358,26 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     change(latest.current);
     saveNow();
   }, [draft, change, saveNow]);
+
+  // A sub-page added from the Notes column while this note is open (D50): the
+  // Page line goes in here, through Auto Save, not as a separate write.
+  useEffect(() => {
+    const onRequest = (event: Event) => {
+      const request = (event as CustomEvent<PageLinkRequest>).detail;
+      if (request.parentId !== note.id || !editor.isEditable) return;
+      request.handled = true;
+      const end = editor.state.doc.content.size;
+      editor
+        .chain()
+        .insertContentAt(end, {
+          type: "pageLink",
+          attrs: { pageId: request.childId, bookId: note.bookId, title: "" },
+        })
+        .run();
+    };
+    window.addEventListener(PAGE_LINK_EVENT, onRequest);
+    return () => window.removeEventListener(PAGE_LINK_EVENT, onRequest);
+  }, [editor, note.id, note.bookId]);
 
   // "Copy link to block" (D48): save now so the block ids reach Firestore.
   const persistNow = () => {
@@ -617,7 +650,6 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                       <EditorContent editor={editor} />
                     </div>
                   </AppContextMenu>
-                  <SubPages note={note} notes={bookNotes} />
                   <LinkBubble editor={editor} />
                   <FloatingToolbar editor={editor} />
                   <SlashMenu store={slashStore} />
