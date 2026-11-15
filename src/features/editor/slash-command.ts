@@ -1,19 +1,38 @@
 import { Extension, type Editor, type Range } from "@tiptap/react";
 import { PluginKey } from "@tiptap/pm/state";
 import Suggestion from "@tiptap/suggestion";
+import type { LucideIcon } from "lucide-react";
 import {
   applyBlockTypeAt,
+  BLOCK_TYPE_LIST,
   filterBlockTypes,
-  type BlockType,
 } from "./block-types";
+
+/** One entry of the `/` menu: a block type, or an action such as Sub-page (D48, D49). */
+export type SlashItem = {
+  id: string;
+  label: string;
+  keywords: string[];
+  icon: LucideIcon;
+  /** Runs the entry; `range` is the typed `/query`, still in the document. */
+  run: (editor: Editor, range: Range) => void;
+};
+
+const BLOCK_ITEMS: SlashItem[] = BLOCK_TYPE_LIST.map((type) => ({
+  id: type.id,
+  label: type.label,
+  keywords: type.keywords,
+  icon: type.icon,
+  run: (editor, range) => applyBlockTypeAt(editor, range, type),
+}));
 
 /** What the `/` menu shows; null when it is closed (D48). */
 export type SlashMenuState = {
-  items: BlockType[];
+  items: SlashItem[];
   selected: number;
   /** Where the typed `/query` is, in viewport coordinates. */
   rect: DOMRect | null;
-  pick: (type: BlockType) => void;
+  pick: (item: SlashItem) => void;
 } | null;
 
 /**
@@ -22,6 +41,14 @@ export type SlashMenuState = {
  */
 export class SlashMenuStore {
   private state: SlashMenuState = null;
+  /** Entries that depend on the open note (Sub-page, D49), read each time the menu filters. */
+  private extras: () => SlashItem[] = () => [];
+
+  setExtras(extras: () => SlashItem[]) {
+    this.extras = extras;
+  }
+
+  getExtras = () => this.extras();
   private listeners = new Set<() => void>();
 
   get = () => this.state;
@@ -51,19 +78,19 @@ export const SlashCommand = Extension.create<SlashOptions>({
   },
 
   addProseMirrorPlugins() {
-    const store = this.options.store;
+    const { store } = this.options;
     let range: Range | null = null;
     let editor: Editor | null = null;
 
-    const pick = (type: BlockType) => {
-      if (editor && range) applyBlockTypeAt(editor, range, type);
+    const pick = (item: SlashItem) => {
+      if (editor && range) item.run(editor, range);
       store.set(null);
     };
 
     const show = (props: {
       editor: Editor;
       range: Range;
-      items: BlockType[];
+      items: SlashItem[];
       clientRect?: (() => DOMRect | null) | null;
     }) => {
       editor = props.editor;
@@ -85,17 +112,27 @@ export const SlashCommand = Extension.create<SlashOptions>({
     };
 
     return [
-      Suggestion<BlockType, BlockType>({
+      Suggestion<SlashItem, SlashItem>({
         editor: this.editor,
         pluginKey: new PluginKey("slashCommand"),
         char: "/",
         // Not inside code blocks, where "/" is ordinary text.
         allow: ({ state, range: r }) =>
           !state.doc.resolve(r.from).parent.type.spec.code,
-        items: ({ query }) => filterBlockTypes(query),
-        command: ({ editor: e, range: r, props: type }) => {
-          applyBlockTypeAt(e, r, type);
+        items: ({ query }) => {
+          const ids = new Set(filterBlockTypes(query).map((type) => type.id));
+          const q = query.trim().toLowerCase();
+          const extra = store
+            .getExtras()
+            .filter(
+              (item) =>
+                !q ||
+                item.label.toLowerCase().includes(q) ||
+                item.keywords.some((word) => word.startsWith(q)),
+            );
+          return [...BLOCK_ITEMS.filter((item) => ids.has(item.id)), ...extra];
         },
+        command: ({ editor: e, range: r, props: item }) => item.run(e, r),
         render: () => ({
           onStart: (props) => {
             store.set(null);

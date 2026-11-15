@@ -487,7 +487,8 @@ the type, size and that a note is not its own parent; cycles and depth are app r
   in one batch; a client time when over one batch). Restore brings back the sub-pages deleted with it; Restore
   to another book also clears the note's parent. A restored note whose parent is still in Trash shows at the top
   level and re-nests when the parent comes back.
-- Editor: a breadcrumb above the title and a Sub-pages list with "Add sub-page" after the content (not note
-  content). Lined paper keeps both on the rows (D40).
+- Editor: a breadcrumb above the title and a Sub-pages list of links after the content (not note content).
+  New sub-pages come from the `/` menu's Sub-page entry (shown while the note can still have one, not on
+  locked notes): it removes the typed `/…`, creates the sub-page and opens it, without a link in the content. Lined paper keeps both on the rows (D40).
 - Search and Trash show the page path. JSON backup exports `parentId` and import remaps it to the new ids in two
   passes, dropping parents that would break the rules above. Markdown import creates top-level notes.

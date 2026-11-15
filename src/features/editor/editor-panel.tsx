@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   CloudOff,
   Code2,
+  FilePlus,
   FileText,
   HardDrive,
   History,
@@ -66,11 +67,13 @@ import {
 import { LinkBubble } from "./link-bubble";
 import { NoteIconPicker } from "./note-icon-picker";
 import { PageBreadcrumb, SubPages } from "./page-trail";
+import { useCreateSubPage } from "./use-create-sub-page";
+import { canAddChild } from "@/features/notes/tree";
 import { DocumentOutline } from "./document-outline";
 import { BlockControls } from "./block-controls";
 import { BlockDragDrop } from "./block-drag";
 import { FloatingToolbar } from "./floating-toolbar";
-import { SlashCommand, SlashMenuStore } from "./slash-command";
+import { SlashCommand, SlashMenuStore, type SlashItem } from "./slash-command";
 import { SlashMenu } from "./slash-menu";
 import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
@@ -194,6 +197,27 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
 
   // One `/` menu store per editor (D48); the extension list is read once, on creation.
   const [slashStore] = useState(() => new SlashMenuStore());
+  // `/` → Sub-page (D49): offered while this note can still have sub-pages.
+  const createSubPage = useCreateSubPage();
+  const canAddSubPage = !note.isLocked && canAddChild(note.id, bookNotes);
+  useEffect(() => {
+    slashStore.setExtras((): SlashItem[] =>
+      canAddSubPage
+        ? [
+            {
+              id: "subpage",
+              label: "Sub-page",
+              keywords: ["page", "subpage", "child", "nested"],
+              icon: FilePlus,
+              run: (e, range) => {
+                e.chain().focus().deleteRange(range).run();
+                createSubPage(note);
+              },
+            },
+          ]
+        : [],
+    );
+  });
   const [pageColumn, setPageColumn] = useState<HTMLDivElement | null>(null);
   const editor = useEditor({
     extensions: [

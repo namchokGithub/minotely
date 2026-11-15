@@ -411,8 +411,7 @@ body {
   margin-top: var(--paper-row);
   line-height: var(--paper-row);
 }
-.paper-lined .sub-pages li,
-.paper-lined .sub-pages button {
+.paper-lined .sub-pages li {
   padding-block: 0;
 }
 /* Tags row. */

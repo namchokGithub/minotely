@@ -1,9 +1,5 @@
-import { Link, useNavigate } from "react-router";
-import { FilePlus } from "lucide-react";
-import { toast } from "sonner";
-import { useUid } from "@/features/auth/auth-context";
-import { createSubPage } from "@/features/notes/api";
-import { buildNoteTree, canAddChild, pathOf } from "@/features/notes/tree";
+import { Link } from "react-router";
+import { buildNoteTree, pathOf } from "@/features/notes/tree";
 import type { Note } from "@/features/notes/types";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -40,10 +36,8 @@ export function PageBreadcrumb({ note, notes }: { note: Note; notes: Note[] }) {
   );
 }
 
-/** Sub-pages of the open note after its content, with "Add sub-page" (D49). Not note content. */
+/** Links to the open note's sub-pages after its content (D49). Not note content. */
 export function SubPages({ note, notes }: { note: Note; notes: Note[] }) {
-  const uid = useUid();
-  const navigate = useNavigate();
   const noteSort = useUiStore((state) => state.noteSort);
   const children = buildNoteTree(notes, noteSort).flatMap(
     function find(node): Note[] {
@@ -52,46 +46,21 @@ export function SubPages({ note, notes }: { note: Note; notes: Note[] }) {
         : node.children.flatMap(find);
     },
   );
-  const canAdd = !note.isLocked && canAddChild(note.id, notes);
-  if (children.length === 0 && !canAdd) return null;
-
-  const add = () => {
-    const { id, written } = createSubPage(uid, note);
-    written.catch((error: unknown) => {
-      console.error("Add sub-page failed", error);
-      toast.error(
-        "Could not add a sub-page. If this keeps happening, the Security Rules may need publishing.",
-      );
-    });
-    navigate(`/books/${note.bookId}/notes/${id}`);
-  };
+  if (children.length === 0) return null;
 
   return (
     <section
       aria-label="Sub-pages"
       className="sub-pages mt-8 text-sm text-muted-foreground"
     >
-      {children.length > 0 && (
-        <>
-          <h3 className="font-medium text-foreground">Sub-pages</h3>
-          <ul>
-            {children.map((child) => (
-              <li key={child.id} className="flex min-w-0 py-0.5">
-                <PageLink note={child} />
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {canAdd && (
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded-md py-0.5 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
-          onClick={add}
-        >
-          <FilePlus className="size-4" /> Add sub-page
-        </button>
-      )}
+      <h3 className="font-medium text-foreground">Sub-pages</h3>
+      <ul>
+        {children.map((child) => (
+          <li key={child.id} className="flex min-w-0 py-0.5">
+            <PageLink note={child} />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
