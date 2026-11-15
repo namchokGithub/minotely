@@ -364,3 +364,16 @@ like drafts (D12), and is not in the JSON backup.
   every existing note; skipped offline or when both lists are empty, because a cold cache could look like that.
 
 Moving history to `users/{uid}/notes/{noteId}/versions` (rules, backup, cross-device) is the later step.
+
+## D43 — Custom background around the page, per device (2026-11-15)
+
+The page column (D13) keeps the theme color; the area around it can be customised: a color, an image by `https`
+URL (drawn over the color, `cover`, fixed while the page scrolls), an opacity (0–100%) and a darker/lighter level
+(-100 black to +100 white, drawn as a flat overlay so it works for colors and images alike). Default is nothing
+set: the theme color, as before. It is one setting for all notes, stored in `localStorage` under
+`minotely:page-background:{uid}`, so there is no Firestore field, rule or backup change and it does not follow
+the owner to other devices. The controls are a non-modal dialog opened from Page appearance → Background…, with
+no overlay, so changes show at once. Only `https:` URLs that parse are accepted and the stored value is
+re-validated on read; the image is loaded from that site on every open, which tells the site the visitor's IP.
+The app has no file storage, so there is no upload. Below 768px the page fills the width and the background is
+not visible.
