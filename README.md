@@ -9,7 +9,9 @@ Sign in with any Google account; each account sees only its own books and notes.
 ## Features
 
 - **Library → Books → Notes** — books with color (preset or custom) and icon, drag to reorder, live note count.
-- **Editor** — inline WYSIWYG (Tiptap) with live Markdown shortcuts and a Raw Markdown toggle; headings, lists,
+- **Editor** — inline WYSIWYG (Tiptap) with live Markdown shortcuts, a `/` block menu, callouts, block controls
+  (`+` to add, `⠿` to drag or open block actions), a floating toolbar on selections, code block color presets, and
+  a Raw Markdown toggle; headings, lists,
   checklists, tables, code blocks, bold/italic, text color, highlight, and links with an edit bar. Editing Raw
   Markdown can remove text colors and custom highlights that Markdown cannot represent. Ctrl/⌘+C copies a
   rich-text selection as Markdown; the right-click menu or Ctrl/⌘+Alt+Shift+C copies plain text. English and
@@ -18,13 +20,17 @@ Sign in with any Google account; each account sees only its own books and notes.
 - **Reliable Auto Save** — every edit saved on the device at once (IndexedDB), synced 30 s after typing stops
   (at least every 5 min), keeps working offline, asks before overwriting a version changed elsewhere; Ctrl/⌘+S
   syncs now.
-- **Organize** — pin, lock (read-only), tags with filter, sort (updated, created, A–Z, custom), move notes by drag
+- **Organize** — sub-pages up to 3 levels (tree in the Notes column), note icons (emoji), pin, lock (read-only), tags with filter, sort (updated, created, A–Z, custom), move notes by drag
   and drop, Trash with restore.
-- **Find** — search titles, content and `#tags` across all books (Ctrl/⌘+K).
-- **Reading** — paper styles (plain, lined, grid, dotted), editor font and size, light/dark theme.
+- **Find** — search titles, content and `#tags` across all books (Ctrl/⌘+K); a Table of Contents of the open
+  note’s headings.
+- **Reading** — paper styles (plain, margin, lined, grid, dotted), page width (Default, A5, A4, Letter, A3,
+  Full), editor font and size, light/dark theme, and a custom background around the page (color or image, per
+  device).
 - **Data** — JSON backup export/import, Markdown export/import per note.
-- **Responsive** — 3 resizable columns on desktop, collapsible Library on tablet, one screen at a time with a
-  bottom menu on mobile.
+- **Version history** — Auto and Manual versions of each note, kept on this device, with a read-only preview.
+- **Responsive** — 3 resizable columns on desktop and tablet, each side column collapsible to a narrow rail from
+  its title, one screen at a time with a bottom menu on mobile.
 - **Keyboard and accessibility** — shortcuts with hints, app right-click menus (a second right-click opens the
   browser menu), reduced-motion support.
 
@@ -70,6 +76,7 @@ src/
     trash/        Trash
     settings/     synced editor settings, mobile Settings screen
     data/         JSON backup, Markdown import/export
+    versions/     local version history
   lib/            Firebase, Firestore, Dexie, shared hooks
   stores/         Zustand UI store
 docs/             requirements, plan, progress, decisions, security
@@ -132,7 +139,7 @@ domains for Firebase Auth. Security notes: `docs/SECURITY.md`.
 
 ## Roadmap
 
-- **Post-MVP:** version history.
+- **Post-MVP:** version history synced across devices (today it is kept on each device only).
 
 Status details: `docs/PROGRESS.md`.
 

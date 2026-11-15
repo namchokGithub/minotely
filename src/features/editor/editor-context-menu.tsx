@@ -26,6 +26,7 @@ import {
 import { shortcut } from "@/lib/shortcuts";
 import { insertOrEditLink } from "./links";
 import { copySelectionAsText } from "./copy-text";
+import { pasteText } from "./paste-markdown";
 import type { NoteSpellcheckController, SpellingTarget } from "./spellcheck";
 
 /**
@@ -57,7 +58,9 @@ export function EditorContextItems({
   const paste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      editor.chain().focus().insertContent(text).run();
+      editor.commands.focus();
+      // Same rules as Ctrl/⌘+V for plain text, so Markdown is converted too (D41).
+      pasteText(editor.view, text);
     } catch (error) {
       // Clipboard read needs permission; Ctrl/⌘+V always works.
       console.error("Paste failed", error);

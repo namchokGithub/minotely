@@ -11,12 +11,14 @@ import { booksCol, toBook } from "@/features/books/api";
 import { isValidBookColor } from "@/features/books/appearance";
 import { BATCH_LIMIT, EMPTY_DOC, notesCol, toNote } from "@/features/notes/api";
 import { normalizeTag } from "@/features/notes/tags";
+import { toNoteIcon } from "@/features/notes/note-icon";
+import { effectiveParentId, type TreeLink } from "@/features/notes/tree";
 
 // Limits match firestore.rules (D17).
 const MAX_BOOK_NAME = 80;
 const MAX_TITLE = 200;
 const MAX_TAGS = 20;
-const PAPER_STYLES = ["plain", "lined", "grid", "dotted"];
+const PAPER_STYLES = ["plain", "margin", "lined", "grid", "dotted"];
 
 const BACKUP_APP = "minotely";
 const BACKUP_VERSION = 1;
@@ -35,6 +37,10 @@ type BackupNote = {
   id: string;
   bookId: string;
   title: string;
+  /** Missing in backups made before D46. */
+  icon?: string;
+  /** Parent note id within the backup (D49); missing for top-level notes and older backups. */
+  parentId?: string;
   content: string;
   plainText: string;
   tags: string[];
@@ -73,6 +79,8 @@ export async function exportBackup(uid: string): Promise<Backup> {
       id: n.id,
       bookId: n.bookId,
       title: n.title,
+      icon: n.icon,
+      ...(n.parentId ? { parentId: n.parentId } : {}),
       content: n.content,
       plainText: n.plainText,
       tags: n.tags,
@@ -141,17 +149,38 @@ export async function importBackup(uid: string, backup: Backup) {
     );
   }
 
+  // Pass 1 (D49): a new id for every imported note, so sub-pages can point at
+  // their parent's new id. A parent that is not imported, in another book, in a
+  // cycle or too deep is dropped by the same rule the app uses to show the tree.
+  const imported = backup.notes.filter((note) => bookIds.has(str(note.bookId)));
+  // Each imported note gets its own new document, even with a missing or
+  // repeated id in the file; only unique ids can be parents.
+  const keys = imported.map((note, index) => {
+    const id = str(note.id);
+    const first = imported.findIndex((other) => str(other.id) === id);
+    return id && first === index ? id : `#${index}`;
+  });
+  const noteIds = new Map(keys.map((key) => [key, doc(notesCol(uid)).id]));
+  const links: TreeLink[] = imported.map((note, index) => ({
+    id: keys[index],
+    bookId: str(note.bookId),
+    parentId: str(note.parentId) || null,
+  }));
+
   let notes = 0;
-  for (const note of backup.notes) {
-    const bookId = bookIds.get(str(note.bookId));
-    if (!bookId) continue;
-    const ref = doc(notesCol(uid));
+  for (const [index, note] of imported.entries()) {
+    const bookId = bookIds.get(str(note.bookId))!;
+    const ref = doc(notesCol(uid), noteIds.get(keys[index]));
+    const oldParent = effectiveParentId(keys[index], links);
+    const parentId = oldParent ? noteIds.get(oldParent) : undefined;
     const createdAt = time(note.createdAt);
     notes += 1;
     writes.push((batch) =>
       batch.set(ref, {
         bookId,
+        ...(parentId ? { parentId } : {}),
         title: str(note.title).slice(0, MAX_TITLE),
+        icon: toNoteIcon(str(note.icon)),
         content: str(note.content, EMPTY_DOC),
         plainText: str(note.plainText),
         tags: Array.isArray(note.tags)
@@ -180,7 +209,18 @@ export async function importBackup(uid: string, backup: Backup) {
   for (let i = 0; i < writes.length; i += BATCH_LIMIT) {
     const batch = writeBatch(db);
     writes.slice(i, i + BATCH_LIMIT).forEach((write) => write(batch));
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (error) {
+      // Sub-pages need the Security Rules from D49; earlier batches stay imported.
+      if ((error as { code?: string }).code === "permission-denied") {
+        throw new Error(
+          "Firestore refused part of the import. If this backup has sub-pages, publish the latest Security Rules, then import again (notes already added stay).",
+          { cause: error },
+        );
+      }
+      throw error;
+    }
   }
 
   return { books: bookIds.size, notes };

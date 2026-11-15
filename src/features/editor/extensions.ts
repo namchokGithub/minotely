@@ -9,6 +9,9 @@ import {
 } from "@tiptap/extension-table";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Placeholder } from "@tiptap/extensions";
+import UniqueID from "@tiptap/extension-unique-id";
+import { Callout } from "./callout";
+import { PageLink } from "./page-link";
 import { Extension, type JSONContent } from "@tiptap/react";
 import { insertOrEditLink, openLink } from "./links";
 
@@ -30,6 +33,21 @@ const LinkShortcuts = Extension.create({
   },
 });
 
+/** Block node types that get a stable id (D48). */
+export const BLOCK_TYPES = [
+  "paragraph",
+  "heading",
+  "blockquote",
+  "callout",
+  "codeBlock",
+  "bulletList",
+  "orderedList",
+  "taskList",
+  "table",
+  "horizontalRule",
+  "pageLink",
+];
+
 /**
  * Markdown shortcuts (# heading, - list, 1. list, [ ] task, > quote, ``` code,
  * **bold**, *italic*, ==highlight==) come from each extension's input rules.
@@ -37,6 +55,8 @@ const LinkShortcuts = Extension.create({
 export const editorExtensions = [
   StarterKit.configure({
     heading: { levels: [1, 2, 3] },
+    // Drop line while dragging a block (D48): drawn by the `.block-drop-cursor` class.
+    dropcursor: { color: false, width: 3, class: "block-drop-cursor" },
     // Editing: clicks place the cursor; locked notes are not editable, so links open as normal anchors.
     link: {
       openOnClick: false,
@@ -61,7 +81,11 @@ export const editorExtensions = [
   TableRow,
   TableHeader,
   TableCell,
-  Placeholder.configure({ placeholder: "Start writing…" }),
+  Callout,
+  PageLink,
+  // Stable block ids for "Copy link to block" (D48); rendered as data-id.
+  UniqueID.configure({ types: BLOCK_TYPES }),
+  Placeholder.configure({ placeholder: "Start writing…  Type / for blocks" }),
 ];
 
 export const TEXT_COLORS = [

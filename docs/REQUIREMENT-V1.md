@@ -24,26 +24,26 @@ My Library
 
 ## Core Features
 
-| Feature           | Requirement                              | Priority |
-| ----------------- | ---------------------------------------- | -------- |
-| Authentication    | GoogleSign-in (ทุกบัญชี, ข้อมูลแยกต่อคน) | P0       |
-| BookManagement    | Create,Rename,Delete,Color               | P0       |
-| NoteManagement    | Create,Edit,Delete,Move                  | P0       |
-| Markdown          | Heading,List,Table,CodeBlock             | P0       |
-| RichText          | Bold,Italic,Highlight,TextColor          | P0       |
-| EditorMode        | Edit WYSIWYG / Raw Markdown              | P0       |
-| AutoSave          | บันทึกอัตโนมัติ                          | P0       |
-| Search            | ค้นหาTitleและContent                     | P0       |
-| Responsive        | Desktop,Tablet,Mobile                    | P0       |
-| PaperStyles       | Lined,Grid,Plain,Dotted                  | P1       |
-| Pin/Favorite      | ปักหมุดNoteสำคัญ                         | P1       |
-| Tags              | ติดTagให้Note                            | P1       |
-| Sorting           | Updated,Created,A–Z,Custom               | P1       |
-| Import/Export     | Markdown,JSON                            | P1       |
-| Trash             | กู้คืนNoteที่ลบ                          | P1       |
-| OfflineMode       | อ่าน/แก้ไขเมื่อไม่มีอินเทอร์เน็ต         | P2       |
-| VersionHistory    | ดูประวัติการแก้ไขNote                    | P2       |
-| KeyboardShortcuts | ควบคุมEditorด้วยคีย์บอร์ด                | P2       |
+| Feature           | Requirement                                | Priority |
+| ----------------- | ------------------------------------------ | -------- |
+| Authentication    | GoogleSign-in (ทุกบัญชี, ข้อมูลแยกต่อคน)   | P0       |
+| BookManagement    | Create,Rename,Delete,Color                 | P0       |
+| NoteManagement    | Create,Edit,Delete,Move                    | P0       |
+| Markdown          | Heading,List,Table,CodeBlock               | P0       |
+| RichText          | Bold,Italic,Highlight,TextColor            | P0       |
+| EditorMode        | Edit WYSIWYG / Raw Markdown                | P0       |
+| AutoSave          | บันทึกอัตโนมัติ                            | P0       |
+| Search            | ค้นหาTitleและContent                       | P0       |
+| Responsive        | Desktop,Tablet,Mobile                      | P0       |
+| PaperStyles       | Plain,Margin,Lined,Grid,Dotted             | P1       |
+| Pin/Favorite      | ปักหมุดNoteสำคัญ                           | P1       |
+| Tags              | ติดTagให้Note                              | P1       |
+| Sorting           | Updated,Created,A–Z,Custom                 | P1       |
+| Import/Export     | Markdown,JSON                              | P1       |
+| Trash             | กู้คืนNoteที่ลบ                            | P1       |
+| OfflineMode       | อ่าน/แก้ไขเมื่อไม่มีอินเทอร์เน็ต           | P2       |
+| VersionHistory    | ดูประวัติการแก้ไขNote (เก็บในเครื่อง, D42) | P2       |
+| KeyboardShortcuts | ควบคุมEditorด้วยคีย์บอร์ด                  | P2       |
 
 ## UX/UI Design
 
@@ -69,7 +69,7 @@ Layout ตามขนาดหน้าจอ
 
 ![1793520550973](image/REQUIREMENT-V1/1793520550973.png)
 
-ให้ใช้ Paper Style เป็นพื้นหลังของ Editor เท่านั้น ไม่ต้องบังคับข้อความทุกบรรทัดให้ตรงกับเส้นกระดาษ เพราะ Rich Text ที่มี Heading, Code Block และ Table จะมีความสูงไม่เท่ากัน
+ให้ใช้ Paper Style เป็นพื้นหลังของ Editor เท่านั้น ไม่ต้องบังคับข้อความทุกบรรทัดให้ตรงกับเส้นกระดาษ เพราะ Rich Text ที่มี Heading, Code Block และ Table จะมีความสูงไม่เท่ากัน ยกเว้น Lined: ข้อความทุกบรรทัดวางบนเส้น โดยทุก Block สูงเป็นจำนวนเท่าของ 1 เส้น (2rem) (D40)
 
 สำหรับ Motion ควรใช้เพียงการเปิดปิด Sidebar, สลับ Notes, เปลี่ยน Hover ของปุ่มเล็กน้อย ระยะเวลาประมาณ 150–250ms พร้อมรองรับ `prefers-reduced-motion`
 
@@ -116,6 +116,8 @@ users/
       {noteId}/
         bookId
         title
+        icon (one emoji, or empty — D46)
+        parentId (parent note id in the same book; missing = top level — D49)
         content (Tiptap JSON string — D10)
         plainText
         tags

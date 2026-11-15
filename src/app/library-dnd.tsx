@@ -24,7 +24,8 @@ import { setBookOrder, useBooks } from "@/features/books/api";
 import { BookGlyph } from "@/features/books/book-glyph";
 import type { Book } from "@/features/books/types";
 import { bookDragId, type DragData } from "./dnd-ids";
-import { moveNote } from "@/features/notes/api";
+import { moveBranch, undoMoveBranch, useAllNotes } from "@/features/notes/api";
+import { descendantsOf } from "@/features/notes/tree";
 import { useRouteIds } from "./use-route-ids";
 
 // Notes drop onto the book under the pointer; books sort by the closest slot.
@@ -62,6 +63,7 @@ function orderBetween(previous?: Book, next?: Book): number {
  */
 export function LibraryDnd({ children }: { children: ReactNode }) {
   const uid = useUid();
+  const { data: allNotes } = useAllNotes();
   const navigate = useNavigate();
   const { noteId: openNoteId } = useRouteIds();
   const { data: books = [] } = useBooks();
@@ -88,24 +90,35 @@ export function LibraryDnd({ children }: { children: ReactNode }) {
       const target = to.book;
       if (note.bookId === target.id) return;
       const title = note.title.trim() || "Untitled";
-      const isOpen = () =>
-        window.location.pathname.endsWith(`/notes/${note.id}`);
-      moveNote(uid, note.id, target.id)
+      // Sub-pages move with the note (D49); Undo puts the same notes back.
+      const notesBefore = allNotes ?? [];
+      const branch = [
+        note.id,
+        ...descendantsOf(note.id, notesBefore).map((n) => n.id),
+      ];
+      // The open note, when it is the moved note or one of its sub-pages.
+      const openInBranch = () => {
+        const id = window.location.pathname.match(/\/notes\/([^/]+)$/)?.[1];
+        return id && branch.includes(id) ? id : null;
+      };
+      moveBranch(uid, note, target.id, notesBefore)
         .then(() =>
           toast.success(`Moved “${title}” to “${target.name}”`, {
             action: {
               label: "Undo",
               onClick: () => {
-                moveNote(uid, note.id, note.bookId).catch(failed("Undo move"));
-                if (isOpen())
-                  navigate(`/books/${note.bookId}/notes/${note.id}`);
+                undoMoveBranch(uid, note, notesBefore).catch(
+                  failed("Undo move"),
+                );
+                const open = openInBranch();
+                if (open) navigate(`/books/${note.bookId}/notes/${open}`);
               },
             },
           }),
         )
         .catch(failed(`Could not move “${title}”`));
-      if (openNoteId === note.id)
-        navigate(`/books/${target.id}/notes/${note.id}`);
+      if (openNoteId && branch.includes(openNoteId))
+        navigate(`/books/${target.id}/notes/${openNoteId}`);
       return;
     }
 

@@ -240,34 +240,133 @@ body {
   }
 }
 
-/* Paper styles: editor background only, scrolls with the text (D13). */
+/*
+ * Paper styles: a background on the page column (the 768px block that holds the
+ * text), not on the whole editor panel, so lines stop at the page edges (D13).
+ */
 @layer components {
   .paper-lined,
   .paper-grid,
   .paper-dotted {
     --paper-line: color-mix(in oklch, var(--foreground) 9%, transparent);
-    background-attachment: local;
   }
+  /* Fill the panel height so a short note still shows a full page. */
+  .paper-lined > div,
+  .paper-grid > div,
+  .paper-dotted > div {
+    min-height: 100%;
+  }
+  /* Lined: one text row per ruled line (D40). The rules that do this are unlayered, below. */
   .paper-lined {
+    --paper-row: 2rem;
+    --paper-shift: -0.3125rem;
+  }
+  .paper-lined > div {
     background-image: linear-gradient(
       to bottom,
-      transparent calc(2rem - 1px),
-      var(--paper-line) calc(2rem - 1px)
+      transparent calc(var(--paper-row) - 1px),
+      var(--paper-line) calc(var(--paper-row) - 1px)
     );
-    background-size: 100% 2rem;
+    background-size: 100% var(--paper-row);
+    background-position-y: var(--paper-shift);
   }
-  .paper-grid {
+  .paper-grid > div {
     background-image:
       linear-gradient(var(--paper-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
     background-size: 1.5rem 1.5rem;
   }
-  .paper-dotted {
+  .paper-dotted > div {
     background-image: radial-gradient(
       color-mix(in oklch, var(--foreground) 22%, transparent) 1px,
       transparent 1.25px
     );
     background-size: 1.25rem 1.25rem;
+  }
+
+  /* Callout (D48): a tinted box with a 💡 mark; its blocks keep their own styles. */
+  .minotely-editor .callout {
+    @apply relative rounded-lg bg-muted/70 py-3 pr-4 pl-11;
+  }
+  .minotely-editor .callout::before {
+    @apply absolute top-3 left-3.5 leading-7 content-['💡'];
+  }
+  .minotely-editor .callout > * + * {
+    @apply mt-3;
+  }
+
+  /* Dragging a block (D48): the source fades, the drop line is blue. */
+  .minotely-editor .block-drag-source {
+    opacity: 0.4;
+    transition: opacity 150ms ease-out;
+  }
+  .block-drop-cursor,
+  .block-drop-line {
+    border-radius: 9999px;
+    background-color: #3b82f6;
+    pointer-events: none;
+  }
+  .dark .block-drop-cursor,
+  .dark .block-drop-line {
+    background-color: #60a5fa;
+  }
+  /* Handle drags draw their own line at block boundaries; hide the editor's text-drop cursor. */
+  .block-dragging .block-drop-cursor {
+    display: none;
+  }
+  /* Off-screen copy the browser photographs as the drag image. */
+  .block-drag-holder {
+    position: fixed;
+    top: -10000px;
+    left: -10000px;
+  }
+  .block-drag-holder .block-drag-preview {
+    list-style: none;
+    margin: 0;
+    border-radius: 0.5rem;
+    background-color: var(--background);
+    padding: 0.25rem 0.75rem;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  }
+
+  /* Page line (D50): one line of text with an icon. */
+  .minotely-editor .page-link-line {
+    @apply min-h-7;
+  }
+
+  /* A block opened from a "Copy link to block" link (D48). */
+  .minotely-editor .block-flash {
+    @apply rounded-md bg-primary/10 transition-colors duration-200;
+  }
+
+  /* Code block colors, per device (D48). Default keeps the muted theme color. */
+  .code-theme-dark .minotely-editor pre {
+    background-color: #1e1e24;
+    color: #e4e4e7;
+  }
+  .code-theme-sepia .minotely-editor pre {
+    background-color: #f4ecd8;
+    color: #433422;
+  }
+  .code-theme-blue .minotely-editor pre {
+    background-color: #e8f0fe;
+    color: #1e3a8a;
+  }
+  .code-theme-green .minotely-editor pre {
+    background-color: #e7f6ec;
+    color: #14532d;
+  }
+  .dark .code-theme-sepia .minotely-editor pre {
+    background-color: #3a3023;
+    color: #f3e7cf;
+  }
+  .dark .code-theme-blue .minotely-editor pre {
+    background-color: #172554;
+    color: #dbeafe;
+  }
+  .dark .code-theme-green .minotely-editor pre {
+    background-color: #0f2e1d;
+    color: #dcfce7;
   }
 
   /* Typography settings (users/{uid}/preferences/settings). */
@@ -286,6 +385,124 @@ body {
     font-size: 1.125rem;
     line-height: 1.8;
   }
+}
+
+/*
+ * Lined paper: every block is a whole number of rows tall, so text sits on the
+ * ruled lines (D40). Unlayered on purpose: these must win over the utility
+ * classes on the title, tags and Raw Markdown textarea.
+ */
+.paper-lined > div {
+  padding-top: var(--paper-row);
+}
+/* Icon and title row (D46): two rows tall; the title fills it so its text keeps its place on the lines. */
+.paper-lined .note-title-row {
+  box-sizing: border-box;
+  height: calc(var(--paper-row) * 2);
+  margin-bottom: 0;
+  padding-top: 1.25rem;
+  align-items: stretch;
+}
+.paper-lined .note-title-row > input {
+  height: 100%;
+}
+/* Sub-pages (D49, D50): the breadcrumb and each Page line are one row. */
+.paper-lined .note-breadcrumb {
+  height: var(--paper-row);
+  margin-bottom: 0;
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor .page-link-line {
+  height: var(--paper-row);
+}
+/* Tags row. */
+.paper-lined .note-title-row + div {
+  row-gap: 0;
+  min-height: var(--paper-row);
+  margin-bottom: var(--paper-row);
+}
+.paper-lined .note-title-row + div > span {
+  box-sizing: border-box;
+  height: var(--paper-row);
+  padding-block: 0;
+  border-block: 0.25rem solid transparent;
+  background-clip: padding-box;
+}
+.paper-lined .note-title-row + div > input {
+  min-height: var(--paper-row);
+  padding-block: 0;
+}
+/* Raw Markdown mode: hint and textarea. */
+.paper-lined > div > p {
+  margin-bottom: 0;
+  line-height: var(--paper-row);
+}
+.paper-lined textarea[aria-label="Raw Markdown content"] {
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor {
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor > * + *,
+.paper-lined .minotely-editor li > p,
+.paper-lined
+  .minotely-editor
+  ul[data-type="taskList"]
+  ul[data-type="taskList"] {
+  margin-block: 0;
+}
+.paper-lined .minotely-editor h1,
+.paper-lined .minotely-editor h2,
+.paper-lined .minotely-editor h3 {
+  margin-top: var(--paper-row);
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor > :is(h1, h2, h3):first-child {
+  margin-top: 0;
+}
+.paper-lined .minotely-editor hr {
+  margin-block: calc((var(--paper-row) - 1px) / 2);
+}
+.paper-lined .minotely-editor ul[data-type="taskList"] li > label {
+  margin-top: calc((var(--paper-row) - 1rem) / 2);
+}
+/* Inline code is smaller and monospace; without this its box makes the row 1px taller. */
+.paper-lined .minotely-editor :not(pre) > code {
+  line-height: 1;
+}
+/* Code block: row-high lines, and 1rem padding top and bottom adds one row. */
+.paper-lined .minotely-editor pre {
+  padding-block: calc(var(--paper-row) / 2);
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor pre code {
+  display: block;
+}
+/* Callout: padding top and bottom adds one row (D48). */
+.paper-lined .minotely-editor .callout {
+  padding-block: calc(var(--paper-row) / 2);
+}
+.paper-lined .minotely-editor .callout::before {
+  top: calc(var(--paper-row) / 2);
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor .callout > * + * {
+  margin-top: 0;
+}
+/* Tables: borders drawn as shadows so they add no height; each text line is one row. */
+.paper-lined .minotely-editor table {
+  box-shadow:
+    inset 1px 0 0 var(--border),
+    inset 0 1px 0 var(--border);
+}
+.paper-lined .minotely-editor th,
+.paper-lined .minotely-editor td {
+  border-width: 0;
+  padding-block: 0;
+  line-height: var(--paper-row);
+  box-shadow:
+    inset -1px 0 0 var(--border),
+    inset 0 -1px 0 var(--border);
 }
 
 /* Motion stays at 150–250 ms; switch it off for reduced-motion users. */

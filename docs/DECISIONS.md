@@ -77,9 +77,10 @@ hidden or the note is closed. Timing, offline behaviour and the overwrite rule a
 
 ## D13 — Paper style per note, typography per user (2026-11-01)
 
-`paperStyle` is stored on each note and drawn as a CSS background on the editor scroll area
-(`background-attachment: local`), not aligned to text lines. Lined paper also has a red margin line left of
-the text, inside the content column, with extra left padding so the line never crosses text. Font family and size are one setting for all notes,
+`paperStyle` is stored on each note and drawn as a CSS background on the page column (the centred block, 768px wide by default and set by D45, that
+holds the text; since 2026-11-15, before that on the whole editor scroll area), so lines stop at
+the page edges; not aligned to text lines. Lined paper also has a red margin line left of
+the text (Margin paper, added 2026-11-15, is that line on a plain background), inside the content column, with extra left padding so the line never crosses text. Font family and size are one setting for all notes,
 stored in `users/{uid}/preferences/settings` so they follow the owner across devices.
 
 ## D14 — Custom sort with Move up / Move down (2026-11-01) — books: drag added by D24
@@ -316,3 +317,197 @@ The editor context menu has a checked Spell check item, including for locked not
 the current account on this device and is stored in localStorage under a UID-specific key, defaulting to on.
 Turning it off clears Tiptap spelling decorations and suppresses suggestions and background checks; turning it
 on checks the open note again. It does not change note content, Firestore settings, or personal dictionary words.
+
+## D40 — Lined paper: text sits on the ruled lines (2026-11-15)
+
+Changes D13 for Lined paper only; other paper styles stay a background that text does not follow. Under
+`.paper-lined` one row is `--paper-row` (2rem) and every block is a whole number of rows: body, lists, checklists,
+headings and the Raw Markdown textarea use a 2rem line height; gaps between blocks are zero, with one empty row
+above headings and below the tags; the title takes two rows; code blocks add one row of padding; `hr` is centred
+in one row; table borders are drawn as box shadows so they add no height. Inline code gets `line-height: 1`,
+because its smaller monospace box otherwise makes a row 1px taller and everything below drifts. The ruled lines
+are shifted up 5px so they sit just under the text baseline. Small, Medium and Large text share the 2rem row.
+These rules are unlayered CSS in `src/index.css` so they override the utility classes on the title, tags and
+textarea.
+
+## D41 — Pasted Markdown becomes rich text (2026-11-15)
+
+Pasting plain text that looks like Markdown into the WYSIWYG editor converts it with the same `MarkdownManager`
+as import and Raw mode, through ProseMirror's `clipboardTextParser`. This also closes the loop with D35: text
+copied from a note (Markdown on the clipboard) pastes back with its formatting. "Looks like Markdown" is a list
+of patterns in `paste-markdown.ts` (heading, list, quote, code fence, table separator, rule, bold, strike,
+highlight, inline code, link); plain prose without them pastes as before, because parsing everything as Markdown
+would join multi-line text into one paragraph. Not converted: clipboard content with HTML (normal rich paste),
+Ctrl/⌘+Shift+V, pastes inside a code block, and a bare URL (still becomes a link). The context menu's Paste calls
+the same parser (`view.pasteText` alone is always plain), so it follows the same rules. The detection is a heuristic; Undo or Ctrl/⌘+Shift+V gives the
+raw text.
+
+## D42 — Version history kept on the device (2026-11-15)
+
+First step of Version History, deliberately local: versions live in the Dexie table `versions` (title, Tiptap
+JSON, kind `auto` | `manual`, created time, per `uid`), not in Firestore, so there are no reads, writes, rules or
+backup changes. Consequences: history is per browser, is lost when site data is cleared, stays after sign-out
+like drafts (D12), and is not in the JSON backup.
+
+- **Auto:** on the first edit after a note opens, the content it had before the edit is kept if the newest
+  version does not already hold it; after that, a successful sync is kept at most once per 10 minutes. Only
+  synced content is stored, never an unsynced draft.
+- **Manual:** Save version (in the dialog) syncs pending edits first and stores what Firestore now holds; it
+  refuses and says why when offline, on a sync error, or while a conflict (D32) is open.
+- **No duplicates:** nothing is stored when the newest version has the same title and content (a Manual version
+  of content that only an Auto version holds is still stored), or when the note is empty.
+- **Retention:** 10 Auto and 10 Manual per note; the oldest of the same kind is dropped.
+- **Timeline:** History button in the note header opens a dialog, newest first, with a read-only Tiptap preview.
+  There is no restore; the owner copies from the preview.
+- **Cleanup:** deleting a note forever or emptying Trash deletes its versions. Versions of notes deleted forever
+  on another device are removed when the Trash page opens, where the live and trashed note lists together name
+  every existing note; skipped offline or when both lists are empty, because a cold cache could look like that.
+
+Moving history to `users/{uid}/notes/{noteId}/versions` (rules, backup, cross-device) is the later step.
+
+## D43 — Custom background around the page, per device (2026-11-15)
+
+The page column (D13) keeps the theme color; the area around it can be customised: a color, an image by `https`
+URL (drawn over the color, `cover`, fixed while the page scrolls), an opacity (0–100%) and a darker/lighter level
+(-100 black to +100 white, drawn as a flat overlay so it works for colors and images alike). Default is nothing
+set: the theme color, as before. It is one setting for all notes, stored in `localStorage` under
+`minotely:page-background:{uid}`, so there is no Firestore field, rule or backup change and it does not follow
+the owner to other devices. The controls are a non-modal dialog opened from Page appearance → Background…, with
+no overlay, so changes show at once. The Page appearance items (paper, font, size, Background…) are one list
+(`AppearanceItems`, D26) shown by the header button and by a right-click on the background around the page;
+right-clicks on the page itself keep the editor menu or the browser menu. The dialog opens only after the menu
+has closed, because a closing menu moves focus and a non-modal dialog closes when focus leaves it. Only `https:` URLs that parse are accepted and the stored value is
+re-validated on read; the image is loaded from that site on every open, which tells the site the visitor's IP.
+The app has no file storage, so there is no upload. Below 768px the page fills the width and the background is
+not visible.
+
+## D44 — Side columns collapse to a rail (2026-11-15)
+
+On 768px and up the Library and Notes columns each collapse on their own, so the editor can take the width. The
+control is the column's own title: clicking "Minotely" (logo and name) collapses Library; clicking the book
+name (or "Trash") collapses Notes. A collapsed column is not hidden but becomes a 48px rail with one icon
+button (the logo, or the open book's icon) that expands it again; a fully hidden column would take its own
+control away with it. The Library rail also lists every book as its icon, in Library order, then Trash: a click
+opens that book without expanding the column, and the native `title` tooltip shows the name (the accessible name
+adds the note count). Notes cannot be dropped on rail icons; expand the Library to move a note by drag and drop. State is in the persisted UI
+store (`booksSidebarOpen`, `notesPanelOpen`), per device. The panel stays mounted while collapsed (`md:hidden`)
+so dialogs, drag and drop and listeners keep their state, and phones, which show one screen at a time, always
+show the full panel. `fitWidths` (D25) counts a collapsed column as the rail width and hides its splitter.
+Tablet still folds Library automatically while a note is open, now to the rail; the tablet-only toggle button
+in the Notes header is gone because the title does the same. No keyboard shortcut.
+
+## D45 — Page width presets, a per-device preview (2026-11-15)
+
+The page column's maximum width can be set like a paper size: Default (768px, as before), A5 (148mm), A4
+(210mm), Letter (8.5in), A3 (297mm) and Full (90% of the editor area). Sizes are CSS physical units, so they
+match a word processor at 100% zoom (96px per inch); the width includes the page's own side padding and the
+Lined/Margin red line. Length is never limited and there are no page breaks. When the editor area is narrower
+than the preset, the page shrinks to fit instead of scrolling sideways. It is a preview, not a note property:
+one value for all notes, `pageWidth` in the persisted UI store on this device, so no Firestore field, rule or
+backup change. The menu group is "Page width (this device)" in Page appearance (header button and the
+right-click menu on the background, D43/D44).
+
+## D46 — Note icon (2026-11-15)
+
+A note can have one icon, shown before its title in the editor, the note list, search, Trash and the phone
+header. It is an emoji or symbol, not a Lucide icon like books, so it reads as the note's own mark (Notion-like)
+and needs no color. Stored as optional `icon` (string, "" for none) on the note; notes and backups made before
+this have none. `toNoteIcon` keeps only the first grapheme when it is not a letter, digit or space, at most 16
+UTF-16 units; rules accept a string up to 16 characters. Setting it does not bump `updatedAt` (like paper style)
+and is not part of the content conflict check (D32) or version history (D42). The picker is a dropdown with 32
+suggested emojis, a field to type or paste any emoji, and Remove. No emoji library was added. On Lined paper the
+icon and title share the two-row title band (`.note-title-row`, D40).
+
+## D47 — Table of Contents (Document Outline) (2026-11-15)
+
+Called `DocumentOutline` in code and "Table of Contents" in the UI. It lists the open note's H1–H3 headings (empty
+headings skipped), read from the editor state, so it follows edits at once and costs no reads. Collapsed it is a
+column of short bars (width by level, at most 40) fixed at the top right of the editor area, outside the page so
+it does not scroll or take page width. Hover or keyboard focus shows the list; clicking the bars pins it open
+until a click outside, Escape or choosing a heading. Choosing a heading scrolls to it (smooth unless reduced
+motion) and puts the cursor there. Shown on 768px and up in rich-text mode only; hover does not exist on touch
+and phones have no room. No current-heading highlight yet.
+
+## D48 — Notion-like blocks in the editor (2026-11-15)
+
+Blocks are still Tiptap/ProseMirror nodes; there is no separate block model. One list of block types
+(`block-types.ts`: Text, Heading 1–3, Bulleted, Numbered, Checklist, Quote, Callout, Code block, Table, Divider;
+no Image until there is file storage) feeds every entry point:
+
+- **`/` menu:** `@tiptap/suggestion` with a small store and a React list; `/` at a line start or after a space,
+  not in code blocks; type to filter, arrows, Enter/Tab, Escape.
+- **Callout:** a `callout` node (`content: block+`) drawn with a 💡 mark in CSS. Markdown is Tiptap's Pandoc-style
+  `:::callout` … `:::`, so Raw mode, copy, paste (D41 sign added) and export keep it; `!> ` at a line start makes
+  one. On Lined paper its padding adds one row (D40).
+- **Floating toolbar:** a BubbleMenu on a non-empty text selection with the top toolbar's text controls (Bold,
+  Italic, Color, Highlight, Link); hidden on links (link bar, D23), in code blocks and on a selected block.
+- **Block Controls:** beside the top-level block under the pointer (by vertical position, so the gutter counts),
+  `+` inserts an empty paragraph below (Alt/⌥ above) with `/` typed, which opens the `/` menu; `⠿` drags the block
+  (`block-drag.ts`, below), or on click opens the Block Action Menu:
+  Duplicate, Turn into (unwraps, then applies the type), Move to (appends the block to another note through the
+  checked transaction of D32, then removes it here; refused offline or on a conflict), Copy link to block, Delete.
+  Each line of a list (bullet, numbered or checklist item, at any depth) is its own block: the controls sit
+  left of its marker, dragging moves the line with the lines nested under it, `+` adds an empty line to the same
+  list, Turn into converts only that line (splitting the list), Delete of a list's last line removes the list,
+  Move to sends it as a one-line list of the same kind, and its link uses its first paragraph's id. Other blocks
+  are handled whole. While dragging, the block stays in place at 40% opacity, the pointer carries a copy on the
+  page color with a shadow, and Dropcursor draws a 3px blue line where it will land (`.block-drop-cursor`).
+  Handle drags do not use ProseMirror's own drop: it deletes whatever is selected at drop time (so a moved
+  selection duplicated the block) and drops a list line between paragraphs by splitting the paragraph (empty
+  rows). `BlockDragDrop` instead lands every drop on a block or list-line boundary (before or after by the
+  pointer's half), deletes exactly the dragged node (its list too when it was the last line), converts a line to
+  the kind of list it lands in, wraps a line dropped between other blocks in a one-line list of its old kind,
+  ignores drops onto itself, and keeps block ids. It draws its own blue line; the editor's drop cursor stays for
+  text drags only.
+  768px and up with a fine pointer only. `@tiptap/extension-drag-handle` was not used: its
+  peer dependencies bring in Yjs collaboration packages.
+- **Block ids:** `@tiptap/extension-unique-id` gives every block type a `data-id`. Ids generated when an older note
+  opens are not treated as an edit (no write); they are saved with the next change, or at once by Copy link to
+  block. A link is `/books/{bookId}/notes/{noteId}#block-{id}`; opening it scrolls to the block and flashes it.
+- **Code block color:** presets Default, Dark, Sepia, Blue, Green (light and dark variants) in Page appearance,
+  per device in the UI store, like page width (D45).
+- Markdown shortcuts already existed as input rules; none were added besides `!> `.
+
+## D49 — Nested pages (sub-pages) (2026-11-15)
+
+Design: `docs/superpowers/specs/2026-11-15-nested-pages-design.md`. A note can have one parent note in the same
+book, stored as optional `parentId`; top-level notes have no key (it is removed with `deleteField()`, never
+written as null, so the app keeps working before the Rules that allow it are published). The tree is built in
+the client from the live notes already loaded (D33) by `src/features/notes/tree.ts`; no extra reads. Only an
+**effective** parent counts: it must exist among the same list, be in the same book, not form a cycle, and keep
+the note within 3 levels; otherwise the note shows at the top level, so bad data never hides a note. Rules check
+the type, size and that a note is not its own parent; cycles and depth are app rules.
+
+- Notes column: a tree with ▸/▾ per note that has sub-pages (collapsed state per device in the UI store); a tag
+  filter shows a flat list with paths. Custom order (Move up/down) works among siblings.
+- Menus (⋯ and right-click, D26): Add sub-page (up to level 3), Move into… (same book, not into itself or its
+  sub-pages, within depth), Move to top level.
+- Branches: moving to another book (menu or drag onto a book, with Undo) moves the note and its sub-pages; the
+  note becomes top level there. Delete sends the branch to Trash with one shared `deletedAt` (`serverTimestamp()`
+  in one batch; a client time when over one batch). Restore brings back the sub-pages deleted with it; Restore
+  to another book also clears the note's parent. A restored note whose parent is still in Trash shows at the top
+  level and re-nests when the parent comes back.
+- Editor: a breadcrumb above the title. Sub-pages appear in the content as Page lines (D50). Lined paper keeps both on the rows (D40).
+- Search and Trash show the page path. JSON backup exports `parentId` and import remaps it to the new ids in two
+  passes, dropping parents that would break the rules above. Markdown import creates top-level notes.
+
+## D50 — Sub-pages as Page lines in the content (2026-11-15)
+
+Replaces D49's Sub-pages section below the note. A sub-page appears in its parent's content as a `pageLink`
+block: one line with the page's icon and its title in an editable field. The block stores the page id, plus its
+book and a title snapshot used only for Markdown, search text and when the page is missing; the line always
+shows the page's live title, and typing in it renames the page (after 600 ms or on leaving the field) through
+the checked transaction of D32; refused offline or on a conflict. The snapshot is refreshed when the title
+changes, as a non-edit transaction (saved with the next real change, like block ids). The tree is still
+`parentId` (D49); a Page line is an entry point, not the structure.
+
+- `/` → Sub-page creates the page, puts its line at the cursor and focuses its name. Add sub-page and Move into…
+  in the Notes column add a line at the end of the parent: through the parent's open editor when it is open
+  (`requestPageLink`, so Auto Save writes it and no conflict appears), otherwise as a direct checked write;
+  not for locked parents.
+- Deleting a line leaves the page (it stays in the Notes column); Backspace in an empty name removes the line.
+  Pages without a line are shown only in the Notes column. Copying or moving a line elsewhere keeps it a link to
+  the same page; it does not change the page's parent. A line whose page is gone shows its last title crossed out.
+- Icon click or Ctrl/⌘+Enter opens the page; Enter moves below the line.
+- Markdown: `[Title](<origin>/books/{bookId}/notes/{pageId})` on its own line; a tokenizer turns such a line back
+  into a Page line, so Raw mode, copy and paste keep it. Lined paper: one row.

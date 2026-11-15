@@ -2,11 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { deleteDraft, putDraft } from "@/lib/db";
 import { NoteConflictError, saveNoteContent } from "@/features/notes/api";
 import type { NoteContentFields } from "@/features/notes/types";
+import { AUTO_VERSION_GAP_MS, saveVersion } from "@/features/versions/api";
 
 export type SaveStatus =
   "idle" | "local" | "syncing" | "synced" | "offline" | "error" | "conflict";
 
 export type ContentBase = Pick<NoteContentFields, "title" | "content">;
+
+/** Result of `syncNow`: the content now in Firestore, or why it could not be synced. */
+export type SyncResult =
+  | { ok: true; content: ContentBase }
+  | { ok: false; reason: "offline" | "conflict" | "error" };
 
 /** Sync after this long without typing (D32). */
 const IDLE_DELAY_MS = 30_000;
@@ -22,6 +28,8 @@ const RETRY_DELAY_MS = 30_000;
  * note in Firestore is still the version this edit started from; if another
  * device changed it, syncing stops until the user chooses a version.
  * The draft is deleted only after Firestore confirms the latest change.
+ * Local version history (D42): the content from before the first edit and, at
+ * most every 10 min, the content of a successful sync are kept as Auto versions.
  */
 export function useAutoSave(
   uid: string,
@@ -41,6 +49,14 @@ export function useAutoSave(
     let blocked = false;
     let revision = 0;
     let firstPendingAt: number | null = null;
+    let inFlight: Promise<void> | null = null;
+    let keptOriginal = false;
+
+    const autoVersion = (fields: ContentBase, minGapMs: number) => {
+      saveVersion(uid, noteId, fields, "auto", minGapMs).catch((error) =>
+        console.error("Saving local version failed", error),
+      );
+    };
 
     const schedule = (delay: number) => {
       clearTimeout(timer);
@@ -66,7 +82,17 @@ export function useAutoSave(
       }).catch((error) => console.error("Saving local draft failed", error));
     }
 
-    async function flush(overwrite = false) {
+    /** One sync at a time; a call during a sync returns that sync's promise. */
+    function flush(overwrite = false): Promise<void> {
+      if (inFlight) return inFlight;
+      const run = sync(overwrite).finally(() => {
+        if (inFlight === run) inFlight = null;
+      });
+      inFlight = run;
+      return run;
+    }
+
+    async function sync(overwrite: boolean) {
       clearTimeout(timer);
       if (!pending || saving || (blocked && !overwrite)) return;
       if (!navigator.onLine) {
@@ -83,6 +109,7 @@ export function useAutoSave(
         await saveNoteContent(uid, noteId, fields, overwrite ? null : base);
         base = fields;
         saving = false;
+        autoVersion(fields, AUTO_VERSION_GAP_MS);
         if (savedRevision === revision) {
           await deleteDraft(noteId);
           setStatus("synced");
@@ -111,6 +138,10 @@ export function useAutoSave(
     }
 
     function change(fields: NoteContentFields) {
+      if (!keptOriginal) {
+        keptOriginal = true;
+        autoVersion(startBase, 0);
+      }
       revision += 1;
       pending = fields;
       writeDraft(fields);
@@ -124,6 +155,22 @@ export function useAutoSave(
       if (blocked) return;
       if (!pending && !saving) setStatus((s) => (s === "idle" ? "synced" : s));
       void flush();
+    }
+
+    /** Save version: sync what is pending first, then report what Firestore holds. */
+    async function syncNow(): Promise<SyncResult> {
+      // A change typed during a sync needs one more round.
+      for (let round = 0; round < 3 && !blocked; round += 1) {
+        if (inFlight) await inFlight;
+        if (!pending) break;
+        if (!navigator.onLine) return { ok: false, reason: "offline" };
+        await flush();
+      }
+      if (blocked) return { ok: false, reason: "conflict" };
+      if (pending || inFlight) {
+        return { ok: false, reason: navigator.onLine ? "error" : "offline" };
+      }
+      return { ok: true, content: base };
     }
 
     /** Conflict: overwrite the other version with this one. */
@@ -152,7 +199,15 @@ export function useAutoSave(
       if (pending && !blocked) setStatus("offline");
     }
 
-    return { change, flush, saveNow, keepMine, takeTheirs, wentOffline };
+    return {
+      change,
+      flush,
+      saveNow,
+      syncNow,
+      keepMine,
+      takeTheirs,
+      wentOffline,
+    };
   }, [uid, noteId, startBase]);
 
   useEffect(() => {
@@ -176,6 +231,7 @@ export function useAutoSave(
     conflict,
     change: saver.change,
     saveNow: saver.saveNow,
+    syncNow: saver.syncNow,
     keepMine: saver.keepMine,
     takeTheirs: saver.takeTheirs,
   };

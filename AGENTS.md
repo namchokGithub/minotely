@@ -33,11 +33,11 @@ src/
   app/              # app root, router, providers, layout shell, theme
   components/ui/    # shadcn/ui components
   features/
-    auth/  books/  notes/  editor/  search/  trash/  settings/  data/ (import/export)
+    auth/  books/  notes/  editor/  search/  trash/  settings/  data/ (import/export)  versions/
   lib/
     firebase.ts     # Firebase app + Auth (real project via .env.local)
     firestore.ts    # Firestore, loaded only after sign-in (D18)
-    db.ts           # Dexie (drafts, cache)
+    db.ts           # Dexie (drafts, local note versions)
   stores/           # Zustand UI stores
 firestore.rules     # per-user access (D22) + shape checks (D17)
 firebase.json       # Hosting (dist, SPA rewrite, caching) + rules path (D19)
@@ -56,7 +56,7 @@ firebase.json       # Hosting (dist, SPA rewrite, caching) + rules path (D19)
 - The editor defaults to inline WYSIWYG and can switch to editable Raw Markdown (D34). There is no Edit/Preview toggle.
 - Notes are soft-deleted with `deletedAt`; Trash restores or permanently deletes.
 - Auto Save debounces writes, shows Saving / Saved / Error, and keeps a local draft in Dexie until the write succeeds.
-- Paper Style is an editor background only; text is not snapped to lines.
+- Paper Style is an editor background only; text is not snapped to lines, except Lined paper, where every block is a whole number of 2rem rows (D40).
 - Motion stays at 150–250 ms, uses CSS transitions (D15), and respects `prefers-reduced-motion`.
 - Row actions are defined once per row type and rendered in both the ⋯ menu and the right-click menu via `MenuKit` (D26). Add new actions there, not to one menu only.
 - Routing uses `BrowserRouter` at `/`; Firebase Hosting rewrites every path to `index.html` (D19).

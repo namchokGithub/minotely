@@ -8,21 +8,58 @@ Plan: `docs/PLAN.md`. Statuses: `Todo`, `In progress`, `Blocked`, `Done`.
 
 Every item not `Done`. Keep in sync with the sections below.
 
-| ID   | Item                                                                 | Status      |
-| ---- | -------------------------------------------------------------------- | ----------- |
-| M6.1 | Fewer Firestore writes, keep editing offline, conflict check on sync | In progress |
-| M6.2 | Fewer Firestore reads: one notes listener, persistent cache          | In progress |
-| M6.3 | Raw Markdown editor toggle                                           | In progress |
-| M6.4 | Copy WYSIWYG selections as Markdown                                  | In progress |
-| M6.5 | English spellcheck in WYSIWYG with custom suggestions                | In progress |
-| M6.6 | Thai dictionary and bilingual spellcheck in WYSIWYG                  | In progress |
-| M6.7 | Copy plain text from the editor menu or keyboard shortcut            | In progress |
-| M6.8 | Toggle spell check from the editor context menu                      | In progress |
+| ID    | Item                                                                                   | Status      |
+| ----- | -------------------------------------------------------------------------------------- | ----------- |
+| M6.1  | Fewer Firestore writes, keep editing offline, conflict check on sync                   | In progress |
+| M6.2  | Fewer Firestore reads: one notes listener, persistent cache                            | In progress |
+| M6.3  | Raw Markdown editor toggle                                                             | In progress |
+| M6.4  | Copy WYSIWYG selections as Markdown                                                    | In progress |
+| M6.5  | English spellcheck in WYSIWYG with custom suggestions                                  | In progress |
+| M6.6  | Thai dictionary and bilingual spellcheck in WYSIWYG                                    | In progress |
+| M6.7  | Copy plain text from the editor menu or keyboard shortcut                              | In progress |
+| M6.8  | Toggle spell check from the editor context menu                                        | In progress |
+| M6.9  | Margin paper style; Lined paper text sits on the lines                                 | In progress |
+| M6.10 | Pasted Markdown becomes rich text                                                      | In progress |
+| M6.11 | Local version history (Auto and Manual, this device only)                              | In progress |
+| M6.12 | Background around the page (color, image URL, opacity, darker/lighter)                 | In progress |
+| M6.13 | Collapse Library and Notes columns to a rail from their titles                         | In progress |
+| M6.14 | Page width presets (Default, A5, A4, Letter, A3, Full 90%)                             | In progress |
+| M7.1  | Note icon (one emoji before the title) — publish rules                                 | In progress |
+| M7.2  | Table of Contents (Document Outline) at the right of the note                          | In progress |
+| M7.3  | Blocks: `/` menu, callout, floating toolbar, block controls, drag, actions, code color | In progress |
+| M7.4  | Nested pages (sub-pages, up to 3 levels) — publish rules                               | In progress |
+| M7.5  | Sub-pages as editable Page lines in the content                                        | In progress |
 
 ## Notes
 
 - No open work. M4.4: first release deployed from GitHub Actions on push to `production` (2026-11-02, D31).
 - M1–M4.3 were verified manually by the owner against the real Firebase project (2026-11-02).
+
+### M7 — Notion-like editing (2026-11-15)
+
+Owner's list, split into three projects (not images for now): (1) note icon and Table of Contents, (2) blocks in
+the editor (`/` menu, callout, code block color, floating toolbar, block `+` and `⠿` controls, block drag and
+drop, block actions), (3) nested pages. Markdown shortcuts already exist (input rules).
+
+- M7.1 (approved, done in code, D46; publish rules; owner to test): an icon button before the note title picks
+  one emoji (32 suggestions, or type/paste any) or removes it; shown in the note list, search, Trash and the
+  phone header. New optional note field `icon` in types, rules, backup and the requirement schema.
+- M7.2 (approved, done in code, D47; owner to test): headings (H1–H3) as short bars at the right edge of the
+  editor on 768px and up; hover or focus shows the list, click on the bars pins it, a heading scrolls to it.
+
+- M7.3 (approved, done in code, D48; owner to test): `/` block menu (Text, H1–H3, lists, checklist, quote,
+  callout, code block, table, divider); Callout block (`:::callout` in Markdown, `!> ` shortcut); floating
+  toolbar on a text selection; `+` and `⠿` beside the block under the pointer (768px+, mouse): add below or
+  above, drag to move, Duplicate / Turn into / Move to another note / Copy link to block / Delete; code block
+  color presets per device. New dependencies `@tiptap/suggestion`, `@tiptap/extension-unique-id`. No images.
+- M7.4 (approved, done in code, D49; publish rules; owner to test): sub-pages up to 3 levels as a tree in the
+  Notes column; Add sub-page, Move into…, Move to top level; branch-aware move, delete and restore; breadcrumb
+  and Sub-pages list in the note; paths in search and Trash; backup keeps the structure. Spec and plan in
+  `docs/superpowers/`.
+
+- M7.5 (approved, done in code, D50; owner to test): sub-pages are Page lines in the parent's content; editing
+  the line renames the page; `/` Sub-page inserts one; Notes-column Add sub-page / Move into… add one; deleting
+  a line keeps the page. The Sub-pages section below the note is gone.
 
 ### M6 — Sync cost and offline editing (2026-11-03)
 
@@ -52,6 +89,28 @@ Every item not `Done`. Keep in sync with the sections below.
 - M6.8 (approved, done in code, D39; owner to test): a checked Spell check item in the editor's right-click
   menu turns English and Thai checking on or off for all notes of that account on this device. Off removes
   underlines and suggestions immediately and pauses checking; on rechecks the open note.
+
+- M6.9 (approved, done in code, D13/D40; publish rules for Margin; owner to test): Margin paper = plain page with
+  the red margin line; on Lined paper every block is a whole number of 2rem rows so text sits on the lines.
+- M6.10 (approved, done in code, D41; owner to test): plain text that looks like Markdown is converted on paste
+  (Ctrl/⌘+V and the context menu); Ctrl/⌘+Shift+V and code blocks paste raw text.
+- M6.11 (approved, done in code, D42; owner to test): History button in the note header opens a dialog with
+  versions kept in IndexedDB only: Auto (content before the first edit, then at most one per 10 min after a
+  successful sync) and Manual (Save version: syncs first, refuses when offline, on a sync error or a conflict);
+  read-only preview; 10 Auto + 10 Manual per note. Not in Firestore, Security Rules or JSON backup.
+
+- M6.12 (approved, done in code, D13/D43; owner to test): paper lines are drawn on the page column only; the
+  area around the page can get a color, an https image, an opacity and a darker/lighter level from Page
+  appearance → Background…, saved in localStorage per account on this device.
+
+- M6.13 (approved, done in code, D44; owner to test): on 768px and up, clicking the Library title ("Minotely")
+  or the Notes/Trash title collapses that column to a 48px rail with one icon button that expands it again;
+  state saved per device. The tablet-only Library toggle button in the Notes header is removed. The Library
+  rail lists each book's icon (hover shows the name; click opens the book) and Trash.
+
+- M6.14 (approved, done in code, D45; owner to test): Page appearance → Page width (this device) sets the page
+  column's maximum width: Default 768px, A5, A4, Letter, A3, Full (90% of the editor). Length unlimited;
+  per device, not synced.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

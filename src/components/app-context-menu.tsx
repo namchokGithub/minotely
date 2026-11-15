@@ -17,11 +17,14 @@ export function AppContextMenu({
   children,
   menu,
   label,
+  onCloseAutoFocus,
 }: {
   /** One element; it becomes the trigger. */
   children: ReactNode;
   menu: ReactNode;
   label: string;
+  /** Runs when the menu has closed, before focus returns; `preventDefault()` keeps focus where it is. */
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
   const open = useRef(false);
   const closedAt = useRef(0);
@@ -44,7 +47,11 @@ export function AppContextMenu({
       <ContextMenuTrigger asChild onContextMenuCapture={onContextMenuCapture}>
         {children}
       </ContextMenuTrigger>
-      <ContextMenuContent aria-label={label} className="w-auto min-w-48">
+      <ContextMenuContent
+        aria-label={label}
+        className="w-auto min-w-48"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         {menu}
       </ContextMenuContent>
     </ContextMenu>
