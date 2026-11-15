@@ -53,6 +53,8 @@ export const BLOCK_TYPES = [
 export const editorExtensions = [
   StarterKit.configure({
     heading: { levels: [1, 2, 3] },
+    // Drop line while dragging a block (D48): drawn by the `.block-drop-cursor` class.
+    dropcursor: { color: false, width: 3, class: "block-drop-cursor" },
     // Editing: clicks place the cursor; locked notes are not editable, so links open as normal anchors.
     link: {
       openOnClick: false,

@@ -98,7 +98,30 @@ function startBlockDrag(view: EditorView, pos: number, event: React.DragEvent) {
   view.dragging = { slice: selection.content(), move: true };
   event.dataTransfer.effectAllowed = "move";
   event.dataTransfer.setData("text/plain", dom.textContent ?? "");
-  event.dataTransfer.setDragImage(dom, 0, 0);
+
+  // What the pointer carries: a copy of the block on the page color with a shadow.
+  const preview = dom.cloneNode(true) as HTMLElement;
+  preview.classList.add("block-drag-preview");
+  preview.style.width = `${dom.getBoundingClientRect().width}px`;
+  const holder = document.createElement("div");
+  holder.className = "minotely-editor block-drag-holder";
+  holder.append(preview);
+  document.body.append(holder);
+  event.dataTransfer.setDragImage(preview, 16, 16);
+  // The browser takes its picture right away; the copy is not needed after that.
+  setTimeout(() => holder.remove(), 0);
+
+  // The block stays in place, faded, until it is dropped.
+  dom.classList.add("block-drag-source");
+  const clear = () => {
+    for (const faded of document.querySelectorAll(".block-drag-source")) {
+      faded.classList.remove("block-drag-source");
+    }
+    document.removeEventListener("dragend", clear);
+    document.removeEventListener("drop", clear);
+  };
+  document.addEventListener("dragend", clear);
+  document.addEventListener("drop", clear);
   return true;
 }
 

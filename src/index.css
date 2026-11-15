@@ -295,6 +295,34 @@ body {
     @apply mt-3;
   }
 
+  /* Dragging a block (D48): the source fades, the drop line is blue. */
+  .minotely-editor .block-drag-source {
+    opacity: 0.4;
+    transition: opacity 150ms ease-out;
+  }
+  .block-drop-cursor {
+    border-radius: 9999px;
+    background-color: #3b82f6;
+    pointer-events: none;
+  }
+  .dark .block-drop-cursor {
+    background-color: #60a5fa;
+  }
+  /* Off-screen copy the browser photographs as the drag image. */
+  .block-drag-holder {
+    position: fixed;
+    top: -10000px;
+    left: -10000px;
+  }
+  .block-drag-holder .block-drag-preview {
+    list-style: none;
+    margin: 0;
+    border-radius: 0.5rem;
+    background-color: var(--background);
+    padding: 0.25rem 0.75rem;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  }
+
   /* A block opened from a "Copy link to block" link (D48). */
   .minotely-editor .block-flash {
     @apply rounded-md bg-primary/10 transition-colors duration-200;

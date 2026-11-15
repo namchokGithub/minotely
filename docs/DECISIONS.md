@@ -450,7 +450,9 @@ no Image until there is file storage) feeds every entry point:
   left of its marker, dragging moves the line with the lines nested under it, `+` adds an empty line to the same
   list, Turn into converts only that line (splitting the list), Delete of a list's last line removes the list,
   Move to sends it as a one-line list of the same kind, and its link uses its first paragraph's id. Other blocks
-  are handled whole. 768px and up with a fine pointer only. `@tiptap/extension-drag-handle` was not used: its
+  are handled whole. While dragging, the block stays in place at 40% opacity, the pointer carries a copy on the
+  page color with a shadow, and Dropcursor draws a 3px blue line where it will land (`.block-drop-cursor`).
+  768px and up with a fine pointer only. `@tiptap/extension-drag-handle` was not used: its
   peer dependencies bring in Yjs collaboration packages.
 - **Block ids:** `@tiptap/extension-unique-id` gives every block type a `data-id`. Ids generated when an older note
   opens are not treated as an edit (no write); they are saved with the next change, or at once by Copy link to
