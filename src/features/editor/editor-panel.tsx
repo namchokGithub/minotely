@@ -41,12 +41,14 @@ import { useUid } from "@/features/auth/auth-context";
 import { useSettings } from "@/features/settings/api";
 import { setNoteLocked, setNotePinned, useNotes } from "@/features/notes/api";
 import type { Note, NoteContentFields } from "@/features/notes/types";
-import { AppearanceMenu } from "./appearance-menu";
+import { AppearanceItems, AppearanceMenu } from "./appearance-menu";
+import { BackgroundDialog } from "./background-dialog";
 import { copySelectionAsMarkdown } from "./copy-markdown";
 import { parsePastedMarkdown } from "./paste-markdown";
 import { pageBackgroundStyle, usePageBackground } from "./page-background";
 import { copySelectionAsText } from "./copy-text";
 import { AppContextMenu } from "@/components/app-context-menu";
+import { contextKit } from "@/components/menu-kit";
 import { isPlainTextCopyShortcut, isSaveShortcut } from "@/lib/shortcuts";
 import { EditorContextItems } from "./editor-context-menu";
 import { EditorToolbar } from "./editor-toolbar";
@@ -159,6 +161,19 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const settings = useSettings();
   const backgroundStyle = pageBackgroundStyle(usePageBackground(uid));
+  const [backgroundOpen, setBackgroundOpen] = useState(false);
+  // "Background…" in either appearance menu: the dialog opens only after that
+  // menu has closed and released focus, so the menu cannot close it again (D43).
+  const backgroundRequested = useRef(false);
+  const requestBackground = () => {
+    backgroundRequested.current = true;
+  };
+  const openRequestedBackground = (event: Event) => {
+    if (!backgroundRequested.current) return;
+    backgroundRequested.current = false;
+    event.preventDefault();
+    setBackgroundOpen(true);
+  };
 
   const editor = useEditor({
     extensions: spellingExtensions,
@@ -380,7 +395,11 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
         >
           <History />
         </Button>
-        <AppearanceMenu note={note} />
+        <AppearanceMenu
+          note={note}
+          onBackground={requestBackground}
+          onCloseAutoFocus={openRequestedBackground}
+        />
       </div>
 
       {/* Background around the page (D43): a fixed layer behind the scrolling page. */}
@@ -392,105 +411,131 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
             style={backgroundStyle}
           />
         )}
-        <div
-          className={cn(
-            "relative min-h-0 flex-1 overflow-y-auto",
-            `paper-${note.paperStyle}`,
-            `editor-font-${settings.fontFamily}`,
-            `editor-size-${settings.fontSize}`,
-          )}
+        {/* Right-click on the background around the page: the appearance menu (D26, D43). */}
+        <AppContextMenu
+          label="Page appearance"
+          menu={
+            <AppearanceItems
+              kit={contextKit}
+              note={note}
+              onBackground={requestBackground}
+            />
+          }
+          onCloseAutoFocus={openRequestedBackground}
         >
           <div
             className={cn(
-              // The page keeps the theme color over any background around it (D43).
-              "mx-auto min-h-full w-full max-w-3xl bg-background px-4 pt-6 pb-[50dvh] sm:px-6 sm:pt-8",
-              // Lined and Margin paper: red margin line left of the text, full height (D13).
-              (note.paperStyle === "lined" || note.paperStyle === "margin") &&
-                "relative min-h-full pl-14 before:absolute before:inset-y-0 before:left-9 before:w-0.5 before:bg-red-500/75 sm:pl-20 sm:before:left-12 dark:before:bg-red-400/60",
+              "relative min-h-0 flex-1 overflow-y-auto",
+              `paper-${note.paperStyle}`,
+              `editor-font-${settings.fontFamily}`,
+              `editor-size-${settings.fontSize}`,
             )}
           >
-            <input
-              value={title}
-              placeholder="Untitled"
-              aria-label="Note title"
-              maxLength={200}
-              readOnly={note.isLocked}
-              className="mb-2 w-full bg-transparent text-2xl font-semibold sm:text-3xl tracking-tight outline-none placeholder:text-muted-foreground/60"
-              onChange={(event) => {
-                setTitle(event.target.value);
-                latest.current = {
-                  ...latest.current,
-                  title: event.target.value,
-                };
-                change(latest.current);
+            <div
+              // Right-clicks and long-presses on the page itself keep the editor menu or
+              // the browser's own behavior; only the background opens the appearance menu.
+              onContextMenu={(event) => event.stopPropagation()}
+              onPointerDown={(event) => {
+                if (event.pointerType !== "mouse") event.stopPropagation();
               }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  if (mode === "markdown") rawTextarea.current?.focus();
-                  else editor.commands.focus("start");
-                }
-              }}
-            />
-            <TagEditor note={note} readOnly={note.isLocked} />
-            {mode === "markdown" ? (
-              <>
-                <p className="mb-3 text-xs text-muted-foreground">
-                  Editing Markdown may remove text colors and custom highlights.
-                </p>
-                <textarea
-                  ref={rawTextarea}
-                  value={rawMarkdown}
-                  onChange={(event) => editMarkdown(event.target.value)}
-                  readOnly={note.isLocked}
-                  aria-label="Raw Markdown content"
-                  spellCheck={false}
-                  className="min-h-[50vh] w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-mono text-sm leading-6 shadow-none outline-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
-                  placeholder="Write Markdown…"
-                />
-              </>
-            ) : (
-              <>
-                <AppContextMenu
-                  label="Editor actions"
-                  menu={
-                    <EditorContextItems
-                      editor={editor}
-                      spellingTarget={spellingTarget}
-                      spellcheck={spellcheck}
-                      spellcheckEnabled={spellcheckEnabled}
-                      onToggleSpellcheck={toggleSpellcheck}
-                      onSpellingAction={() => setSpellingTarget(null)}
-                    />
+              className={cn(
+                // The page keeps the theme color over any background around it (D43).
+                "mx-auto min-h-full w-full max-w-3xl bg-background px-4 pt-6 pb-[50dvh] sm:px-6 sm:pt-8",
+                // Lined and Margin paper: red margin line left of the text, full height (D13).
+                (note.paperStyle === "lined" || note.paperStyle === "margin") &&
+                  "relative min-h-full pl-14 before:absolute before:inset-y-0 before:left-9 before:w-0.5 before:bg-red-500/75 sm:pl-20 sm:before:left-12 dark:before:bg-red-400/60",
+              )}
+            >
+              <input
+                value={title}
+                placeholder="Untitled"
+                aria-label="Note title"
+                maxLength={200}
+                readOnly={note.isLocked}
+                className="mb-2 w-full bg-transparent text-2xl font-semibold sm:text-3xl tracking-tight outline-none placeholder:text-muted-foreground/60"
+                onChange={(event) => {
+                  setTitle(event.target.value);
+                  latest.current = {
+                    ...latest.current,
+                    title: event.target.value,
+                  };
+                  change(latest.current);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    if (mode === "markdown") rawTextarea.current?.focus();
+                    else editor.commands.focus("start");
                   }
-                >
-                  <div
-                    onContextMenuCapture={(event) => {
-                      if (!spellcheck || !spellcheckEnabled) {
-                        setSpellingTarget(null);
-                        return;
-                      }
-                      const position =
-                        event.clientX === 0 && event.clientY === 0
-                          ? editor.state.selection.from
-                          : editor.view.posAtCoords({
-                              left: event.clientX,
-                              top: event.clientY,
-                            })?.pos;
-                      setSpellingTarget(
-                        position == null ? null : spellcheck.at(position),
-                      );
-                    }}
+                }}
+              />
+              <TagEditor note={note} readOnly={note.isLocked} />
+              {mode === "markdown" ? (
+                <>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Editing Markdown may remove text colors and custom
+                    highlights.
+                  </p>
+                  <textarea
+                    ref={rawTextarea}
+                    value={rawMarkdown}
+                    onChange={(event) => editMarkdown(event.target.value)}
+                    readOnly={note.isLocked}
+                    aria-label="Raw Markdown content"
+                    spellCheck={false}
+                    className="min-h-[50vh] w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-mono text-sm leading-6 shadow-none outline-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
+                    placeholder="Write Markdown…"
+                  />
+                </>
+              ) : (
+                <>
+                  <AppContextMenu
+                    label="Editor actions"
+                    menu={
+                      <EditorContextItems
+                        editor={editor}
+                        spellingTarget={spellingTarget}
+                        spellcheck={spellcheck}
+                        spellcheckEnabled={spellcheckEnabled}
+                        onToggleSpellcheck={toggleSpellcheck}
+                        onSpellingAction={() => setSpellingTarget(null)}
+                      />
+                    }
                   >
-                    <EditorContent editor={editor} />
-                  </div>
-                </AppContextMenu>
-                <LinkBubble editor={editor} />
-              </>
-            )}
+                    <div
+                      onContextMenuCapture={(event) => {
+                        if (!spellcheck || !spellcheckEnabled) {
+                          setSpellingTarget(null);
+                          return;
+                        }
+                        const position =
+                          event.clientX === 0 && event.clientY === 0
+                            ? editor.state.selection.from
+                            : editor.view.posAtCoords({
+                                left: event.clientX,
+                                top: event.clientY,
+                              })?.pos;
+                        setSpellingTarget(
+                          position == null ? null : spellcheck.at(position),
+                        );
+                      }}
+                    >
+                      <EditorContent editor={editor} />
+                    </div>
+                  </AppContextMenu>
+                  <LinkBubble editor={editor} />
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </AppContextMenu>
       </div>
+
+      <BackgroundDialog
+        uid={uid}
+        open={backgroundOpen}
+        onOpenChange={setBackgroundOpen}
+      />
 
       <VersionHistory
         uid={uid}

@@ -373,7 +373,10 @@ URL (drawn over the color, `cover`, fixed while the page scrolls), an opacity (0
 set: the theme color, as before. It is one setting for all notes, stored in `localStorage` under
 `minotely:page-background:{uid}`, so there is no Firestore field, rule or backup change and it does not follow
 the owner to other devices. The controls are a non-modal dialog opened from Page appearance → Background…, with
-no overlay, so changes show at once. Only `https:` URLs that parse are accepted and the stored value is
+no overlay, so changes show at once. The Page appearance items (paper, font, size, Background…) are one list
+(`AppearanceItems`, D26) shown by the header button and by a right-click on the background around the page;
+right-clicks on the page itself keep the editor menu or the browser menu. The dialog opens only after the menu
+has closed, because a closing menu moves focus and a non-modal dialog closes when focus leaves it. Only `https:` URLs that parse are accepted and the stored value is
 re-validated on read; the image is loaded from that site on every open, which tells the site the visitor's IP.
 The app has no file storage, so there is no upload. Below 768px the page fills the width and the background is
 not visible.

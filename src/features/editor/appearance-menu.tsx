@@ -1,18 +1,12 @@
-import { useState } from "react";
 import { Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { dropdownKit, type MenuKit } from "@/components/menu-kit";
 import { useUid } from "@/features/auth/auth-context";
-import { BackgroundDialog } from "./background-dialog";
 import { setNotePaperStyle } from "@/features/notes/api";
 import type { Note, PaperStyle } from "@/features/notes/types";
 import {
@@ -44,92 +38,116 @@ function logError(action: string) {
   return (error: unknown) => console.error(`${action} failed`, error);
 }
 
-/** Paper style (per note), typography (synced setting for all notes) and the background around the page (this device, D43). */
-export function AppearanceMenu({ note }: { note: Note }) {
+type AppearanceItemsProps = {
+  kit: MenuKit;
+  note: Note;
+  /** "Background…" was chosen; the dialog opens once the menu has closed (D43). */
+  onBackground: () => void;
+};
+
+/**
+ * Paper style (per note), typography (synced setting for all notes) and the
+ * background around the page (this device, D43). One list for the header
+ * button and the right-click menu on the background (D26).
+ */
+export function AppearanceItems({
+  kit: k,
+  note,
+  onBackground,
+}: AppearanceItemsProps) {
   const uid = useUid();
   const settings = useSettings();
-  const [backgroundOpen, setBackgroundOpen] = useState(false);
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Page appearance"
-            title="Page appearance"
-            className="shrink-0"
-          >
-            <Type />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-44"
-          // Opening the Background dialog: leave focus in the dialog, not back on this button.
-          onCloseAutoFocus={(event) => {
-            if (backgroundOpen) event.preventDefault();
-          }}
-        >
-          <DropdownMenuLabel>Paper (this note)</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={note.paperStyle}
-            onValueChange={(value) =>
-              setNotePaperStyle(uid, note.id, value as PaperStyle).catch(
-                logError("Paper style"),
-              )
-            }
-          >
-            {(Object.keys(PAPER) as PaperStyle[]).map((key) => (
-              <DropdownMenuRadioItem key={key} value={key}>
-                {PAPER[key]}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>Font (all notes)</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={settings.fontFamily}
-            onValueChange={(value) =>
-              updateSettings(uid, { fontFamily: value as FontFamily }).catch(
-                logError("Font"),
-              )
-            }
-          >
-            {(Object.keys(FONTS) as FontFamily[]).map((key) => (
-              <DropdownMenuRadioItem key={key} value={key}>
-                {FONTS[key]}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>Size (all notes)</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={settings.fontSize}
-            onValueChange={(value) =>
-              updateSettings(uid, { fontSize: value as FontSize }).catch(
-                logError("Font size"),
-              )
-            }
-          >
-            {(Object.keys(SIZES) as FontSize[]).map((key) => (
-              <DropdownMenuRadioItem key={key} value={key}>
-                {SIZES[key]}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setBackgroundOpen(true)}>
-            Background…
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <BackgroundDialog
-        uid={uid}
-        open={backgroundOpen}
-        onOpenChange={setBackgroundOpen}
-      />
+      <k.Label>Paper (this note)</k.Label>
+      <k.RadioGroup
+        value={note.paperStyle}
+        onValueChange={(value) =>
+          setNotePaperStyle(uid, note.id, value as PaperStyle).catch(
+            logError("Paper style"),
+          )
+        }
+      >
+        {(Object.keys(PAPER) as PaperStyle[]).map((key) => (
+          <k.RadioItem key={key} value={key}>
+            {PAPER[key]}
+          </k.RadioItem>
+        ))}
+      </k.RadioGroup>
+      <k.Separator />
+      <k.Label>Font (all notes)</k.Label>
+      <k.RadioGroup
+        value={settings.fontFamily}
+        onValueChange={(value) =>
+          updateSettings(uid, { fontFamily: value as FontFamily }).catch(
+            logError("Font"),
+          )
+        }
+      >
+        {(Object.keys(FONTS) as FontFamily[]).map((key) => (
+          <k.RadioItem key={key} value={key}>
+            {FONTS[key]}
+          </k.RadioItem>
+        ))}
+      </k.RadioGroup>
+      <k.Separator />
+      <k.Label>Size (all notes)</k.Label>
+      <k.RadioGroup
+        value={settings.fontSize}
+        onValueChange={(value) =>
+          updateSettings(uid, { fontSize: value as FontSize }).catch(
+            logError("Font size"),
+          )
+        }
+      >
+        {(Object.keys(SIZES) as FontSize[]).map((key) => (
+          <k.RadioItem key={key} value={key}>
+            {SIZES[key]}
+          </k.RadioItem>
+        ))}
+      </k.RadioGroup>
+      <k.Separator />
+      <k.Item onSelect={onBackground}>Background…</k.Item>
     </>
+  );
+}
+
+type AppearanceMenuProps = Omit<AppearanceItemsProps, "kit"> & {
+  /** Runs when the menu has closed, before focus returns to the button. */
+  onCloseAutoFocus: (event: Event) => void;
+};
+
+/** Header button for the appearance menu. */
+export function AppearanceMenu({
+  note,
+  onBackground,
+  onCloseAutoFocus,
+}: AppearanceMenuProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Page appearance"
+          title="Page appearance"
+          className="shrink-0"
+        >
+          <Type />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-44"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
+        <AppearanceItems
+          kit={dropdownKit}
+          note={note}
+          onBackground={onBackground}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
