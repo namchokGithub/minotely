@@ -35,10 +35,46 @@ import type { Note } from "@/features/notes/types";
 import { BLOCK_TYPE_LIST, turnBlockInto } from "./block-types";
 import { parseContent } from "./extensions";
 
-/** The top-level block under the pointer, in page-column coordinates. */
+/** The block under the pointer, in page-column coordinates. */
 type Hovered = { pos: number; top: number; left: number };
 
 const CONTROLS_WIDTH = 48;
+/** Room for a bullet or number, so the controls sit left of the list marker. */
+const MARKER_WIDTH = 24;
+
+const LIST_TYPES = new Set(["bulletList", "orderedList", "taskList"]);
+const LIST_ITEM_TYPES = new Set(["listItem", "taskItem"]);
+
+const isListItem = (node: PMNode) => LIST_ITEM_TYPES.has(node.type.name);
+
+/**
+ * The list item at `clientY` inside the list at `pos`, deepest first, so each
+ * line of a list is its own block (D48). Null when the pointer is between items.
+ */
+function listItemAt(
+  view: EditorView,
+  list: PMNode,
+  pos: number,
+  clientY: number,
+): number | null {
+  let found: number | null = null;
+  list.forEach((item, offset) => {
+    if (found !== null) return;
+    const itemPos = pos + 1 + offset;
+    const dom = view.nodeDOM(itemPos);
+    if (!(dom instanceof HTMLElement)) return;
+    const rect = dom.getBoundingClientRect();
+    if (clientY < rect.top - 2 || clientY > rect.bottom + 2) return;
+    let inner: number | null = null;
+    item.forEach((child, childOffset) => {
+      if (inner === null && LIST_TYPES.has(child.type.name)) {
+        inner = listItemAt(view, child, itemPos + 1 + childOffset, clientY);
+      }
+    });
+    found = inner ?? itemPos;
+  });
+  return found;
+}
 
 /** First-line middle of a block, so the controls sit beside its first line of text. */
 function firstLineOffset(element: HTMLElement) {
@@ -49,7 +85,7 @@ function firstLineOffset(element: HTMLElement) {
 }
 
 /**
- * Selects the top-level block at `pos` and hands it to ProseMirror's own drag
+ * Selects the block (or list item) at `pos` and hands it to ProseMirror's own drag
  * and drop, which moves it on drop (Dropcursor shows where). False: nothing to drag.
  */
 function startBlockDrag(view: EditorView, pos: number, event: React.DragEvent) {
@@ -78,7 +114,8 @@ type BlockControlsProps = {
 };
 
 /**
- * Block Controls (D48): beside the top-level block under the pointer, a `+`
+ * Block Controls (D48): beside the block under the pointer (each line of a
+ * list is its own block, with its nested lines), a `+`
  * that adds a block below (Alt/⌥ + click: above) and opens the `/` menu, and a
  * `⠿` handle that drags the block or, on click, opens the Block Action Menu:
  * Duplicate, Delete, Turn into, Move to (another note) and Copy link to block.
@@ -117,18 +154,32 @@ export function BlockControls({
       const view = editor.view;
       const box = container.getBoundingClientRect();
       let found: Hovered | null = null;
-      view.state.doc.forEach((_node, offset) => {
+      view.state.doc.forEach((node, offset) => {
         if (found) return;
         const dom = view.nodeDOM(offset);
         if (!(dom instanceof HTMLElement)) return;
         const rect = dom.getBoundingClientRect();
-        if (event.clientY >= rect.top - 4 && event.clientY <= rect.bottom + 4) {
-          found = {
-            pos: offset,
-            top: rect.top - box.top + firstLineOffset(dom),
-            left: rect.left - box.left - CONTROLS_WIDTH - 4,
-          };
+        if (event.clientY < rect.top - 4 || event.clientY > rect.bottom + 4) {
+          return;
         }
+        // Lists: one line (item) at a time; elsewhere the whole block.
+        const itemPos = LIST_TYPES.has(node.type.name)
+          ? listItemAt(view, node, offset, event.clientY)
+          : null;
+        const pos = itemPos ?? offset;
+        const target = view.nodeDOM(pos);
+        if (!(target instanceof HTMLElement)) return;
+        const targetRect = target.getBoundingClientRect();
+        const marker =
+          itemPos !== null &&
+          view.state.doc.nodeAt(pos)?.type.name === "listItem"
+            ? MARKER_WIDTH
+            : 0;
+        found = {
+          pos,
+          top: targetRect.top - box.top + firstLineOffset(target),
+          left: targetRect.left - box.left - marker - CONTROLS_WIDTH - 4,
+        };
       });
       clearTimeout(hideTimer.current);
       if (found) setHovered(found);
@@ -164,12 +215,26 @@ export function BlockControls({
 
   const nodeAt = (pos: number) => editor.state.doc.nodeAt(pos);
 
-  /** `+`: an empty block below (above with Alt/⌥), with "/" typed to open the block menu. */
+  /**
+   * `+`: an empty block below (above with Alt/⌥), with "/" typed to open the
+   * block menu. On a list line: a new empty item of the same list instead.
+   */
   const addBlock = (above: boolean) => {
     const node = nodeAt(hovered.pos);
     if (!node) return;
     const at = above ? hovered.pos : hovered.pos + node.nodeSize;
     const { state, view } = editor;
+    if (isListItem(node)) {
+      const item = node.type.create(
+        node.type.name === "taskItem" ? { checked: false } : null,
+        state.schema.nodes.paragraph.create(),
+      );
+      const tr = state.tr.insert(at, item);
+      tr.setSelection(TextSelection.create(tr.doc, at + 2));
+      view.dispatch(tr.scrollIntoView());
+      view.focus();
+      return;
+    }
     const paragraph = state.schema.nodes.paragraph.create(
       null,
       state.schema.text("/"),
@@ -281,9 +346,19 @@ function BlockActionMenu({
     editor.view.dispatch(editor.state.tr.insert(pos + node.nodeSize, node));
   };
 
+  // A list line lives in a list; the last line of a list takes the list with it.
+  const $pos = editor.state.doc.resolve(pos);
+  const list = isListItem(node) ? $pos.parent : null;
+  const listPos = list ? $pos.before() : null;
+
   const remove = () => {
     if (!stillThere()) return;
-    editor.view.dispatch(editor.state.tr.delete(pos, pos + node.nodeSize));
+    const { tr } = editor.state;
+    if (list && listPos !== null && list.childCount === 1) {
+      editor.view.dispatch(tr.delete(listPos, listPos + list.nodeSize));
+    } else {
+      editor.view.dispatch(tr.delete(pos, pos + node.nodeSize));
+    }
   };
 
   const moveTo = async (note: Note) => {
@@ -293,7 +368,9 @@ function BlockActionMenu({
       return;
     }
     const content = parseContent(note.content);
-    content.content = [...(content.content ?? []), node.toJSON()];
+    // A list line goes over as a one-line list of the same kind.
+    const block = list ? list.type.create(list.attrs, node) : node;
+    content.content = [...(content.content ?? []), block.toJSON()];
     try {
       await saveNoteContent(
         uid,
@@ -319,7 +396,10 @@ function BlockActionMenu({
   };
 
   const copyLink = async () => {
-    const id: unknown = node.attrs.id;
+    // List lines have no id of their own; their first paragraph has one.
+    const id: unknown = isListItem(node)
+      ? node.firstChild?.attrs.id
+      : node.attrs.id;
     if (typeof id !== "string" || !id) return;
     const url = `${window.location.origin}/books/${bookId}/notes/${noteId}#block-${id}`;
     try {
@@ -352,10 +432,20 @@ function BlockActionMenu({
               return (
                 <DropdownMenuItem
                   key={type.id}
-                  onSelect={() =>
-                    stillThere() &&
-                    turnBlockInto(editor, pos, node.nodeSize, type)
-                  }
+                  onSelect={() => {
+                    if (!stillThere()) return;
+                    // A list line: only its own text, not the lines nested under it.
+                    if (list && node.firstChild) {
+                      turnBlockInto(
+                        editor,
+                        pos + 1,
+                        node.firstChild.nodeSize,
+                        type,
+                      );
+                    } else {
+                      turnBlockInto(editor, pos, node.nodeSize, type);
+                    }
+                  }}
                 >
                   <Icon /> {type.label}
                 </DropdownMenuItem>

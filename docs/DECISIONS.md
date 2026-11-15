@@ -446,7 +446,11 @@ no Image until there is file storage) feeds every entry point:
   with ProseMirror's own drag and drop (`view.dragging`, Dropcursor), or on click opens the Block Action Menu:
   Duplicate, Turn into (unwraps, then applies the type), Move to (appends the block to another note through the
   checked transaction of D32, then removes it here; refused offline or on a conflict), Copy link to block, Delete.
-  Top-level blocks only; 768px and up with a fine pointer only. `@tiptap/extension-drag-handle` was not used: its
+  Each line of a list (bullet, numbered or checklist item, at any depth) is its own block: the controls sit
+  left of its marker, dragging moves the line with the lines nested under it, `+` adds an empty line to the same
+  list, Turn into converts only that line (splitting the list), Delete of a list's last line removes the list,
+  Move to sends it as a one-line list of the same kind, and its link uses its first paragraph's id. Other blocks
+  are handled whole. 768px and up with a fine pointer only. `@tiptap/extension-drag-handle` was not used: its
   peer dependencies bring in Yjs collaboration packages.
 - **Block ids:** `@tiptap/extension-unique-id` gives every block type a `data-id`. Ids generated when an older note
   opens are not treated as an edit (no write); they are saved with the next change, or at once by Copy link to
