@@ -42,6 +42,7 @@ import { setNoteLocked, setNotePinned, useNotes } from "@/features/notes/api";
 import type { Note, NoteContentFields } from "@/features/notes/types";
 import { AppearanceMenu } from "./appearance-menu";
 import { copySelectionAsMarkdown } from "./copy-markdown";
+import { parsePastedMarkdown } from "./paste-markdown";
 import { copySelectionAsText } from "./copy-text";
 import { AppContextMenu } from "@/components/app-context-menu";
 import { isPlainTextCopyShortcut, isSaveShortcut } from "@/lib/shortcuts";
@@ -168,6 +169,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
       handleDOMEvents: {
         copy: copySelectionAsMarkdown,
       },
+      clipboardTextParser: parsePastedMarkdown,
       handleKeyDown: (view, event) => {
         if (!isPlainTextCopyShortcut(event) || view.state.selection.empty)
           return false;

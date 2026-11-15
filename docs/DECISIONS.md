@@ -328,3 +328,15 @@ because its smaller monospace box otherwise makes a row 1px taller and everythin
 are shifted up 5px so they sit just under the text baseline. Small, Medium and Large text share the 2rem row.
 These rules are unlayered CSS in `src/index.css` so they override the utility classes on the title, tags and
 textarea.
+
+## D41 — Pasted Markdown becomes rich text (2026-11-15)
+
+Pasting plain text that looks like Markdown into the WYSIWYG editor converts it with the same `MarkdownManager`
+as import and Raw mode, through ProseMirror's `clipboardTextParser`. This also closes the loop with D35: text
+copied from a note (Markdown on the clipboard) pastes back with its formatting. "Looks like Markdown" is a list
+of patterns in `paste-markdown.ts` (heading, list, quote, code fence, table separator, rule, bold, strike,
+highlight, inline code, link); plain prose without them pastes as before, because parsing everything as Markdown
+would join multi-line text into one paragraph. Not converted: clipboard content with HTML (normal rich paste),
+Ctrl/⌘+Shift+V, pastes inside a code block, and a bare URL (still becomes a link). The context menu's Paste calls
+the same parser (`view.pasteText` alone is always plain), so it follows the same rules. The detection is a heuristic; Undo or Ctrl/⌘+Shift+V gives the
+raw text.
