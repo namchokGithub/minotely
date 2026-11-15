@@ -15,6 +15,8 @@ import {
   type FontFamily,
   type FontSize,
 } from "@/features/settings/api";
+import { useUiStore } from "@/stores/ui-store";
+import { PAGE_WIDTHS, type PageWidth } from "./page-width";
 
 const PAPER: Record<PaperStyle, string> = {
   plain: "Plain",
@@ -46,8 +48,8 @@ type AppearanceItemsProps = {
 };
 
 /**
- * Paper style (per note), typography (synced setting for all notes) and the
- * background around the page (this device, D43). One list for the header
+ * Paper style (per note), page width (this device, D45), typography (synced
+ * setting for all notes) and the background around the page (this device, D43). One list for the header
  * button and the right-click menu on the background (D26).
  */
 export function AppearanceItems({
@@ -57,6 +59,8 @@ export function AppearanceItems({
 }: AppearanceItemsProps) {
   const uid = useUid();
   const settings = useSettings();
+  const pageWidth = useUiStore((state) => state.pageWidth);
+  const setPageWidth = useUiStore((state) => state.setPageWidth);
 
   return (
     <>
@@ -72,6 +76,18 @@ export function AppearanceItems({
         {(Object.keys(PAPER) as PaperStyle[]).map((key) => (
           <k.RadioItem key={key} value={key}>
             {PAPER[key]}
+          </k.RadioItem>
+        ))}
+      </k.RadioGroup>
+      <k.Separator />
+      <k.Label>Page width (this device)</k.Label>
+      <k.RadioGroup
+        value={pageWidth}
+        onValueChange={(value) => setPageWidth(value as PageWidth)}
+      >
+        {(Object.keys(PAGE_WIDTHS) as PageWidth[]).map((key) => (
+          <k.RadioItem key={key} value={key}>
+            {PAGE_WIDTHS[key].label}
           </k.RadioItem>
         ))}
       </k.RadioGroup>

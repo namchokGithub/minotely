@@ -3,6 +3,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { Spinner } from "@/components/spinner";
@@ -46,6 +47,8 @@ import { BackgroundDialog } from "./background-dialog";
 import { copySelectionAsMarkdown } from "./copy-markdown";
 import { parsePastedMarkdown } from "./paste-markdown";
 import { pageBackgroundStyle, usePageBackground } from "./page-background";
+import { PAGE_WIDTHS } from "./page-width";
+import { useUiStore } from "@/stores/ui-store";
 import { copySelectionAsText } from "./copy-text";
 import { AppContextMenu } from "@/components/app-context-menu";
 import { contextKit } from "@/components/menu-kit";
@@ -161,6 +164,8 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const settings = useSettings();
   const backgroundStyle = pageBackgroundStyle(usePageBackground(uid));
+  const pageMaxWidth =
+    PAGE_WIDTHS[useUiStore((state) => state.pageWidth)].maxWidth;
   const [backgroundOpen, setBackgroundOpen] = useState(false);
   // "Background…" in either appearance menu: the dialog opens only after that
   // menu has closed and released focus, so the menu cannot close it again (D43).
@@ -438,9 +443,11 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
               onPointerDown={(event) => {
                 if (event.pointerType !== "mouse") event.stopPropagation();
               }}
+              // Page width preset (D45); the page still shrinks to fit a narrower editor.
+              style={{ "--page-max-w": pageMaxWidth } as CSSProperties}
               className={cn(
                 // The page keeps the theme color over any background around it (D43).
-                "mx-auto min-h-full w-full max-w-3xl bg-background px-4 pt-6 pb-[50dvh] sm:px-6 sm:pt-8",
+                "mx-auto min-h-full w-full max-w-(--page-max-w) bg-background px-4 pt-6 pb-[50dvh] sm:px-6 sm:pt-8",
                 // Lined and Margin paper: red margin line left of the text, full height (D13).
                 (note.paperStyle === "lined" || note.paperStyle === "margin") &&
                   "relative min-h-full pl-14 before:absolute before:inset-y-0 before:left-9 before:w-0.5 before:bg-red-500/75 sm:pl-20 sm:before:left-12 dark:before:bg-red-400/60",

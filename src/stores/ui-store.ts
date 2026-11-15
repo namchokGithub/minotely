@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { NoteSort } from "@/features/notes/types";
 import { clamp, LIBRARY_WIDTH, NOTES_WIDTH } from "@/app/panel-sizes";
+import { isPageWidth, type PageWidth } from "@/features/editor/page-width";
 
 export type ThemePreference = "system" | "light" | "dark";
 
@@ -12,6 +13,8 @@ type UiState = {
   /** Notes column expanded; collapsed it is a narrow rail (768px and up, D44). */
   notesPanelOpen: boolean;
   noteSort: NoteSort;
+  /** Page column width preset for all notes, this device only (D45). */
+  pageWidth: PageWidth;
   searchOpen: boolean;
   /** Saved column widths in px, per device (M5.4). */
   libraryWidth: number;
@@ -23,6 +26,7 @@ type UiState = {
   setBooksSidebarOpen: (booksSidebarOpen: boolean) => void;
   toggleNotesPanel: () => void;
   setNoteSort: (noteSort: NoteSort) => void;
+  setPageWidth: (pageWidth: PageWidth) => void;
   setSearchOpen: (searchOpen: boolean) => void;
   setLibraryWidth: (width: number) => void;
   setNotesWidth: (width: number) => void;
@@ -36,6 +40,7 @@ export const useUiStore = create<UiState>()(
       booksSidebarOpen: true,
       notesPanelOpen: true,
       noteSort: "updated",
+      pageWidth: "default",
       searchOpen: false,
       libraryWidth: LIBRARY_WIDTH.default,
       notesWidth: NOTES_WIDTH.default,
@@ -46,6 +51,8 @@ export const useUiStore = create<UiState>()(
       toggleNotesPanel: () =>
         set((state) => ({ notesPanelOpen: !state.notesPanelOpen })),
       setNoteSort: (noteSort) => set({ noteSort }),
+      setPageWidth: (pageWidth) =>
+        set({ pageWidth: isPageWidth(pageWidth) ? pageWidth : "default" }),
       setBooksSidebarOpen: (booksSidebarOpen) => set({ booksSidebarOpen }),
       setSearchOpen: (searchOpen) => set({ searchOpen }),
       setLastBookId: (lastBookId) => set({ lastBookId }),
@@ -64,6 +71,7 @@ export const useUiStore = create<UiState>()(
         booksSidebarOpen: state.booksSidebarOpen,
         notesPanelOpen: state.notesPanelOpen,
         noteSort: state.noteSort,
+        pageWidth: state.pageWidth,
         libraryWidth: state.libraryWidth,
         notesWidth: state.notesWidth,
         lastBookId: state.lastBookId,

@@ -23,6 +23,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M6.11 | Local version history (Auto and Manual, this device only)              | In progress |
 | M6.12 | Background around the page (color, image URL, opacity, darker/lighter) | In progress |
 | M6.13 | Collapse Library and Notes columns to a rail from their titles         | In progress |
+| M6.14 | Page width presets (Default, A5, A4, Letter, A3, Full 90%)             | In progress |
 
 ## Notes
 
@@ -75,6 +76,10 @@ Every item not `Done`. Keep in sync with the sections below.
   or the Notes/Trash title collapses that column to a 48px rail with one icon button that expands it again;
   state saved per device. The tablet-only Library toggle button in the Notes header is removed. The Library
   rail lists each book's icon (hover shows the name; click opens the book) and Trash.
+
+- M6.14 (approved, done in code, D45; owner to test): Page appearance → Page width (this device) sets the page
+  column's maximum width: Default 768px, A5, A4, Letter, A3, Full (90% of the editor). Length unlimited;
+  per device, not synced.
 
 ### M5 — Owner feedback (2026-11-02) — all done
 

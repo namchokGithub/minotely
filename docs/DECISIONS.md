@@ -77,8 +77,8 @@ hidden or the note is closed. Timing, offline behaviour and the overwrite rule a
 
 ## D13 — Paper style per note, typography per user (2026-11-01)
 
-`paperStyle` is stored on each note and drawn as a CSS background on the page column (the centred block, at most
-768px wide, that holds the text; since 2026-11-15, before that on the whole editor scroll area), so lines stop at
+`paperStyle` is stored on each note and drawn as a CSS background on the page column (the centred block, 768px wide by default and set by D45, that
+holds the text; since 2026-11-15, before that on the whole editor scroll area), so lines stop at
 the page edges; not aligned to text lines. Lined paper also has a red margin line left of
 the text (Margin paper, added 2026-11-15, is that line on a plain background), inside the content column, with extra left padding so the line never crosses text. Font family and size are one setting for all notes,
 stored in `users/{uid}/preferences/settings` so they follow the owner across devices.
@@ -395,3 +395,14 @@ so dialogs, drag and drop and listeners keep their state, and phones, which show
 show the full panel. `fitWidths` (D25) counts a collapsed column as the rail width and hides its splitter.
 Tablet still folds Library automatically while a note is open, now to the rail; the tablet-only toggle button
 in the Notes header is gone because the title does the same. No keyboard shortcut.
+
+## D45 — Page width presets, a per-device preview (2026-11-15)
+
+The page column's maximum width can be set like a paper size: Default (768px, as before), A5 (148mm), A4
+(210mm), Letter (8.5in), A3 (297mm) and Full (90% of the editor area). Sizes are CSS physical units, so they
+match a word processor at 100% zoom (96px per inch); the width includes the page's own side padding and the
+Lined/Margin red line. Length is never limited and there are no page breaks. When the editor area is narrower
+than the preset, the page shrinks to fit instead of scrolling sideways. It is a preview, not a note property:
+one value for all notes, `pageWidth` in the persisted UI store on this device, so no Firestore field, rule or
+backup change. The menu group is "Page width (this device)" in Page appearance (header button and the
+right-click menu on the background, D43/D44).
