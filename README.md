@@ -21,7 +21,7 @@ Sign in with any Google account; each account sees only its own books and notes.
 - **Organize** — pin, lock (read-only), tags with filter, sort (updated, created, A–Z, custom), move notes by drag
   and drop, Trash with restore.
 - **Find** — search titles, content and `#tags` across all books (Ctrl/⌘+K).
-- **Reading** — paper styles (plain, lined, grid, dotted), editor font and size, light/dark theme.
+- **Reading** — paper styles (plain, margin, lined, grid, dotted), editor font and size, light/dark theme.
 - **Data** — JSON backup export/import, Markdown export/import per note.
 - **Responsive** — 3 resizable columns on desktop, collapsible Library on tablet, one screen at a time with a
   bottom menu on mobile.

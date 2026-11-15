@@ -1,4 +1,4 @@
-export type PaperStyle = "plain" | "lined" | "grid" | "dotted";
+export type PaperStyle = "plain" | "margin" | "lined" | "grid" | "dotted";
 
 export type Note = {
   id: string;

@@ -41,7 +41,7 @@ service cloud.firestore {
         && d.isPinned is bool
         // Notes created before M5.6 have no `isLocked`.
         && d.get("isLocked", false) is bool
-        && d.paperStyle in ["plain", "lined", "grid", "dotted"]
+        && d.paperStyle in ["plain", "margin", "lined", "grid", "dotted"]
         // Notes created before custom sort have no `order`.
         && d.get("order", 0) is number
         && d.createdAt is timestamp

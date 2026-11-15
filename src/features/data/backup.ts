@@ -16,7 +16,7 @@ import { normalizeTag } from "@/features/notes/tags";
 const MAX_BOOK_NAME = 80;
 const MAX_TITLE = 200;
 const MAX_TAGS = 20;
-const PAPER_STYLES = ["plain", "lined", "grid", "dotted"];
+const PAPER_STYLES = ["plain", "margin", "lined", "grid", "dotted"];
 
 const BACKUP_APP = "minotely";
 const BACKUP_VERSION = 1;

@@ -21,6 +21,7 @@ import {
 
 const PAPER: Record<PaperStyle, string> = {
   plain: "Plain",
+  margin: "Margin",
   lined: "Lined",
   grid: "Grid",
   dotted: "Dotted",

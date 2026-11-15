@@ -79,7 +79,7 @@ hidden or the note is closed. Timing, offline behaviour and the overwrite rule a
 
 `paperStyle` is stored on each note and drawn as a CSS background on the editor scroll area
 (`background-attachment: local`), not aligned to text lines. Lined paper also has a red margin line left of
-the text, inside the content column, with extra left padding so the line never crosses text. Font family and size are one setting for all notes,
+the text (Margin paper, added 2026-11-15, is that line on a plain background), inside the content column, with extra left padding so the line never crosses text. Font family and size are one setting for all notes,
 stored in `users/{uid}/preferences/settings` so they follow the owner across devices.
 
 ## D14 — Custom sort with Move up / Move down (2026-11-01) — books: drag added by D24

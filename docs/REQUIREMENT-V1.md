@@ -35,7 +35,7 @@ My Library
 | AutoSave          | บันทึกอัตโนมัติ                          | P0       |
 | Search            | ค้นหาTitleและContent                     | P0       |
 | Responsive        | Desktop,Tablet,Mobile                    | P0       |
-| PaperStyles       | Lined,Grid,Plain,Dotted                  | P1       |
+| PaperStyles       | Plain,Margin,Lined,Grid,Dotted           | P1       |
 | Pin/Favorite      | ปักหมุดNoteสำคัญ                         | P1       |
 | Tags              | ติดTagให้Note                            | P1       |
 | Sorting           | Updated,Created,A–Z,Custom               | P1       |
