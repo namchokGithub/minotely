@@ -367,6 +367,20 @@ body {
 .paper-lined .note-title-row > input {
   height: 100%;
 }
+/* Sub-pages (D49): the breadcrumb is one row; the sub-page list starts one row below the text, one row per line. */
+.paper-lined .note-breadcrumb {
+  height: var(--paper-row);
+  margin-bottom: 0;
+  line-height: var(--paper-row);
+}
+.paper-lined .sub-pages {
+  margin-top: var(--paper-row);
+  line-height: var(--paper-row);
+}
+.paper-lined .sub-pages li,
+.paper-lined .sub-pages button {
+  padding-block: 0;
+}
 /* Tags row. */
 .paper-lined .note-title-row + div {
   row-gap: 0;

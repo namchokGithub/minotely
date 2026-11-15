@@ -454,3 +454,27 @@ no Image until there is file storage) feeds every entry point:
 - **Code block color:** presets Default, Dark, Sepia, Blue, Green (light and dark variants) in Page appearance,
   per device in the UI store, like page width (D45).
 - Markdown shortcuts already existed as input rules; none were added besides `!> `.
+
+## D49 — Nested pages (sub-pages) (2026-11-15)
+
+Design: `docs/superpowers/specs/2026-11-15-nested-pages-design.md`. A note can have one parent note in the same
+book, stored as optional `parentId`; top-level notes have no key (it is removed with `deleteField()`, never
+written as null, so the app keeps working before the Rules that allow it are published). The tree is built in
+the client from the live notes already loaded (D33) by `src/features/notes/tree.ts`; no extra reads. Only an
+**effective** parent counts: it must exist among the same list, be in the same book, not form a cycle, and keep
+the note within 3 levels; otherwise the note shows at the top level, so bad data never hides a note. Rules check
+the type, size and that a note is not its own parent; cycles and depth are app rules.
+
+- Notes column: a tree with ▸/▾ per note that has sub-pages (collapsed state per device in the UI store); a tag
+  filter shows a flat list with paths. Custom order (Move up/down) works among siblings.
+- Menus (⋯ and right-click, D26): Add sub-page (up to level 3), Move into… (same book, not into itself or its
+  sub-pages, within depth), Move to top level.
+- Branches: moving to another book (menu or drag onto a book, with Undo) moves the note and its sub-pages; the
+  note becomes top level there. Delete sends the branch to Trash with one shared `deletedAt` (`serverTimestamp()`
+  in one batch; a client time when over one batch). Restore brings back the sub-pages deleted with it; Restore
+  to another book also clears the note's parent. A restored note whose parent is still in Trash shows at the top
+  level and re-nests when the parent comes back.
+- Editor: a breadcrumb above the title and a Sub-pages list with "Add sub-page" after the content (not note
+  content). Lined paper keeps both on the rows (D40).
+- Search and Trash show the page path. JSON backup exports `parentId` and import remaps it to the new ids in two
+  passes, dropping parents that would break the rules above. Markdown import creates top-level notes.

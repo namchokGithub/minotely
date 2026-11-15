@@ -117,6 +117,7 @@ users/
         bookId
         title
         icon (one emoji, or empty — D46)
+        parentId (parent note id in the same book; missing = top level — D49)
         content (Tiptap JSON string — D10)
         plainText
         tags

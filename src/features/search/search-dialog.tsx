@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useBooks } from "@/features/books/api";
 import { BookGlyph } from "@/features/books/book-glyph";
 import { useAllNotes } from "@/features/notes/api";
+import { pathOf } from "@/features/notes/tree";
 import { useUiStore } from "@/stores/ui-store";
 import { searchNotes } from "./search";
 
@@ -124,6 +125,14 @@ function SearchBody({ onDone }: { onDone: () => void }) {
                     {note.title.trim() || "Untitled"}
                   </span>
                 </span>
+                {/* Sub-page path (D49). */}
+                {pathOf(note.id, notes.data ?? []).length > 0 && (
+                  <span className="truncate text-xs text-muted-foreground">
+                    {pathOf(note.id, notes.data ?? [])
+                      .map((n) => n.title.trim() || "Untitled")
+                      .join(" / ")}
+                  </span>
+                )}
                 {snippet && (
                   <span className="truncate text-xs text-muted-foreground">
                     {snippet}

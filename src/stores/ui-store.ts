@@ -18,6 +18,8 @@ type UiState = {
   pageWidth: PageWidth;
   /** Code block colors for all notes, this device only (D48). */
   codeTheme: CodeTheme;
+  /** Notes whose sub-pages are hidden in the Notes column, this device (D49). */
+  collapsedNotes: string[];
   searchOpen: boolean;
   /** Saved column widths in px, per device (M5.4). */
   libraryWidth: number;
@@ -31,6 +33,7 @@ type UiState = {
   setNoteSort: (noteSort: NoteSort) => void;
   setPageWidth: (pageWidth: PageWidth) => void;
   setCodeTheme: (codeTheme: CodeTheme) => void;
+  toggleNoteCollapsed: (noteId: string) => void;
   setSearchOpen: (searchOpen: boolean) => void;
   setLibraryWidth: (width: number) => void;
   setNotesWidth: (width: number) => void;
@@ -46,6 +49,7 @@ export const useUiStore = create<UiState>()(
       noteSort: "updated",
       pageWidth: "default",
       codeTheme: "default",
+      collapsedNotes: [],
       searchOpen: false,
       libraryWidth: LIBRARY_WIDTH.default,
       notesWidth: NOTES_WIDTH.default,
@@ -58,6 +62,12 @@ export const useUiStore = create<UiState>()(
       setNoteSort: (noteSort) => set({ noteSort }),
       setPageWidth: (pageWidth) =>
         set({ pageWidth: isPageWidth(pageWidth) ? pageWidth : "default" }),
+      toggleNoteCollapsed: (noteId) =>
+        set((state) => ({
+          collapsedNotes: state.collapsedNotes.includes(noteId)
+            ? state.collapsedNotes.filter((id) => id !== noteId)
+            : [...state.collapsedNotes, noteId],
+        })),
       setCodeTheme: (codeTheme) =>
         set({ codeTheme: isCodeTheme(codeTheme) ? codeTheme : "default" }),
       setBooksSidebarOpen: (booksSidebarOpen) => set({ booksSidebarOpen }),
@@ -80,6 +90,7 @@ export const useUiStore = create<UiState>()(
         noteSort: state.noteSort,
         pageWidth: state.pageWidth,
         codeTheme: state.codeTheme,
+        collapsedNotes: state.collapsedNotes,
         libraryWidth: state.libraryWidth,
         notesWidth: state.notesWidth,
         lastBookId: state.lastBookId,

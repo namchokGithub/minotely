@@ -1,17 +1,22 @@
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   onSnapshot,
   query,
   runTransaction,
   serverTimestamp,
   setDoc,
+  Timestamp,
   updateDoc,
   where,
   writeBatch,
+  type DocumentData,
+  type DocumentReference,
   type QueryConstraint,
   type QueryDocumentSnapshot,
+  type UpdateData,
 } from "firebase/firestore";
 import { useMemo } from "react";
 import { db } from "@/lib/firestore";
@@ -20,6 +25,7 @@ import { toDate } from "@/lib/firestore-utils";
 import { useSnapshotQuery } from "@/lib/use-snapshot-query";
 import { useUid } from "@/features/auth/auth-context";
 import { toNoteIcon } from "./note-icon";
+import { descendantsOf } from "./tree";
 import type { Note, NoteContentFields, PaperStyle } from "./types";
 
 export const notesCol = (uid: string) => collection(db, "users", uid, "notes");
@@ -35,6 +41,9 @@ export function toNote(snap: QueryDocumentSnapshot): Note {
   return {
     id: snap.id,
     bookId: data.bookId,
+    // Notes created before D49, and top-level notes, have no `parentId`.
+    parentId:
+      typeof data.parentId === "string" && data.parentId ? data.parentId : null,
     title: data.title ?? "",
     // Notes created before D46 have no `icon`.
     icon: typeof data.icon === "string" ? data.icon : "",
@@ -115,17 +124,35 @@ function newNoteData(
   };
 }
 
-/** Creates the note locally right away and returns its id; the write syncs in the background. */
+/**
+ * Creates the note locally right away and returns its id; the write syncs in the background.
+ * With `parentId` it is a sub-page (D49); top-level notes have no `parentId` key.
+ */
 export function createNote(
   uid: string,
   bookId: string,
   fields?: Partial<NoteContentFields>,
+  parentId?: string,
 ) {
   const ref = doc(notesCol(uid));
-  setDoc(ref, newNoteData(bookId, fields)).catch((error) =>
-    console.error("Create note failed", error),
-  );
+  setDoc(ref, {
+    ...newNoteData(bookId, fields),
+    ...(parentId ? { parentId } : {}),
+  }).catch((error) => console.error("Create note failed", error));
   return ref.id;
+}
+
+/**
+ * Creates an empty sub-page of `parent` (D49). Returns the new id at once and
+ * the write, so the caller can report a refusal (Security Rules not published yet).
+ */
+export function createSubPage(uid: string, parent: Note) {
+  const ref = doc(notesCol(uid));
+  const written = setDoc(ref, {
+    ...newNoteData(parent.bookId),
+    parentId: parent.id,
+  });
+  return { id: ref.id, written };
 }
 
 /** Creates several notes and waits for Firestore, so failures reach the caller. */
@@ -215,11 +242,117 @@ export function setNotePaperStyle(
   return updateDoc(doc(notesCol(uid), noteId), { paperStyle });
 }
 
-export function moveNote(uid: string, noteId: string, bookId: string) {
+type NoteUpdate = { ref: DocumentReference; data: UpdateData<DocumentData> };
+
+async function commitInBatches(updates: NoteUpdate[]) {
+  for (let i = 0; i < updates.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    for (const { ref, data } of updates.slice(i, i + BATCH_LIMIT)) {
+      batch.update(ref, data);
+    }
+    await batch.commit();
+  }
+}
+
+/** Makes the note a sub-page of `parentId`, or a top-level note with null (D49). */
+export function setNoteParent(
+  uid: string,
+  noteId: string,
+  parentId: string | null,
+) {
   return updateDoc(doc(notesCol(uid), noteId), {
-    bookId,
-    updatedAt: serverTimestamp(),
+    parentId: parentId ?? deleteField(),
   });
+}
+
+/**
+ * Moves the note and its sub-pages to another book (D49). The note becomes a
+ * top-level note there; its sub-pages keep their parents.
+ */
+export function moveBranch(
+  uid: string,
+  note: Note,
+  bookId: string,
+  allNotes: Note[],
+) {
+  const branch = [note, ...descendantsOf(note.id, allNotes)];
+  return commitInBatches(
+    branch.map((n) => ({
+      ref: doc(notesCol(uid), n.id),
+      data: {
+        bookId,
+        updatedAt: serverTimestamp(),
+        ...(n.id === note.id ? { parentId: deleteField() } : {}),
+      },
+    })),
+  );
+}
+
+/** Undo of `moveBranch`: the same notes go back to their book; the note gets its old parent back. */
+export function undoMoveBranch(
+  uid: string,
+  note: Note,
+  allNotesBefore: Note[],
+) {
+  const branch = [note, ...descendantsOf(note.id, allNotesBefore)];
+  return commitInBatches(
+    branch.map((n) => ({
+      ref: doc(notesCol(uid), n.id),
+      data: {
+        bookId: n.bookId,
+        updatedAt: serverTimestamp(),
+        ...(n.id === note.id
+          ? { parentId: note.parentId ?? deleteField() }
+          : {}),
+      },
+    })),
+  );
+}
+
+/**
+ * Moves the note and its sub-pages to Trash with one shared `deletedAt`, so a
+ * restore can bring the branch back together (D49).
+ */
+export function deleteBranch(uid: string, note: Note, allNotes: Note[]) {
+  const branch = [note, ...descendantsOf(note.id, allNotes)];
+  // One batch gives every note the same server time; several batches would not.
+  const deletedAt =
+    branch.length <= BATCH_LIMIT ? serverTimestamp() : Timestamp.now();
+  return commitInBatches(
+    branch.map((n) => ({
+      ref: doc(notesCol(uid), n.id),
+      data: { deletedAt, updatedAt: serverTimestamp() },
+    })),
+  );
+}
+
+/**
+ * Brings a note back from Trash with the sub-pages deleted in the same action
+ * (same `deletedAt`). With `bookId` they all move to that book and the note
+ * becomes top level there (D49).
+ */
+export function restoreBranch(
+  uid: string,
+  note: Note,
+  trashNotes: Note[],
+  bookId?: string,
+) {
+  const deletedAt = note.deletedAt?.getTime();
+  const sameDelete = trashNotes.filter(
+    (n) => n.deletedAt?.getTime() === deletedAt,
+  );
+  const branch = [note, ...descendantsOf(note.id, sameDelete)];
+  return commitInBatches(
+    branch.map((n) => ({
+      ref: doc(notesCol(uid), n.id),
+      data: {
+        deletedAt: null,
+        updatedAt: serverTimestamp(),
+        ...(bookId ? { bookId } : {}),
+        ...(bookId && n.id === note.id ? { parentId: deleteField() } : {}),
+      },
+    })),
+  );
 }
 
 /** Swaps the custom order of two notes. */
@@ -229,23 +362,6 @@ export function swapNoteOrder(uid: string, a: Note, b: Note) {
   batch.update(doc(notesCol(uid), a.id), { order: bOrder });
   batch.update(doc(notesCol(uid), b.id), { order: a.order });
   return batch.commit();
-}
-
-/** Moves the note to Trash. */
-export function deleteNote(uid: string, noteId: string) {
-  return updateDoc(doc(notesCol(uid), noteId), {
-    deletedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-}
-
-/** Brings a note back from Trash, optionally into another book. */
-export function restoreNote(uid: string, noteId: string, bookId?: string) {
-  return updateDoc(doc(notesCol(uid), noteId), {
-    ...(bookId ? { bookId } : {}),
-    deletedAt: null,
-    updatedAt: serverTimestamp(),
-  });
 }
 
 export async function deleteNoteForever(uid: string, noteId: string) {

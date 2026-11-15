@@ -30,11 +30,12 @@ import type { Book } from "@/features/books/types";
 import {
   deleteNoteForever,
   emptyTrash,
-  restoreNote,
+  restoreBranch,
   useAllNotes,
   useTrashNotes,
 } from "@/features/notes/api";
 import { deleteVersionsExcept } from "@/lib/db";
+import { descendantsOf, pathOf } from "@/features/notes/tree";
 import type { Note } from "@/features/notes/types";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
@@ -123,7 +124,13 @@ export function TrashPanel() {
           ) : (
             <ul className="grid gap-0.5">
               {sorted.map((note) => (
-                <TrashItem key={note.id} note={note} books={books ?? []} />
+                <TrashItem
+                  key={note.id}
+                  note={note}
+                  books={books ?? []}
+                  trashNotes={notes.data ?? []}
+                  liveNotes={liveNotes ?? []}
+                />
               ))}
             </ul>
           )}
@@ -159,8 +166,26 @@ export function TrashPanel() {
   );
 }
 
-function TrashItem({ note, books }: { note: Note; books: Book[] }) {
+function TrashItem({
+  note,
+  books,
+  trashNotes,
+  liveNotes,
+}: {
+  note: Note;
+  books: Book[];
+  /** Everything in Trash, for restoring a branch together (D49). */
+  trashNotes: Note[];
+  /** Live notes, so a trashed sub-page can show the path it had. */
+  liveNotes: Note[];
+}) {
   const uid = useUid();
+  const sameDelete = trashNotes.filter(
+    (n) => n.deletedAt?.getTime() === note.deletedAt?.getTime(),
+  );
+  const subPages = descendantsOf(note.id, sameDelete).length;
+  const path = pathOf(note.id, [...liveNotes, ...trashNotes]);
+  const restoreLabel = subPages > 0 ? ` with ${subPages} sub-page(s)` : "";
   const [deleteOpen, setDeleteOpen] = useState(false);
   const book = books.find((b) => b.id === note.bookId);
   const title = note.title.trim() || "Untitled";
@@ -171,22 +196,24 @@ function TrashItem({ note, books }: { note: Note; books: Book[] }) {
       {book && (
         <k.Item
           onSelect={() =>
-            restoreNote(uid, note.id).catch(logError("Restore note"))
+            restoreBranch(uid, note, trashNotes).catch(logError("Restore note"))
           }
         >
-          <RotateCcw /> Restore
+          <RotateCcw /> Restore{restoreLabel}
         </k.Item>
       )}
       <k.Sub>
         <k.SubTrigger disabled={books.length === 0}>
-          <RotateCcw /> Restore to
+          <RotateCcw /> Restore{restoreLabel} to
         </k.SubTrigger>
         <k.SubContent className="max-h-72 overflow-y-auto">
           {books.map((b) => (
             <k.Item
               key={b.id}
               onSelect={() =>
-                restoreNote(uid, note.id, b.id).catch(logError("Restore note"))
+                restoreBranch(uid, note, trashNotes, b.id).catch(
+                  logError("Restore note"),
+                )
               }
             >
               <BookGlyph icon={b.icon} color={b.color} />
@@ -210,6 +237,11 @@ function TrashItem({ note, books }: { note: Note; books: Book[] }) {
             {note.icon && <span aria-hidden="true">{note.icon} </span>}
             {title}
           </span>
+          {path.length > 0 && (
+            <span className="truncate text-xs text-muted-foreground">
+              {path.map((n) => n.title.trim() || "Untitled").join(" / ")}
+            </span>
+          )}
           <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             {book ? (
               <>

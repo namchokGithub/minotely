@@ -27,7 +27,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M7.1  | Note icon (one emoji before the title) — publish rules                                 | In progress |
 | M7.2  | Table of Contents (Document Outline) at the right of the note                          | In progress |
 | M7.3  | Blocks: `/` menu, callout, floating toolbar, block controls, drag, actions, code color | In progress |
-| M7.4  | Nested pages                                                                           | Todo        |
+| M7.4  | Nested pages (sub-pages, up to 3 levels) — publish rules                               | In progress |
 
 ## Notes
 
@@ -51,7 +51,10 @@ drop, block actions), (3) nested pages. Markdown shortcuts already exist (input 
   toolbar on a text selection; `+` and `⠿` beside the block under the pointer (768px+, mouse): add below or
   above, drag to move, Duplicate / Turn into / Move to another note / Copy link to block / Delete; code block
   color presets per device. New dependencies `@tiptap/suggestion`, `@tiptap/extension-unique-id`. No images.
-- M7.4 (Todo): nested pages — changes the note data model; to be designed before building.
+- M7.4 (approved, done in code, D49; publish rules; owner to test): sub-pages up to 3 levels as a tree in the
+  Notes column; Add sub-page, Move into…, Move to top level; branch-aware move, delete and restore; breadcrumb
+  and Sub-pages list in the note; paths in search and Trash; backup keeps the structure. Spec and plan in
+  `docs/superpowers/`.
 
 ### M6 — Sync cost and offline editing (2026-11-03)
 

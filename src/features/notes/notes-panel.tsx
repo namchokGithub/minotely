@@ -31,8 +31,16 @@ import { useUid } from "@/features/auth/auth-context";
 import { useBooks } from "@/features/books/api";
 import { BookGlyph } from "@/features/books/book-glyph";
 import { useUiStore } from "@/stores/ui-store";
+import { useRouteIds } from "@/app/use-route-ids";
 import { createNote, importNotes, useNotes } from "./api";
 import { NoteItem } from "./note-item";
+import {
+  buildNoteTree,
+  effectiveParentId,
+  flattenTree,
+  pathOf,
+  type TreeNode,
+} from "./tree";
 import { sortNotes } from "./sort";
 import { collectTags } from "./tags";
 import type { NoteSort } from "./types";
@@ -61,10 +69,27 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
   const book = books?.find((b) => b.id === bookId);
   const notes = useNotes(bookId);
   const tags = collectTags(notes.data ?? []);
-  const visible = sortNotes(
-    (notes.data ?? []).filter((n) => !tagFilter || n.tags.includes(tagFilter)),
-    noteSort,
-  );
+  const collapsedNotes = useUiStore((state) => state.collapsedNotes);
+  const toggleNoteCollapsed = useUiStore((state) => state.toggleNoteCollapsed);
+  const bookNotes = notes.data ?? [];
+  const { noteId: openNoteId } = useRouteIds();
+  const openPath = openNoteId
+    ? pathOf(openNoteId, bookNotes).map((n) => n.id)
+    : [];
+  // Sub-pages (D49): a tree, or a flat list with paths while a tag filter is on.
+  const rows: TreeNode[] = tagFilter
+    ? sortNotes(
+        bookNotes.filter((n) => n.tags.includes(tagFilter)),
+        noteSort,
+      ).map((note) => ({ note, depth: 1, children: [] }))
+    : flattenTree(
+        buildNoteTree(bookNotes, noteSort),
+        // The open note is never hidden under a collapsed parent.
+        new Set(collapsedNotes.filter((id) => !openPath.includes(id))),
+      );
+  const visible = rows.map((row) => row.note);
+  const hasTree =
+    !tagFilter && bookNotes.some((n) => effectiveParentId(n.id, bookNotes));
 
   const importMarkdown = async (files: File[]) => {
     if (!book) return;
@@ -271,26 +296,35 @@ export function NotesPanel({ bookId }: { bookId: string | undefined }) {
             </PanelMessage>
           ) : (
             <ul className="grid gap-0.5">
-              {visible.map((note, index) => {
+              {rows.map((row) => {
+                const { note } = row;
                 const canReorder = noteSort === "custom";
-                const previous = visible[index - 1];
-                const next = visible[index + 1];
+                // Move up / down only among siblings with the same pin state.
+                const sibling = (other: TreeNode | undefined) =>
+                  canReorder && other?.note.isPinned === note.isPinned
+                    ? other?.note
+                    : undefined;
+                const siblings = rows.filter(
+                  (other) =>
+                    other.depth === row.depth &&
+                    effectiveParentId(other.note.id, bookNotes) ===
+                      effectiveParentId(note.id, bookNotes),
+                );
+                const at = siblings.indexOf(row);
                 return (
                   <NoteItem
                     key={note.id}
                     note={note}
                     books={books ?? []}
-                    previous={
-                      canReorder && previous?.isPinned === note.isPinned
-                        ? previous
-                        : undefined
-                    }
-                    next={
-                      canReorder && next?.isPinned === note.isPinned
-                        ? next
-                        : undefined
-                    }
+                    previous={sibling(siblings[at - 1])}
+                    next={sibling(siblings[at + 1])}
                     showReorder={canReorder}
+                    depth={row.depth}
+                    childCount={row.children.length}
+                    collapsed={collapsedNotes.includes(note.id)}
+                    onToggle={() => toggleNoteCollapsed(note.id)}
+                    reserveToggle={hasTree}
+                    path={tagFilter ? pathOf(note.id, bookNotes) : []}
                   />
                 );
               })}

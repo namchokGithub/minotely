@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useDraggable } from "@dnd-kit/core";
+import { toast } from "sonner";
 import { noteDragId, type DragData } from "@/app/dnd-ids";
 import { NavLink, useNavigate } from "react-router";
 import {
   ArrowDown,
   ArrowUp,
+  ChevronRight,
+  CornerDownRight,
+  CornerLeftUp,
   FileDown,
+  FilePlus,
   FolderInput,
   Lock,
   LockOpen,
@@ -35,17 +40,22 @@ import {
 import { cn } from "@/lib/utils";
 import { useRouteIds } from "@/app/use-route-ids";
 import { useUid } from "@/features/auth/auth-context";
+import { useUiStore } from "@/stores/ui-store";
 import { BookGlyph } from "@/features/books/book-glyph";
 import type { Book } from "@/features/books/types";
 import { downloadFile, toFileName } from "@/features/data/download";
 import {
-  deleteNote,
-  moveNote,
+  createSubPage,
+  deleteBranch,
+  moveBranch,
+  setNoteParent,
+  useAllNotes,
   setNoteLocked,
   setNotePinned,
   swapNoteOrder,
 } from "./api";
-import type { Note } from "./types";
+import type { Note, NoteSort } from "./types";
+import { canAddChild, descendantsOf, moveIntoTargets } from "./tree";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
@@ -60,6 +70,16 @@ type NoteItemProps = {
   previous?: Note;
   next?: Note;
   showReorder?: boolean;
+  /** Tree (D49): level, 1 = top. */
+  depth?: number;
+  /** Direct sub-pages; > 0 shows the expand/collapse toggle. */
+  childCount?: number;
+  collapsed?: boolean;
+  onToggle?: () => void;
+  /** Leave room for a toggle so rows line up when any note in the list has sub-pages. */
+  reserveToggle?: boolean;
+  /** Ancestors, shown under the title when the list is flat (tag filter). */
+  path?: Note[];
 };
 
 export function NoteItem({
@@ -68,6 +88,12 @@ export function NoteItem({
   previous,
   next,
   showReorder = false,
+  depth = 1,
+  childCount = 0,
+  collapsed = false,
+  onToggle,
+  reserveToggle = false,
+  path = [],
 }: NoteItemProps) {
   const uid = useUid();
   const navigate = useNavigate();
@@ -82,9 +108,38 @@ export function NoteItem({
   const snippet = note.plainText.trim().split("\n")[0];
   const otherBooks = books.filter((b) => b.id !== note.bookId);
 
+  // Sub-pages (D49): structure is read from all live notes.
+  const { data: allNotes = [] } = useAllNotes();
+  const noteSort = useUiStore((state) => state.noteSort);
+  const collapsedNotes = useUiStore((state) => state.collapsedNotes);
+  const toggleNoteCollapsed = useUiStore((state) => state.toggleNoteCollapsed);
+  // Counted only while the delete dialog is open; the list can be long.
+  const subPageCount = deleteOpen ? descendantsOf(note.id, allNotes).length : 0;
+
   const handleMove = (bookId: string) => {
-    moveNote(uid, note.id, bookId).catch(logError("Move note"));
-    if (activeNoteId === note.id) navigate(`/books/${bookId}/notes/${note.id}`);
+    const branch = [
+      note.id,
+      ...descendantsOf(note.id, allNotes).map((n) => n.id),
+    ];
+    moveBranch(uid, note, bookId, allNotes).catch(logError("Move note"));
+    // The open note may be a sub-page of the moved note; follow it to the new book.
+    if (activeNoteId && branch.includes(activeNoteId)) {
+      navigate(`/books/${bookId}/notes/${activeNoteId}`);
+    }
+  };
+
+  const parentWriteFailed = (action: string) => (error: unknown) => {
+    console.error(`${action} failed`, error);
+    toast.error(
+      `Could not ${action.toLowerCase()}. If this keeps happening, the Security Rules may need publishing.`,
+    );
+  };
+
+  const addSubPage = () => {
+    const { id, written } = createSubPage(uid, note);
+    written.catch(parentWriteFailed("Add sub-page"));
+    if (collapsedNotes.includes(note.id)) toggleNoteCollapsed(note.id);
+    navigate(`/books/${note.bookId}/notes/${id}`);
   };
 
   const exportMarkdown = async () => {
@@ -101,7 +156,7 @@ export function NoteItem({
   };
 
   const handleDelete = () => {
-    deleteNote(uid, note.id).catch(logError("Delete note"));
+    deleteBranch(uid, note, allNotes).catch(logError("Delete note"));
     if (activeNoteId === note.id) navigate(`/books/${note.bookId}`);
   };
 
@@ -142,6 +197,40 @@ export function NoteItem({
           </>
         )}
       </k.Item>
+      <k.Separator />
+      <k.Item disabled={!canAddChild(note.id, allNotes)} onSelect={addSubPage}>
+        <FilePlus /> Add sub-page
+      </k.Item>
+      <k.Sub>
+        <k.SubTrigger>
+          <CornerDownRight /> Move into…
+        </k.SubTrigger>
+        <k.SubContent className="max-h-72 overflow-y-auto">
+          {/* Rendered only while this sub-menu is open (D49). */}
+          <MoveIntoItems
+            kit={k}
+            note={note}
+            allNotes={allNotes}
+            sort={noteSort}
+            onPick={(parentId) =>
+              setNoteParent(uid, note.id, parentId).catch(
+                parentWriteFailed("Move into"),
+              )
+            }
+          />
+        </k.SubContent>
+      </k.Sub>
+      {note.parentId && (
+        <k.Item
+          onSelect={() =>
+            setNoteParent(uid, note.id, null).catch(
+              logError("Move to top level"),
+            )
+          }
+        >
+          <CornerLeftUp /> Move to top level
+        </k.Item>
+      )}
       {showReorder && (
         <>
           <k.Item
@@ -191,13 +280,43 @@ export function NoteItem({
       <li
         ref={setNodeRef}
         className={cn("group relative", isDragging && "opacity-40")}
+        style={
+          {
+            "--indent": `${(depth - 1) * 16}px`,
+            "--toggle": reserveToggle ? "1.25rem" : "0px",
+          } as CSSProperties
+        }
       >
+        {childCount > 0 && (
+          <button
+            type="button"
+            aria-expanded={!collapsed}
+            aria-label={
+              collapsed
+                ? `Expand sub-pages of ${title}`
+                : `Collapse sub-pages of ${title}`
+            }
+            title={collapsed ? "Expand sub-pages" : "Collapse sub-pages"}
+            className="absolute top-2 left-[calc(var(--indent)+0.375rem)] z-10 flex size-5 items-center justify-center rounded text-muted-foreground transition-colors duration-150 outline-none hover:bg-foreground/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggle?.();
+            }}
+          >
+            <ChevronRight
+              className={cn(
+                "size-3.5 transition-transform duration-150 motion-reduce:transition-none",
+                !collapsed && "rotate-90",
+              )}
+            />
+          </button>
+        )}
         <NavLink
           to={`/books/${note.bookId}/notes/${note.id}`}
           {...listeners}
           className={({ isActive }) =>
             cn(
-              "grid touch-manipulation select-none [-webkit-touch-callout:none] grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md px-3 py-2 pr-9 transition-colors duration-150 hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+              "grid touch-manipulation select-none [-webkit-touch-callout:none] grid-cols-[minmax(0,1fr)] gap-0.5 rounded-md py-2 pr-9 pl-[calc(0.75rem+var(--indent)+var(--toggle))] transition-colors duration-150 hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
               isActive && "bg-muted",
             )
           }
@@ -221,7 +340,17 @@ export function NoteItem({
               </span>
             )}
             <span className="truncate">{title}</span>
+            {collapsed && childCount > 0 && (
+              <span className="shrink-0 text-xs font-normal text-muted-foreground">
+                {childCount}
+              </span>
+            )}
           </span>
+          {path.length > 0 && (
+            <span className="truncate text-xs text-muted-foreground">
+              {path.map((n) => n.title.trim() || "Untitled").join(" / ")}
+            </span>
+          )}
           {snippet && (
             <span className="truncate text-xs text-muted-foreground">
               {snippet}
@@ -260,7 +389,9 @@ export function NoteItem({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete “{title}”?</AlertDialogTitle>
               <AlertDialogDescription>
-                The note moves to Trash.
+                {subPageCount > 0
+                  ? `The note and its ${subPageCount} sub-page(s) move to Trash.`
+                  : "The note moves to Trash."}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -273,5 +404,43 @@ export function NoteItem({
         </AlertDialog>
       </li>
     </AppContextMenu>
+  );
+}
+
+/** "Move into…" targets: same book, not itself or its sub-pages, within 3 levels (D49). */
+function MoveIntoItems({
+  kit: k,
+  note,
+  allNotes,
+  sort,
+  onPick,
+}: {
+  kit: MenuKit;
+  note: Note;
+  allNotes: Note[];
+  sort: NoteSort;
+  onPick: (parentId: string) => void;
+}) {
+  const targets = moveIntoTargets(note.id, allNotes, sort);
+  if (targets.length === 0) {
+    return <k.Item disabled>No place to move into</k.Item>;
+  }
+  return (
+    <>
+      {targets.map((row) => (
+        <k.Item
+          key={row.note.id}
+          className={
+            row.depth > 2 ? "pl-8" : row.depth > 1 ? "pl-5" : undefined
+          }
+          onSelect={() => onPick(row.note.id)}
+        >
+          {row.note.icon && <span aria-hidden="true">{row.note.icon}</span>}
+          <span className="truncate">
+            {row.note.title.trim() || "Untitled"}
+          </span>
+        </k.Item>
+      ))}
+    </>
   );
 }

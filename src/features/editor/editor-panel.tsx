@@ -65,6 +65,7 @@ import {
 } from "./spellcheck";
 import { LinkBubble } from "./link-bubble";
 import { NoteIconPicker } from "./note-icon-picker";
+import { PageBreadcrumb, SubPages } from "./page-trail";
 import { DocumentOutline } from "./document-outline";
 import { BlockControls } from "./block-controls";
 import { FloatingToolbar } from "./floating-toolbar";
@@ -144,6 +145,8 @@ function DraftLoader({ note }: { note: Note }) {
 
 function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const uid = useUid();
+  // Sub-pages (D49): breadcrumb and list come from the book's live notes.
+  const { data: bookNotes = [] } = useNotes(note.bookId);
   const { status, conflict, change, saveNow, syncNow, keepMine, takeTheirs } =
     useAutoSave(uid, note.id, {
       title: draft?.baseTitle ?? note.title,
@@ -501,6 +504,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                   "relative min-h-full pl-14 before:absolute before:inset-y-0 before:left-9 before:w-0.5 before:bg-red-500/75 sm:pl-20 sm:before:left-12 dark:before:bg-red-400/60",
               )}
             >
+              <PageBreadcrumb note={note} notes={bookNotes} />
               {/* Icon and title (D46). Lined paper sizes this row in CSS (D40). */}
               <div className="note-title-row mb-2 flex items-center gap-2">
                 <NoteIconPicker
@@ -587,6 +591,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                       <EditorContent editor={editor} />
                     </div>
                   </AppContextMenu>
+                  <SubPages note={note} notes={bookNotes} />
                   <LinkBubble editor={editor} />
                   <FloatingToolbar editor={editor} />
                   <SlashMenu store={slashStore} />

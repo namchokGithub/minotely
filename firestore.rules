@@ -28,12 +28,16 @@ service cloud.firestore {
         && d.updatedAt is timestamp;
     }
 
-    function validNote(d) {
+    function validNote(d, noteId) {
       return d.keys().hasOnly([
-          "bookId", "title", "icon", "content", "plainText", "tags", "isPinned", "isLocked",
+          "bookId", "parentId", "title", "icon", "content", "plainText", "tags", "isPinned", "isLocked",
           "paperStyle", "order", "createdAt", "updatedAt", "deletedAt"
         ])
         && d.bookId is string && d.bookId.size() > 0
+        // Sub-pages (D49): top-level notes have no `parentId` (it is removed, never null);
+        // same book, depth and cycles are checked in the app.
+        && (!d.keys().hasAny(["parentId"]) || (d.parentId is string
+          && d.parentId.size() > 0 && d.parentId.size() <= 128 && d.parentId != noteId))
         && d.title is string && d.title.size() <= 200
         // Notes created before D46 have no `icon`; one emoji, or "".
         && d.get("icon", "") is string && d.get("icon", "").size() <= 16
@@ -65,8 +69,8 @@ service cloud.firestore {
 
     match /users/{uid}/notes/{noteId} {
       allow read, delete: if isUser(uid);
-      allow create: if isUser(uid) && validNote(request.resource.data);
-      allow update: if isUser(uid) && validNote(request.resource.data) && keepsCreatedAt();
+      allow create: if isUser(uid) && validNote(request.resource.data, noteId);
+      allow update: if isUser(uid) && validNote(request.resource.data, noteId) && keepsCreatedAt();
     }
 
     match /users/{uid}/preferences/{docId} {

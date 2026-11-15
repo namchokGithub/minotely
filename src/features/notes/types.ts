@@ -3,6 +3,8 @@ export type PaperStyle = "plain" | "margin" | "lined" | "grid" | "dotted";
 export type Note = {
   id: string;
   bookId: string;
+  /** Parent note in the same book; null at the top level (D49). Only an effective parent counts, see tree.ts. */
+  parentId: string | null;
   title: string;
   /** One emoji shown before the title; "" for none (D46). */
   icon: string;
