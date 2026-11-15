@@ -66,6 +66,10 @@ import {
 import { LinkBubble } from "./link-bubble";
 import { NoteIconPicker } from "./note-icon-picker";
 import { DocumentOutline } from "./document-outline";
+import { BlockControls } from "./block-controls";
+import { FloatingToolbar } from "./floating-toolbar";
+import { SlashCommand, SlashMenuStore } from "./slash-command";
+import { SlashMenu } from "./slash-menu";
 import { TagEditor } from "./tag-editor";
 import { editorExtensions, parseContent } from "./extensions";
 import { useAutoSave, type SaveStatus } from "./use-auto-save";
@@ -169,6 +173,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   const backgroundStyle = pageBackgroundStyle(usePageBackground(uid));
   const pageMaxWidth =
     PAGE_WIDTHS[useUiStore((state) => state.pageWidth)].maxWidth;
+  const codeTheme = useUiStore((state) => state.codeTheme);
   const [backgroundOpen, setBackgroundOpen] = useState(false);
   // "Background…" in either appearance menu: the dialog opens only after that
   // menu has closed and released focus, so the menu cannot close it again (D43).
@@ -183,8 +188,14 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     setBackgroundOpen(true);
   };
 
+  // One `/` menu store per editor (D48); the extension list is read once, on creation.
+  const [slashStore] = useState(() => new SlashMenuStore());
+  const [pageColumn, setPageColumn] = useState<HTMLDivElement | null>(null);
   const editor = useEditor({
-    extensions: spellingExtensions,
+    extensions: [
+      ...spellingExtensions,
+      SlashCommand.configure({ store: slashStore }),
+    ],
     content: parseContent(initial.content),
     editable: !note.isLocked,
     editorProps: {
@@ -206,12 +217,15 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
         return true;
       },
     },
-    onUpdate: ({ editor: e }) => {
+    onUpdate: ({ editor: e, transaction }) => {
       latest.current = {
         ...latest.current,
         content: JSON.stringify(e.getJSON()),
         plainText: e.getText({ blockSeparator: "\n" }),
       };
+      // Block ids added when a note opens (D48) are not an edit: they are saved
+      // with the next real change, or at once by "Copy link to block".
+      if (transaction.getMeta("addToHistory") === false) return;
       change(latest.current);
     },
   });
@@ -302,6 +316,35 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     change(latest.current);
     saveNow();
   }, [draft, change, saveNow]);
+
+  // "Copy link to block" (D48): save now so the block ids reach Firestore.
+  const persistNow = () => {
+    change(latest.current);
+    saveNow();
+  };
+
+  // A link to a block (`#block-<id>`, D48): scroll to it and flash it once.
+  useEffect(() => {
+    const id = window.location.hash.match(/^#block-([\w-]+)$/)?.[1];
+    if (!id) return;
+    const target = editor.view.dom.querySelector(
+      `[data-id="${CSS.escape(id)}"]`,
+    );
+    if (!(target instanceof HTMLElement)) return;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    target.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "center",
+    });
+    target.classList.add("block-flash");
+    const timer = setTimeout(
+      () => target.classList.remove("block-flash"),
+      1600,
+    );
+    return () => clearTimeout(timer);
+  }, [editor]);
 
   const applyOtherVersion = (remote: NoteContentFields) => {
     takeTheirs(remote);
@@ -437,9 +480,11 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
               `paper-${note.paperStyle}`,
               `editor-font-${settings.fontFamily}`,
               `editor-size-${settings.fontSize}`,
+              `code-theme-${codeTheme}`,
             )}
           >
             <div
+              ref={setPageColumn}
               // Right-clicks and long-presses on the page itself keep the editor menu or
               // the browser's own behavior; only the background opens the appearance menu.
               onContextMenu={(event) => event.stopPropagation()}
@@ -450,7 +495,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
               style={{ "--page-max-w": pageMaxWidth } as CSSProperties}
               className={cn(
                 // The page keeps the theme color over any background around it (D43).
-                "mx-auto min-h-full w-full max-w-(--page-max-w) bg-background px-4 pt-6 pb-[50dvh] sm:px-6 sm:pt-8",
+                "relative mx-auto min-h-full w-full max-w-(--page-max-w) bg-background px-4 pt-6 pb-[50dvh] sm:px-6 sm:pt-8",
                 // Lined and Margin paper: red margin line left of the text, full height (D13).
                 (note.paperStyle === "lined" || note.paperStyle === "margin") &&
                   "relative min-h-full pl-14 before:absolute before:inset-y-0 before:left-9 before:w-0.5 before:bg-red-500/75 sm:pl-20 sm:before:left-12 dark:before:bg-red-400/60",
@@ -543,6 +588,18 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                     </div>
                   </AppContextMenu>
                   <LinkBubble editor={editor} />
+                  <FloatingToolbar editor={editor} />
+                  <SlashMenu store={slashStore} />
+                  {note.bookId && (
+                    <BlockControls
+                      editor={editor}
+                      container={pageColumn}
+                      uid={uid}
+                      noteId={note.id}
+                      bookId={note.bookId}
+                      persist={persistNow}
+                    />
+                  )}
                 </>
               )}
             </div>

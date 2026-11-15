@@ -8,6 +8,7 @@ const MARKDOWN_SIGNS = [
   /^ {0,3}(?:[-*+]|\d+[.)]) \S/m, // list, checklist
   /^ {0,3}> ?\S/m, // quote
   /^ {0,3}(?:```|~~~)/m, // code fence
+  /^:::callout\s*$/m, // callout (D48)
   /^ {0,3}\|?(?: *:?-{3,}:? *\|)+/m, // table separator row
   /^ {0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/m, // horizontal rule
   /\*\*[^*\n]+\*\*/, // bold

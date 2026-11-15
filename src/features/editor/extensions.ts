@@ -9,6 +9,8 @@ import {
 } from "@tiptap/extension-table";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Placeholder } from "@tiptap/extensions";
+import UniqueID from "@tiptap/extension-unique-id";
+import { Callout } from "./callout";
 import { Extension, type JSONContent } from "@tiptap/react";
 import { insertOrEditLink, openLink } from "./links";
 
@@ -29,6 +31,20 @@ const LinkShortcuts = Extension.create({
     };
   },
 });
+
+/** Block node types that get a stable id (D48). */
+export const BLOCK_TYPES = [
+  "paragraph",
+  "heading",
+  "blockquote",
+  "callout",
+  "codeBlock",
+  "bulletList",
+  "orderedList",
+  "taskList",
+  "table",
+  "horizontalRule",
+];
 
 /**
  * Markdown shortcuts (# heading, - list, 1. list, [ ] task, > quote, ``` code,
@@ -61,7 +77,10 @@ export const editorExtensions = [
   TableRow,
   TableHeader,
   TableCell,
-  Placeholder.configure({ placeholder: "Start writing…" }),
+  Callout,
+  // Stable block ids for "Copy link to block" (D48); rendered as data-id.
+  UniqueID.configure({ types: BLOCK_TYPES }),
+  Placeholder.configure({ placeholder: "Start writing…  Type / for blocks" }),
 ];
 
 export const TEXT_COLORS = [

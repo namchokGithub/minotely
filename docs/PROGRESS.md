@@ -8,24 +8,26 @@ Plan: `docs/PLAN.md`. Statuses: `Todo`, `In progress`, `Blocked`, `Done`.
 
 Every item not `Done`. Keep in sync with the sections below.
 
-| ID    | Item                                                                   | Status      |
-| ----- | ---------------------------------------------------------------------- | ----------- |
-| M6.1  | Fewer Firestore writes, keep editing offline, conflict check on sync   | In progress |
-| M6.2  | Fewer Firestore reads: one notes listener, persistent cache            | In progress |
-| M6.3  | Raw Markdown editor toggle                                             | In progress |
-| M6.4  | Copy WYSIWYG selections as Markdown                                    | In progress |
-| M6.5  | English spellcheck in WYSIWYG with custom suggestions                  | In progress |
-| M6.6  | Thai dictionary and bilingual spellcheck in WYSIWYG                    | In progress |
-| M6.7  | Copy plain text from the editor menu or keyboard shortcut              | In progress |
-| M6.8  | Toggle spell check from the editor context menu                        | In progress |
-| M6.9  | Margin paper style; Lined paper text sits on the lines                 | In progress |
-| M6.10 | Pasted Markdown becomes rich text                                      | In progress |
-| M6.11 | Local version history (Auto and Manual, this device only)              | In progress |
-| M6.12 | Background around the page (color, image URL, opacity, darker/lighter) | In progress |
-| M6.13 | Collapse Library and Notes columns to a rail from their titles         | In progress |
-| M6.14 | Page width presets (Default, A5, A4, Letter, A3, Full 90%)             | In progress |
-| M7.1  | Note icon (one emoji before the title) — publish rules                 | In progress |
-| M7.2  | Table of Contents (Document Outline) at the right of the note          | In progress |
+| ID    | Item                                                                                   | Status      |
+| ----- | -------------------------------------------------------------------------------------- | ----------- |
+| M6.1  | Fewer Firestore writes, keep editing offline, conflict check on sync                   | In progress |
+| M6.2  | Fewer Firestore reads: one notes listener, persistent cache                            | In progress |
+| M6.3  | Raw Markdown editor toggle                                                             | In progress |
+| M6.4  | Copy WYSIWYG selections as Markdown                                                    | In progress |
+| M6.5  | English spellcheck in WYSIWYG with custom suggestions                                  | In progress |
+| M6.6  | Thai dictionary and bilingual spellcheck in WYSIWYG                                    | In progress |
+| M6.7  | Copy plain text from the editor menu or keyboard shortcut                              | In progress |
+| M6.8  | Toggle spell check from the editor context menu                                        | In progress |
+| M6.9  | Margin paper style; Lined paper text sits on the lines                                 | In progress |
+| M6.10 | Pasted Markdown becomes rich text                                                      | In progress |
+| M6.11 | Local version history (Auto and Manual, this device only)                              | In progress |
+| M6.12 | Background around the page (color, image URL, opacity, darker/lighter)                 | In progress |
+| M6.13 | Collapse Library and Notes columns to a rail from their titles                         | In progress |
+| M6.14 | Page width presets (Default, A5, A4, Letter, A3, Full 90%)                             | In progress |
+| M7.1  | Note icon (one emoji before the title) — publish rules                                 | In progress |
+| M7.2  | Table of Contents (Document Outline) at the right of the note                          | In progress |
+| M7.3  | Blocks: `/` menu, callout, floating toolbar, block controls, drag, actions, code color | In progress |
+| M7.4  | Nested pages                                                                           | Todo        |
 
 ## Notes
 
@@ -43,6 +45,13 @@ drop, block actions), (3) nested pages. Markdown shortcuts already exist (input 
   phone header. New optional note field `icon` in types, rules, backup and the requirement schema.
 - M7.2 (approved, done in code, D47; owner to test): headings (H1–H3) as short bars at the right edge of the
   editor on 768px and up; hover or focus shows the list, click on the bars pins it, a heading scrolls to it.
+
+- M7.3 (approved, done in code, D48; owner to test): `/` block menu (Text, H1–H3, lists, checklist, quote,
+  callout, code block, table, divider); Callout block (`:::callout` in Markdown, `!> ` shortcut); floating
+  toolbar on a text selection; `+` and `⠿` beside the block under the pointer (768px+, mouse): add below or
+  above, drag to move, Duplicate / Turn into / Move to another note / Copy link to block / Delete; code block
+  color presets per device. New dependencies `@tiptap/suggestion`, `@tiptap/extension-unique-id`. No images.
+- M7.4 (Todo): nested pages — changes the note data model; to be designed before building.
 
 ### M6 — Sync cost and offline editing (2026-11-03)
 

@@ -17,6 +17,7 @@ import {
 } from "@/features/settings/api";
 import { useUiStore } from "@/stores/ui-store";
 import { PAGE_WIDTHS, type PageWidth } from "./page-width";
+import { CODE_THEMES, type CodeTheme } from "./code-theme";
 
 const PAPER: Record<PaperStyle, string> = {
   plain: "Plain",
@@ -61,6 +62,8 @@ export function AppearanceItems({
   const settings = useSettings();
   const pageWidth = useUiStore((state) => state.pageWidth);
   const setPageWidth = useUiStore((state) => state.setPageWidth);
+  const codeTheme = useUiStore((state) => state.codeTheme);
+  const setCodeTheme = useUiStore((state) => state.setCodeTheme);
 
   return (
     <>
@@ -124,6 +127,21 @@ export function AppearanceItems({
         ))}
       </k.RadioGroup>
       <k.Separator />
+      <k.Sub>
+        <k.SubTrigger>Code block color</k.SubTrigger>
+        <k.SubContent>
+          <k.RadioGroup
+            value={codeTheme}
+            onValueChange={(value) => setCodeTheme(value as CodeTheme)}
+          >
+            {(Object.keys(CODE_THEMES) as CodeTheme[]).map((key) => (
+              <k.RadioItem key={key} value={key}>
+                {CODE_THEMES[key]}
+              </k.RadioItem>
+            ))}
+          </k.RadioGroup>
+        </k.SubContent>
+      </k.Sub>
       <k.Item onSelect={onBackground}>Background…</k.Item>
     </>
   );

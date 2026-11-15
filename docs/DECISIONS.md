@@ -427,3 +427,30 @@ it does not scroll or take page width. Hover or keyboard focus shows the list; c
 until a click outside, Escape or choosing a heading. Choosing a heading scrolls to it (smooth unless reduced
 motion) and puts the cursor there. Shown on 768px and up in rich-text mode only; hover does not exist on touch
 and phones have no room. No current-heading highlight yet.
+
+## D48 — Notion-like blocks in the editor (2026-11-15)
+
+Blocks are still Tiptap/ProseMirror nodes; there is no separate block model. One list of block types
+(`block-types.ts`: Text, Heading 1–3, Bulleted, Numbered, Checklist, Quote, Callout, Code block, Table, Divider;
+no Image until there is file storage) feeds every entry point:
+
+- **`/` menu:** `@tiptap/suggestion` with a small store and a React list; `/` at a line start or after a space,
+  not in code blocks; type to filter, arrows, Enter/Tab, Escape.
+- **Callout:** a `callout` node (`content: block+`) drawn with a 💡 mark in CSS. Markdown is Tiptap's Pandoc-style
+  `:::callout` … `:::`, so Raw mode, copy, paste (D41 sign added) and export keep it; `!> ` at a line start makes
+  one. On Lined paper its padding adds one row (D40).
+- **Floating toolbar:** a BubbleMenu on a non-empty text selection with the top toolbar's text controls (Bold,
+  Italic, Color, Highlight, Link); hidden on links (link bar, D23), in code blocks and on a selected block.
+- **Block Controls:** beside the top-level block under the pointer (by vertical position, so the gutter counts),
+  `+` inserts an empty paragraph below (Alt/⌥ above) with `/` typed, which opens the `/` menu; `⠿` drags the block
+  with ProseMirror's own drag and drop (`view.dragging`, Dropcursor), or on click opens the Block Action Menu:
+  Duplicate, Turn into (unwraps, then applies the type), Move to (appends the block to another note through the
+  checked transaction of D32, then removes it here; refused offline or on a conflict), Copy link to block, Delete.
+  Top-level blocks only; 768px and up with a fine pointer only. `@tiptap/extension-drag-handle` was not used: its
+  peer dependencies bring in Yjs collaboration packages.
+- **Block ids:** `@tiptap/extension-unique-id` gives every block type a `data-id`. Ids generated when an older note
+  opens are not treated as an edit (no write); they are saved with the next change, or at once by Copy link to
+  block. A link is `/books/{bookId}/notes/{noteId}#block-{id}`; opening it scrolls to the block and flashes it.
+- **Code block color:** presets Default, Dark, Sepia, Blue, Green (light and dark variants) in Page appearance,
+  per device in the UI store, like page width (D45).
+- Markdown shortcuts already existed as input rules; none were added besides `!> `.

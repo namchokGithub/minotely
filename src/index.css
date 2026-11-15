@@ -284,6 +284,52 @@ body {
     background-size: 1.25rem 1.25rem;
   }
 
+  /* Callout (D48): a tinted box with a 💡 mark; its blocks keep their own styles. */
+  .minotely-editor .callout {
+    @apply relative rounded-lg bg-muted/70 py-3 pr-4 pl-11;
+  }
+  .minotely-editor .callout::before {
+    @apply absolute top-3 left-3.5 leading-7 content-['💡'];
+  }
+  .minotely-editor .callout > * + * {
+    @apply mt-3;
+  }
+
+  /* A block opened from a "Copy link to block" link (D48). */
+  .minotely-editor .block-flash {
+    @apply rounded-md bg-primary/10 transition-colors duration-200;
+  }
+
+  /* Code block colors, per device (D48). Default keeps the muted theme color. */
+  .code-theme-dark .minotely-editor pre {
+    background-color: #1e1e24;
+    color: #e4e4e7;
+  }
+  .code-theme-sepia .minotely-editor pre {
+    background-color: #f4ecd8;
+    color: #433422;
+  }
+  .code-theme-blue .minotely-editor pre {
+    background-color: #e8f0fe;
+    color: #1e3a8a;
+  }
+  .code-theme-green .minotely-editor pre {
+    background-color: #e7f6ec;
+    color: #14532d;
+  }
+  .dark .code-theme-sepia .minotely-editor pre {
+    background-color: #3a3023;
+    color: #f3e7cf;
+  }
+  .dark .code-theme-blue .minotely-editor pre {
+    background-color: #172554;
+    color: #dbeafe;
+  }
+  .dark .code-theme-green .minotely-editor pre {
+    background-color: #0f2e1d;
+    color: #dcfce7;
+  }
+
   /* Typography settings (users/{uid}/preferences/settings). */
   .editor-font-serif .minotely-editor,
   .editor-font-serif input[aria-label="Note title"] {
@@ -383,6 +429,17 @@ body {
 }
 .paper-lined .minotely-editor pre code {
   display: block;
+}
+/* Callout: padding top and bottom adds one row (D48). */
+.paper-lined .minotely-editor .callout {
+  padding-block: calc(var(--paper-row) / 2);
+}
+.paper-lined .minotely-editor .callout::before {
+  top: calc(var(--paper-row) / 2);
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor .callout > * + * {
+  margin-top: 0;
 }
 /* Tables: borders drawn as shadows so they add no height; each text line is one row. */
 .paper-lined .minotely-editor table {

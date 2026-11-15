@@ -26,10 +26,13 @@ import { insertOrEditLink } from "./links";
 export function EditorToolbar({
   editor,
   disabled = false,
+  inline = false,
 }: {
   editor: Editor;
   /** Locked note: every formatting control is off. */
   disabled?: boolean;
+  /** The floating toolbar over a text selection (D48): text formatting only, no block controls. */
+  inline?: boolean;
 }) {
   const state = useEditorState({
     editor,
@@ -129,14 +132,16 @@ export function EditorToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <ToolButton
-          label="Checklist"
-          keys="Mod+Shift+9"
-          active={state.taskList}
-          onClick={() => chain().toggleTaskList().run()}
-        >
-          <ListTodo />
-        </ToolButton>
+        {!inline && (
+          <ToolButton
+            label="Checklist"
+            keys="Mod+Shift+9"
+            active={state.taskList}
+            onClick={() => chain().toggleTaskList().run()}
+          >
+            <ListTodo />
+          </ToolButton>
+        )}
         <ToolButton
           label="Link"
           keys="Mod+K"
@@ -145,59 +150,69 @@ export function EditorToolbar({
         >
           <Link2 />
         </ToolButton>
-        <ToolButton
-          label="Code block"
-          keys="Mod+Alt+C"
-          active={state.codeBlock}
-          onClick={() => chain().toggleCodeBlock().run()}
-        >
-          <Code2 />
-        </ToolButton>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <ToolButton menu label="Table" active={state.table}>
-              <TableIcon />
-            </ToolButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-auto min-w-44">
-            <DropdownMenuItem
-              onSelect={() =>
-                chain()
-                  .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-                  .run()
-              }
+        {!inline && (
+          <>
+            <ToolButton
+              label="Code block"
+              keys="Mod+Alt+C"
+              active={state.codeBlock}
+              onClick={() => chain().toggleCodeBlock().run()}
             >
-              Insert table
-            </DropdownMenuItem>
-            {state.table && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => chain().addRowAfter().run()}>
-                  Add row
-                </DropdownMenuItem>
+              <Code2 />
+            </ToolButton>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <ToolButton menu label="Table" active={state.table}>
+                  <TableIcon />
+                </ToolButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-auto min-w-44">
                 <DropdownMenuItem
-                  onSelect={() => chain().addColumnAfter().run()}
+                  onSelect={() =>
+                    chain()
+                      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                      .run()
+                  }
                 >
-                  Add column
+                  Insert table
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => chain().deleteRow().run()}>
-                  Delete row
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => chain().deleteColumn().run()}>
-                  Delete column
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onSelect={() => chain().deleteTable().run()}
-                >
-                  Delete table
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                {state.table && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={() => chain().addRowAfter().run()}
+                    >
+                      Add row
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => chain().addColumnAfter().run()}
+                    >
+                      Add column
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => chain().deleteRow().run()}
+                    >
+                      Delete row
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => chain().deleteColumn().run()}
+                    >
+                      Delete column
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onSelect={() => chain().deleteTable().run()}
+                    >
+                      Delete table
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
       </div>
     </fieldset>
   );
