@@ -270,6 +270,14 @@ body {
     background-size: 1.25rem 1.25rem;
   }
 
+  /* Lined paper only: one text row per ruled line (D40). The rules that do this are unlayered, below. */
+  .paper-lined {
+    --paper-row: 2rem;
+    background-size: 100% var(--paper-row);
+    background-position-y: var(--paper-shift);
+    --paper-shift: -0.3125rem;
+  }
+
   /* Typography settings (users/{uid}/preferences/settings). */
   .editor-font-serif .minotely-editor,
   .editor-font-serif input[aria-label="Note title"] {
@@ -286,6 +294,99 @@ body {
     font-size: 1.125rem;
     line-height: 1.8;
   }
+}
+
+/*
+ * Lined paper: every block is a whole number of rows tall, so text sits on the
+ * ruled lines (D40). Unlayered on purpose: these must win over the utility
+ * classes on the title, tags and Raw Markdown textarea.
+ */
+.paper-lined > div {
+  padding-top: var(--paper-row);
+}
+.paper-lined input[aria-label="Note title"] {
+  box-sizing: border-box;
+  height: calc(var(--paper-row) * 2);
+  margin-bottom: 0;
+  padding-top: 1.25rem;
+}
+/* Tags row. */
+.paper-lined input[aria-label="Note title"] + div {
+  row-gap: 0;
+  min-height: var(--paper-row);
+  margin-bottom: var(--paper-row);
+}
+.paper-lined input[aria-label="Note title"] + div > span {
+  box-sizing: border-box;
+  height: var(--paper-row);
+  padding-block: 0;
+  border-block: 0.25rem solid transparent;
+  background-clip: padding-box;
+}
+.paper-lined input[aria-label="Note title"] + div > input {
+  min-height: var(--paper-row);
+  padding-block: 0;
+}
+/* Raw Markdown mode: hint and textarea. */
+.paper-lined > div > p {
+  margin-bottom: 0;
+  line-height: var(--paper-row);
+}
+.paper-lined textarea[aria-label="Raw Markdown content"] {
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor {
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor > * + *,
+.paper-lined .minotely-editor li > p,
+.paper-lined
+  .minotely-editor
+  ul[data-type="taskList"]
+  ul[data-type="taskList"] {
+  margin-block: 0;
+}
+.paper-lined .minotely-editor h1,
+.paper-lined .minotely-editor h2,
+.paper-lined .minotely-editor h3 {
+  margin-top: var(--paper-row);
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor > :is(h1, h2, h3):first-child {
+  margin-top: 0;
+}
+.paper-lined .minotely-editor hr {
+  margin-block: calc((var(--paper-row) - 1px) / 2);
+}
+.paper-lined .minotely-editor ul[data-type="taskList"] li > label {
+  margin-top: calc((var(--paper-row) - 1rem) / 2);
+}
+/* Inline code is smaller and monospace; without this its box makes the row 1px taller. */
+.paper-lined .minotely-editor :not(pre) > code {
+  line-height: 1;
+}
+/* Code block: row-high lines, and 1rem padding top and bottom adds one row. */
+.paper-lined .minotely-editor pre {
+  padding-block: calc(var(--paper-row) / 2);
+  line-height: var(--paper-row);
+}
+.paper-lined .minotely-editor pre code {
+  display: block;
+}
+/* Tables: borders drawn as shadows so they add no height; each text line is one row. */
+.paper-lined .minotely-editor table {
+  box-shadow:
+    inset 1px 0 0 var(--border),
+    inset 0 1px 0 var(--border);
+}
+.paper-lined .minotely-editor th,
+.paper-lined .minotely-editor td {
+  border-width: 0;
+  padding-block: 0;
+  line-height: var(--paper-row);
+  box-shadow:
+    inset -1px 0 0 var(--border),
+    inset 0 -1px 0 var(--border);
 }
 
 /* Motion stays at 150–250 ms; switch it off for reduced-motion users. */

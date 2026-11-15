@@ -316,3 +316,15 @@ The editor context menu has a checked Spell check item, including for locked not
 the current account on this device and is stored in localStorage under a UID-specific key, defaulting to on.
 Turning it off clears Tiptap spelling decorations and suppresses suggestions and background checks; turning it
 on checks the open note again. It does not change note content, Firestore settings, or personal dictionary words.
+
+## D40 — Lined paper: text sits on the ruled lines (2026-11-15)
+
+Changes D13 for Lined paper only; other paper styles stay a background that text does not follow. Under
+`.paper-lined` one row is `--paper-row` (2rem) and every block is a whole number of rows: body, lists, checklists,
+headings and the Raw Markdown textarea use a 2rem line height; gaps between blocks are zero, with one empty row
+above headings and below the tags; the title takes two rows; code blocks add one row of padding; `hr` is centred
+in one row; table borders are drawn as box shadows so they add no height. Inline code gets `line-height: 1`,
+because its smaller monospace box otherwise makes a row 1px taller and everything below drifts. The ruled lines
+are shifted up 5px so they sit just under the text baseline. Small, Medium and Large text share the 2rem row.
+These rules are unlayered CSS in `src/index.css` so they override the utility classes on the title, tags and
+textarea.
