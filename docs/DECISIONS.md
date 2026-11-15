@@ -443,7 +443,7 @@ no Image until there is file storage) feeds every entry point:
   Italic, Color, Highlight, Link); hidden on links (link bar, D23), in code blocks and on a selected block.
 - **Block Controls:** beside the top-level block under the pointer (by vertical position, so the gutter counts),
   `+` inserts an empty paragraph below (Alt/⌥ above) with `/` typed, which opens the `/` menu; `⠿` drags the block
-  with ProseMirror's own drag and drop (`view.dragging`, Dropcursor), or on click opens the Block Action Menu:
+  (`block-drag.ts`, below), or on click opens the Block Action Menu:
   Duplicate, Turn into (unwraps, then applies the type), Move to (appends the block to another note through the
   checked transaction of D32, then removes it here; refused offline or on a conflict), Copy link to block, Delete.
   Each line of a list (bullet, numbered or checklist item, at any depth) is its own block: the controls sit
@@ -452,6 +452,13 @@ no Image until there is file storage) feeds every entry point:
   Move to sends it as a one-line list of the same kind, and its link uses its first paragraph's id. Other blocks
   are handled whole. While dragging, the block stays in place at 40% opacity, the pointer carries a copy on the
   page color with a shadow, and Dropcursor draws a 3px blue line where it will land (`.block-drop-cursor`).
+  Handle drags do not use ProseMirror's own drop: it deletes whatever is selected at drop time (so a moved
+  selection duplicated the block) and drops a list line between paragraphs by splitting the paragraph (empty
+  rows). `BlockDragDrop` instead lands every drop on a block or list-line boundary (before or after by the
+  pointer's half), deletes exactly the dragged node (its list too when it was the last line), converts a line to
+  the kind of list it lands in, wraps a line dropped between other blocks in a one-line list of its old kind,
+  ignores drops onto itself, and keeps block ids. It draws its own blue line; the editor's drop cursor stays for
+  text drags only.
   768px and up with a fine pointer only. `@tiptap/extension-drag-handle` was not used: its
   peer dependencies bring in Yjs collaboration packages.
 - **Block ids:** `@tiptap/extension-unique-id` gives every block type a `data-id`. Ids generated when an older note

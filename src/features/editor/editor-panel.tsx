@@ -68,6 +68,7 @@ import { NoteIconPicker } from "./note-icon-picker";
 import { PageBreadcrumb, SubPages } from "./page-trail";
 import { DocumentOutline } from "./document-outline";
 import { BlockControls } from "./block-controls";
+import { BlockDragDrop } from "./block-drag";
 import { FloatingToolbar } from "./floating-toolbar";
 import { SlashCommand, SlashMenuStore } from "./slash-command";
 import { SlashMenu } from "./slash-menu";
@@ -198,6 +199,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
     extensions: [
       ...spellingExtensions,
       SlashCommand.configure({ store: slashStore }),
+      BlockDragDrop,
     ],
     content: parseContent(initial.content),
     editable: !note.isLocked,

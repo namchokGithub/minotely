@@ -300,13 +300,19 @@ body {
     opacity: 0.4;
     transition: opacity 150ms ease-out;
   }
-  .block-drop-cursor {
+  .block-drop-cursor,
+  .block-drop-line {
     border-radius: 9999px;
     background-color: #3b82f6;
     pointer-events: none;
   }
-  .dark .block-drop-cursor {
+  .dark .block-drop-cursor,
+  .dark .block-drop-line {
     background-color: #60a5fa;
+  }
+  /* Handle drags draw their own line at block boundaries; hide the editor's text-drop cursor. */
+  .block-dragging .block-drop-cursor {
+    display: none;
   }
   /* Off-screen copy the browser photographs as the drag image. */
   .block-drag-holder {

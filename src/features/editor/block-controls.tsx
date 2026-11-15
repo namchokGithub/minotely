@@ -1,8 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { Editor } from "@tiptap/react";
 import type { Node as PMNode } from "@tiptap/pm/model";
-import { NodeSelection, TextSelection } from "@tiptap/pm/state";
-import type { EditorView } from "@tiptap/pm/view";
+import { TextSelection } from "@tiptap/pm/state";
 import {
   ArrowRightLeft,
   Copy,
@@ -33,6 +38,12 @@ import {
 } from "@/features/notes/api";
 import type { Note } from "@/features/notes/types";
 import { BLOCK_TYPE_LIST, turnBlockInto } from "./block-types";
+import {
+  blockAt,
+  dropLineStore,
+  isListItem,
+  startBlockDrag,
+} from "./block-drag";
 import { parseContent } from "./extensions";
 
 /** The block under the pointer, in page-column coordinates. */
@@ -42,87 +53,12 @@ const CONTROLS_WIDTH = 48;
 /** Room for a bullet or number, so the controls sit left of the list marker. */
 const MARKER_WIDTH = 24;
 
-const LIST_TYPES = new Set(["bulletList", "orderedList", "taskList"]);
-const LIST_ITEM_TYPES = new Set(["listItem", "taskItem"]);
-
-const isListItem = (node: PMNode) => LIST_ITEM_TYPES.has(node.type.name);
-
-/**
- * The list item at `clientY` inside the list at `pos`, deepest first, so each
- * line of a list is its own block (D48). Null when the pointer is between items.
- */
-function listItemAt(
-  view: EditorView,
-  list: PMNode,
-  pos: number,
-  clientY: number,
-): number | null {
-  let found: number | null = null;
-  list.forEach((item, offset) => {
-    if (found !== null) return;
-    const itemPos = pos + 1 + offset;
-    const dom = view.nodeDOM(itemPos);
-    if (!(dom instanceof HTMLElement)) return;
-    const rect = dom.getBoundingClientRect();
-    if (clientY < rect.top - 2 || clientY > rect.bottom + 2) return;
-    let inner: number | null = null;
-    item.forEach((child, childOffset) => {
-      if (inner === null && LIST_TYPES.has(child.type.name)) {
-        inner = listItemAt(view, child, itemPos + 1 + childOffset, clientY);
-      }
-    });
-    found = inner ?? itemPos;
-  });
-  return found;
-}
-
 /** First-line middle of a block, so the controls sit beside its first line of text. */
 function firstLineOffset(element: HTMLElement) {
   const style = getComputedStyle(element);
   const lineHeight = Number.parseFloat(style.lineHeight) || 28;
   const padding = Number.parseFloat(style.paddingTop) || 0;
   return padding + (lineHeight - 24) / 2;
-}
-
-/**
- * Selects the block (or list item) at `pos` and hands it to ProseMirror's own drag
- * and drop, which moves it on drop (Dropcursor shows where). False: nothing to drag.
- */
-function startBlockDrag(view: EditorView, pos: number, event: React.DragEvent) {
-  const dom = view.nodeDOM(pos);
-  if (!view.state.doc.nodeAt(pos) || !(dom instanceof HTMLElement)) {
-    return false;
-  }
-  const selection = NodeSelection.create(view.state.doc, pos);
-  view.dispatch(view.state.tr.setSelection(selection));
-  view.dragging = { slice: selection.content(), move: true };
-  event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData("text/plain", dom.textContent ?? "");
-
-  // What the pointer carries: a copy of the block on the page color with a shadow.
-  const preview = dom.cloneNode(true) as HTMLElement;
-  preview.classList.add("block-drag-preview");
-  preview.style.width = `${dom.getBoundingClientRect().width}px`;
-  const holder = document.createElement("div");
-  holder.className = "minotely-editor block-drag-holder";
-  holder.append(preview);
-  document.body.append(holder);
-  event.dataTransfer.setDragImage(preview, 16, 16);
-  // The browser takes its picture right away; the copy is not needed after that.
-  setTimeout(() => holder.remove(), 0);
-
-  // The block stays in place, faded, until it is dropped.
-  dom.classList.add("block-drag-source");
-  const clear = () => {
-    for (const faded of document.querySelectorAll(".block-drag-source")) {
-      faded.classList.remove("block-drag-source");
-    }
-    document.removeEventListener("dragend", clear);
-    document.removeEventListener("drop", clear);
-  };
-  document.addEventListener("dragend", clear);
-  document.addEventListener("drop", clear);
-  return true;
 }
 
 type BlockControlsProps = {
@@ -176,34 +112,18 @@ export function BlockControls({
       if (!editor.isEditable) return setHovered(null);
       const view = editor.view;
       const box = container.getBoundingClientRect();
+      // Lists: one line (item) at a time; elsewhere the whole block.
+      const hit = blockAt(view, event.clientY);
       let found: Hovered | null = null;
-      view.state.doc.forEach((node, offset) => {
-        if (found) return;
-        const dom = view.nodeDOM(offset);
-        if (!(dom instanceof HTMLElement)) return;
-        const rect = dom.getBoundingClientRect();
-        if (event.clientY < rect.top - 4 || event.clientY > rect.bottom + 4) {
-          return;
-        }
-        // Lists: one line (item) at a time; elsewhere the whole block.
-        const itemPos = LIST_TYPES.has(node.type.name)
-          ? listItemAt(view, node, offset, event.clientY)
-          : null;
-        const pos = itemPos ?? offset;
-        const target = view.nodeDOM(pos);
-        if (!(target instanceof HTMLElement)) return;
-        const targetRect = target.getBoundingClientRect();
-        const marker =
-          itemPos !== null &&
-          view.state.doc.nodeAt(pos)?.type.name === "listItem"
-            ? MARKER_WIDTH
-            : 0;
+      if (hit) {
+        const rect = hit.dom.getBoundingClientRect();
+        const marker = hit.node.type.name === "listItem" ? MARKER_WIDTH : 0;
         found = {
-          pos,
-          top: targetRect.top - box.top + firstLineOffset(target),
-          left: targetRect.left - box.left - marker - CONTROLS_WIDTH - 4,
+          pos: hit.pos,
+          top: rect.top - box.top + firstLineOffset(hit.dom),
+          left: rect.left - box.left - marker - CONTROLS_WIDTH - 4,
         };
-      });
+      }
       clearTimeout(hideTimer.current);
       if (found) setHovered(found);
       else hideTimer.current = setTimeout(() => setHovered(null), 300);
@@ -234,7 +154,7 @@ export function BlockControls({
     };
   }, [editor]);
 
-  if (!hovered) return null;
+  if (!hovered) return <DropLine container={container} />;
 
   const nodeAt = (pos: number) => editor.state.doc.nodeAt(pos);
 
@@ -281,57 +201,78 @@ export function BlockControls({
   };
 
   return (
-    <div
-      className="absolute z-10 hidden items-center md:flex"
-      style={{ top: hovered.top, left: hovered.left, width: CONTROLS_WIDTH }}
-      onMouseEnter={() => clearTimeout(hideTimer.current)}
-    >
-      <button
-        type="button"
-        aria-label="Add block below (Alt/⌥ + click: above)"
-        title="Add block below · Alt/⌥ + click: above"
-        className="flex size-6 items-center justify-center rounded-md text-muted-foreground/70 transition-colors duration-150 hover:bg-muted hover:text-foreground"
-        onClick={(event) => addBlock(event.altKey)}
+    <>
+      <DropLine container={container} />
+      <div
+        className="absolute z-10 hidden items-center md:flex"
+        style={{ top: hovered.top, left: hovered.left, width: CONTROLS_WIDTH }}
+        onMouseEnter={() => clearTimeout(hideTimer.current)}
       >
-        <Plus className="size-4" />
-      </button>
-
-      <DropdownMenu
-        open={menuOpen}
-        onOpenChange={(open) => {
-          setMenuOpen(open);
-          if (!open) setTarget(null);
-        }}
-      >
-        {/* Anchor only: the handle opens the menu on click, so dragging it never opens it. */}
-        <DropdownMenuTrigger asChild>
-          <span aria-hidden="true" className="absolute right-0 size-6" />
-        </DropdownMenuTrigger>
         <button
           type="button"
-          draggable
-          aria-label="Drag to move, or click for block actions"
-          title="Drag to move · Click for actions"
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          className="relative flex size-6 cursor-grab items-center justify-center rounded-md text-muted-foreground/70 transition-colors duration-150 hover:bg-muted hover:text-foreground active:cursor-grabbing"
-          onDragStart={startDrag}
-          onClick={openMenu}
+          aria-label="Add block below (Alt/⌥ + click: above)"
+          title="Add block below · Alt/⌥ + click: above"
+          className="flex size-6 items-center justify-center rounded-md text-muted-foreground/70 transition-colors duration-150 hover:bg-muted hover:text-foreground"
+          onClick={(event) => addBlock(event.altKey)}
         >
-          <GripVertical className="size-4" />
+          <Plus className="size-4" />
         </button>
-        {target && (
-          <BlockActionMenu
-            editor={editor}
-            target={target}
-            uid={uid}
-            noteId={noteId}
-            bookId={bookId}
-            persist={persist}
-          />
-        )}
-      </DropdownMenu>
-    </div>
+
+        <DropdownMenu
+          open={menuOpen}
+          onOpenChange={(open) => {
+            setMenuOpen(open);
+            if (!open) setTarget(null);
+          }}
+        >
+          {/* Anchor only: the handle opens the menu on click, so dragging it never opens it. */}
+          <DropdownMenuTrigger asChild>
+            <span aria-hidden="true" className="absolute right-0 size-6" />
+          </DropdownMenuTrigger>
+          <button
+            type="button"
+            draggable
+            aria-label="Drag to move, or click for block actions"
+            title="Drag to move · Click for actions"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            className="relative flex size-6 cursor-grab items-center justify-center rounded-md text-muted-foreground/70 transition-colors duration-150 hover:bg-muted hover:text-foreground active:cursor-grabbing"
+            onDragStart={startDrag}
+            onClick={openMenu}
+          >
+            <GripVertical className="size-4" />
+          </button>
+          {target && (
+            <BlockActionMenu
+              editor={editor}
+              target={target}
+              uid={uid}
+              noteId={noteId}
+              bookId={bookId}
+              persist={persist}
+            />
+          )}
+        </DropdownMenu>
+      </div>
+    </>
+  );
+}
+
+/** Blue line where a dragged block will land (D48), inside the page column. */
+function DropLine({ container }: { container: HTMLElement | null }) {
+  const line = useSyncExternalStore(dropLineStore.subscribe, dropLineStore.get);
+  if (!line || !container) return null;
+  const box = container.getBoundingClientRect();
+  return (
+    <div
+      aria-hidden="true"
+      className="block-drop-line pointer-events-none absolute z-20 h-[3px] -translate-y-1/2 rounded-full"
+      style={{
+        top: line.top - box.top,
+        left: line.left - box.left,
+        width: line.width,
+      }}
+    />
   );
 }
 
