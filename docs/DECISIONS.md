@@ -543,7 +543,10 @@ ProseMirror widget decoration (`GhostSuggest`), so nothing reaches the note unti
   (Thai joined directly, others by one space), because the segmenter splits compounds such as "นำโชค" into
   "นำ" + "โชค". It is rebuilt 300 ms after typing stops, leaving out the half-typed word at the cursor.
 - A suggestion needs at least 2 graphemes typed, the cursor at the end of a word, and an entry that starts with
-  the last two words (as a phrase) or the last word and is longer; the most used wins, then the shorter. Never in
+  the last two words (as a phrase) or the last word and is longer; the most used wins, then the shorter. Matching ignores upper and lower case; the ghost text continues the entry as written in the page
+  ("mach" → "ine" from "Machine"). The rest must begin a new grapheme: a remainder starting with a combining
+  vowel or tone mark (Thai "เพ" + "ิ่ม") is skipped, because the mark cannot be drawn on the typed letter from a
+  separate element and would float. Never in
   code blocks, while the `/` menu is being typed, during IME composition (no transaction is dispatched then), or
   on locked notes.
 - On by default, with a "Suggestions" toggle in the editor's right-click menu stored per account in this

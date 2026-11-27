@@ -98,12 +98,22 @@ function buildIndex(doc: PMNode, cursor: number | null): WordIndex {
   return index;
 }
 
-/** The most used longer entry that starts with `prefix`; ties go to the shorter one. */
+/**
+ * The most used longer entry that starts with `prefix`, ignoring upper and lower
+ * case; ties go to the shorter one. The rest must start a new character, not a
+ * vowel or tone mark that belongs to the last typed letter: drawn apart from that
+ * letter, such marks float (Thai "เพ" + "ิ่ม").
+ */
 function bestCompletion(index: WordIndex, prefix: string): string | null {
+  const wanted = prefix.toLowerCase();
   let best: string | null = null;
   let bestCount = 0;
   for (const [entry, count] of index) {
-    if (entry.length <= prefix.length || !entry.startsWith(prefix)) continue;
+    if (entry.length <= prefix.length) continue;
+    const lower = entry.toLowerCase();
+    // Letters whose lower case has another length cannot be lined up by position.
+    if (lower.length !== entry.length || !lower.startsWith(wanted)) continue;
+    if (/^\p{M}/u.test(entry.slice(prefix.length))) continue;
     if (
       count > bestCount ||
       (count === bestCount && best !== null && entry.length < best.length)
