@@ -5,6 +5,7 @@ import {
   BookPlus,
   Check,
   ClipboardPaste,
+  FileCode2,
   Code2,
   Copy,
   Highlighter,
@@ -27,7 +28,7 @@ import {
 import { shortcut } from "@/lib/shortcuts";
 import { insertOrEditLink } from "./links";
 import { copySelectionAsText } from "./copy-text";
-import { pasteText } from "./paste-markdown";
+import { pasteAsMarkdown } from "./paste-markdown";
 import type { NoteSpellcheckController, SpellingTarget } from "./spellcheck";
 
 /**
@@ -56,12 +57,13 @@ export function EditorContextItems({
     editor.commands.focus();
     document.execCommand("cut");
   };
-  const paste = async () => {
+  /** Plain text as is, or parsed as Markdown (D41). */
+  const paste = async (asMarkdown: boolean) => {
     try {
       const text = await navigator.clipboard.readText();
       editor.commands.focus();
-      // Same rules as Ctrl/⌘+V for plain text, so Markdown is converted too (D41).
-      pasteText(editor.view, text);
+      if (asMarkdown) pasteAsMarkdown(editor.view, text);
+      else editor.view.pasteText(text);
     } catch (error) {
       // Clipboard read needs permission; Ctrl/⌘+V always works.
       console.error("Paste failed", error);
@@ -126,9 +128,14 @@ export function EditorContextItems({
         <Copy /> Copy as text {hint("Mod+Alt+Shift+C")}
       </ContextMenuItem>
       {editable && (
-        <ContextMenuItem onSelect={() => void paste()}>
-          <ClipboardPaste /> Paste as text {hint("Mod+Shift+V")}
-        </ContextMenuItem>
+        <>
+          <ContextMenuItem onSelect={() => void paste(false)}>
+            <ClipboardPaste /> Paste as text {hint("Mod+Shift+V")}
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => void paste(true)}>
+            <FileCode2 /> Paste as Markdown
+          </ContextMenuItem>
+        </>
       )}
       {editable && (
         <>

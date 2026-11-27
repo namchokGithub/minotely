@@ -338,8 +338,8 @@ copied from a note (Markdown on the clipboard) pastes back with its formatting. 
 of patterns in `paste-markdown.ts` (heading, list, quote, code fence, table separator, rule, bold, strike,
 highlight, inline code, link); plain prose without them pastes as before, because parsing everything as Markdown
 would join multi-line text into one paragraph. Not converted: clipboard content with HTML (normal rich paste),
-Ctrl/⌘+Shift+V, pastes inside a code block, and a bare URL (still becomes a link). The context menu's Paste calls
-the same parser (`view.pasteText` alone is always plain), so it follows the same rules. The detection is a heuristic; Undo or Ctrl/⌘+Shift+V gives the
+Ctrl/⌘+Shift+V, pastes inside a code block, and a bare URL (still becomes a link). The context menu has "Paste as text" (always
+plain, like Ctrl/⌘+Shift+V) and "Paste as Markdown" (always parsed as Markdown, plain inside a code block). The detection is a heuristic; Undo or Ctrl/⌘+Shift+V gives the
 raw text.
 
 ## D42 — Version history kept on the device (2026-11-15)
