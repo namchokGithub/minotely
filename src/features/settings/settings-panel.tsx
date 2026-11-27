@@ -10,6 +10,7 @@ import {
   type FontFamily,
   type FontSize,
 } from "./api";
+import { APP_VERSION, APP_VERSION_TITLE } from "@/lib/app-version";
 
 const THEMES = [
   { value: "system", label: "System", icon: Monitor },
@@ -85,6 +86,13 @@ export function SettingsPanel() {
             />
           </Link>
         </section>
+        {/* Which deploy is running (D54). */}
+        <p
+          className="pt-2 text-center text-xs text-muted-foreground"
+          title={APP_VERSION_TITLE}
+        >
+          Minotely {APP_VERSION}
+        </p>
       </div>
     </div>
   );

@@ -120,7 +120,7 @@ One-time setup:
 4. GitHub → Settings → Secrets and variables → Actions → **Variables**: add the six `VITE_FIREBASE_*` keys from
    `.env.example` with your values.
 
-Release:
+Release (bump `version` in `package.json` first; the app shows it with the commit, D54):
 
 ```bash
 git switch production

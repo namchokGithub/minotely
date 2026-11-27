@@ -16,8 +16,11 @@ export function PanelRail({
   className,
   children,
   after,
+  hint,
 }: {
   label: string;
+  /** Tooltip when it should say more than the label. */
+  hint?: string;
   /** id of the column this expands. */
   controls: string;
   onExpand: () => void;
@@ -39,7 +42,7 @@ export function PanelRail({
           variant="ghost"
           size="icon-sm"
           aria-label={label}
-          title={label}
+          title={hint ?? label}
           aria-expanded={false}
           aria-controls={controls}
           onClick={onExpand}

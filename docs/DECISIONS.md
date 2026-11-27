@@ -551,3 +551,12 @@ ProseMirror widget decoration (`GhostSuggest`), so nothing reaches the note unti
   on locked notes.
 - On by default, with a "Suggestions" toggle in the editor's right-click menu stored per account in this
   browser's `localStorage`. Off on touch devices (`pointer: coarse`), which have no Tab key. No Firestore cost.
+
+## D54 — App version shown in the app (2026-11-27)
+
+The running build is shown as `v{version} · {commit}`: `version` from `package.json` and the first 7 characters
+of `GITHUB_SHA`, which GitHub Actions sets for the deploy step that runs the build (`dev` for local builds).
+Both, and the build time, are baked in at build time through Vite `define` (`__APP_VERSION__`,
+`__APP_COMMIT__`, `__APP_BUILT_AT__`), so nothing is fetched. The commit identifies a deploy even when the
+version was not bumped. Shown under the account email in the Library footer, at the bottom of the phone
+Settings screen, and in the collapsed Library rail's logo tooltip; hovering shows the build time.

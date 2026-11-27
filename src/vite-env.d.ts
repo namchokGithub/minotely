@@ -1,5 +1,10 @@
 /// <reference types="vite/client" />
 
+/** Set by `define` in vite.config.ts (D54). */
+declare const __APP_VERSION__: string;
+declare const __APP_COMMIT__: string;
+declare const __APP_BUILT_AT__: string;
+
 interface ImportMetaEnv {
   readonly VITE_FIREBASE_API_KEY: string;
   readonly VITE_FIREBASE_AUTH_DOMAIN: string;
