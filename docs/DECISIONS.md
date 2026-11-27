@@ -560,3 +560,21 @@ Both, and the build time, are baked in at build time through Vite `define` (`__A
 `__APP_COMMIT__`, `__APP_BUILT_AT__`), so nothing is fetched. The commit identifies a deploy even when the
 version was not bumped. Shown under the account email in the Library footer, at the bottom of the phone
 Settings screen, and in the collapsed Library rail's logo tooltip; hovering shows the build time.
+
+## D55 — Images by URL, resizable, no file storage (2026-11-27)
+
+Notes can show images from their own URLs (`@tiptap/extension-image`, block node, `NoteImage`). No file is stored:
+Firebase Storage needs the Blaze plan and was deferred, so an image loads from its site on every open (that site
+sees the viewer's IP) and breaks when the link dies.
+
+- Pasting one `https` URL inserts it as text at once and probes it as an image (no Referer, 3 s timeout); if it
+  loads and the pasted text is still there, the text becomes an image block. Ctrl/⌘+Shift+V, code blocks and
+  pastes with files or HTML images are left alone. Discord attachment links (`ex=`) get a warning that they
+  expire.
+- The `/` menu's Image asks for an `https` URL. Pasted HTML with `<img>` keeps its images. Markdown is `![](url)`
+  (width is not kept in Markdown); the paste heuristic (D41) recognizes it.
+- Resizing: Tiptap's resizable node view with left, right and bottom-corner handles, aspect ratio kept, width
+  and height saved in the note; CSS keeps images within the page width (`max-width: 100%`, `height: auto`).
+- An image that cannot load shows a dashed "Image unavailable" frame (URL in its tooltip).
+- Lined paper: each image block's height is rounded up to whole rows (ResizeObserver), so text after it stays on
+  the lines (D40).

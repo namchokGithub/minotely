@@ -339,6 +339,55 @@ body {
     @apply pointer-events-none text-muted-foreground/50 select-none;
   }
 
+  /* Images by URL (D55): never wider than the page; corner and side handles to resize. */
+  .minotely-editor [data-resize-container][data-node="image"] {
+    @apply max-w-full;
+  }
+  .minotely-editor [data-resize-container][data-node="image"] img {
+    @apply block h-auto! max-w-full rounded-md;
+  }
+  .minotely-editor [data-resize-handle] {
+    @apply z-10 opacity-0 transition-opacity duration-150;
+  }
+  .minotely-editor [data-resize-container]:hover [data-resize-handle],
+  .minotely-editor .ProseMirror-selectednode [data-resize-handle],
+  .minotely-editor [data-resize-state="true"] [data-resize-handle] {
+    @apply opacity-100;
+  }
+  .minotely-editor [data-resize-handle="left"],
+  .minotely-editor [data-resize-handle="right"] {
+    @apply top-1/2 h-10 w-1.5 -translate-y-1/2 cursor-ew-resize rounded-full bg-foreground/50;
+  }
+  .minotely-editor [data-resize-handle="left"] {
+    @apply left-1;
+  }
+  .minotely-editor [data-resize-handle="right"] {
+    @apply right-1;
+  }
+  .minotely-editor [data-resize-handle="bottom-left"],
+  .minotely-editor [data-resize-handle="bottom-right"] {
+    @apply bottom-1 size-3 rounded-full border-2 border-background bg-foreground/60;
+  }
+  .minotely-editor [data-resize-handle="bottom-left"] {
+    @apply left-1 cursor-nesw-resize;
+  }
+  .minotely-editor [data-resize-handle="bottom-right"] {
+    @apply right-1 cursor-nwse-resize;
+  }
+  .minotely-editor .ProseMirror-selectednode img {
+    @apply ring-2 ring-primary/60;
+  }
+  .minotely-editor .image-unavailable {
+    @apply flex h-16 items-center rounded-md border border-dashed px-3 text-sm text-muted-foreground;
+  }
+  .minotely-editor .image-unavailable img,
+  .minotely-editor .image-unavailable [data-resize-handle] {
+    @apply hidden;
+  }
+  .minotely-editor .image-unavailable::after {
+    content: "Image unavailable";
+  }
+
   /* A block opened from a "Copy link to block" link (D48). */
   .minotely-editor .block-flash {
     @apply rounded-md bg-primary/10 transition-colors duration-200;

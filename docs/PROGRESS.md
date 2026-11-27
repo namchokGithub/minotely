@@ -30,6 +30,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M7.4  | Nested pages (sub-pages, up to 3 levels) — publish rules                               | In progress |
 | M7.5  | Sub-pages as editable Page lines in the content                                        | In progress |
 | M7.6  | Inline Autocomplete (ghost text from the page, Tab to accept)                          | In progress |
+| M7.7  | Images by URL (paste a URL, resize; no file storage)                                   | In progress |
 
 ## Notes
 
@@ -64,6 +65,10 @@ drop, block actions), (3) nested pages. Markdown shortcuts already exist (input 
 
 - M7.6 (approved, done in code, D53; owner to test): faint completion of words and two-word phrases already in
   the page; Tab accepts, Esc hides; Suggestions toggle in the editor right-click menu; off on touch devices.
+
+- M7.7 (approved, done in code, D55; owner to test): pasting an image URL makes an image block; `/` Image by URL;
+  resize by handles; "Image unavailable" frame; Lined rows kept. New dependency `@tiptap/extension-image`.
+  Uploading image files (Firebase Storage, Blaze plan) is deferred.
 
 ### M6 — Sync cost and offline editing (2026-11-03)
 
