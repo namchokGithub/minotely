@@ -274,7 +274,7 @@ shows the parsed content. Markdown cannot represent text colors or every custom 
 remove those styles. Locked notes are read-only in both modes. The existing import/export converter supplies
 the body conversion, with no new stored field or Firestore rule change.
 
-## D35 — Copy rich-text selections as Markdown (2026-11-06)
+## D35 — Copy rich-text selections as Markdown (2026-11-06) — replaced by D52
 
 Inside the WYSIWYG note body, Ctrl/⌘+C and the right-click Copy action serialize the selected Tiptap fragment
 to Markdown and write only `text/plain` to the clipboard. This keeps the selected block structure (headings,
@@ -303,7 +303,7 @@ Thai GPLv3 license is bundled with its files. Personal words remain per account 
 language keys; existing English personal words retain their key. Thai segmentation can split a misspelling
 into valid smaller words, leaving that typo unmarked. Raw Markdown remains outside the checker.
 
-## D38 — Plain-text Copy in the editor context menu (2026-11-07)
+## D38 — Plain-text Copy in the editor context menu (2026-11-07) — replaced by D52
 
 The editor's right-click Copy action now writes selected text with block line breaks to the clipboard, without
 Markdown syntax or HTML. The menu label is "Copy as text" and does not show Ctrl/⌘+C as its shortcut because
@@ -522,3 +522,12 @@ AltGr); `LayoutShortcuts` offers such a non-ASCII press to the editor again as t
 position, so Ctrl+Alt+C, Ctrl+Alt+1–3 and every other editor shortcut work with a Thai layout on Windows and
 macOS. Only presses that produce a non-ASCII character with a modifier are retried; a European AltGr character
 at a position that is also an editor shortcut becomes that shortcut.
+
+## D52 — Copy is plain text plus formatting; Markdown on request (2026-11-27)
+
+Replaces D35 and D38. Writing Markdown on every Ctrl/⌘+C put `**`, `#` and `- [ ]` into chats and other apps.
+Ctrl/⌘+C, Ctrl/⌘+X and the right-click Copy and Cut now use the editor's own clipboard behavior: `text/plain`
+with one line break between blocks (Tiptap's clipboard text serializer, `blockSeparator: "\n"`) and `text/html`,
+so plain fields get clean text and rich editors (Minotely, Google Docs, Notion) keep headings, lists and bold.
+Markdown is on request: the right-click "Copy as Markdown" and Ctrl/⌘+Alt+Shift+C (the shortcut formerly used by
+Copy as text) write only Markdown `text/plain`; text colors and custom highlights are left out.

@@ -50,10 +50,9 @@ import { parsePastedMarkdown } from "./paste-markdown";
 import { pageBackgroundStyle, usePageBackground } from "./page-background";
 import { PAGE_WIDTHS } from "./page-width";
 import { useUiStore } from "@/stores/ui-store";
-import { copySelectionAsText } from "./copy-text";
 import { AppContextMenu } from "@/components/app-context-menu";
 import { contextKit } from "@/components/menu-kit";
-import { isPlainTextCopyShortcut, isSaveShortcut } from "@/lib/shortcuts";
+import { isMarkdownCopyShortcut, isSaveShortcut } from "@/lib/shortcuts";
 import { EditorContextItems } from "./editor-context-menu";
 import { EditorToolbar } from "./editor-toolbar";
 import {
@@ -233,6 +232,8 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   });
   const [pageColumn, setPageColumn] = useState<HTMLDivElement | null>(null);
   const editor = useEditor({
+    // Copied plain text: one line break between blocks, like Copy as text was (D52).
+    coreExtensionOptions: { clipboardTextSerializer: { blockSeparator: "\n" } },
     extensions: [
       ...spellingExtensions,
       SlashCommand.configure({ store: slashStore }),
@@ -247,15 +248,14 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
         spellcheck: "false",
         lang: "en-US",
       },
-      handleDOMEvents: {
-        copy: copySelectionAsMarkdown,
-      },
+      // Ctrl/⌘+C and Cut use the editor's own copy (D52): plain text for plain
+      // fields, formatting (HTML) for rich editors, Minotely included.
       clipboardTextParser: parsePastedMarkdown,
       handleKeyDown: (view, event) => {
-        if (!isPlainTextCopyShortcut(event) || view.state.selection.empty)
+        if (!isMarkdownCopyShortcut(event) || view.state.selection.empty)
           return false;
         event.preventDefault();
-        void copySelectionAsText(view);
+        void copySelectionAsMarkdown(view);
         return true;
       },
     },

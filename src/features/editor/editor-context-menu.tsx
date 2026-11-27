@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/context-menu";
 import { shortcut } from "@/lib/shortcuts";
 import { insertOrEditLink } from "./links";
-import { copySelectionAsText } from "./copy-text";
+import { copySelectionAsMarkdown } from "./copy-markdown";
 import { pasteAsMarkdown } from "./paste-markdown";
 import type { NoteSpellcheckController, SpellingTarget } from "./spellcheck";
 
@@ -52,10 +52,15 @@ export function EditorContextItems({
 }) {
   const editable = editor.isEditable;
   const { empty } = editor.state.selection;
-  // Cut uses the editor's DOM selection and its existing clipboard behavior.
+  // Cut and Copy use the editor's DOM selection and its own clipboard
+  // behavior: plain text plus formatting, like Ctrl/⌘+X and Ctrl/⌘+C (D52).
   const cut = () => {
     editor.commands.focus();
     document.execCommand("cut");
+  };
+  const copy = () => {
+    editor.commands.focus();
+    document.execCommand("copy");
   };
   /** Plain text as is, or parsed as Markdown (D41). */
   const paste = async (asMarkdown: boolean) => {
@@ -120,12 +125,15 @@ export function EditorContextItems({
           <Scissors /> Cut {hint("Mod+X")}
         </ContextMenuItem>
       )}
+      <ContextMenuItem disabled={empty} onSelect={copy}>
+        <Copy /> Copy {hint("Mod+C")}
+      </ContextMenuItem>
       <ContextMenuItem
         disabled={empty}
         aria-keyshortcuts={shortcut("Mod+Alt+Shift+C").aria}
-        onSelect={() => void copySelectionAsText(editor.view)}
+        onSelect={() => void copySelectionAsMarkdown(editor.view)}
       >
-        <Copy /> Copy as text {hint("Mod+Alt+Shift+C")}
+        <FileCode2 /> Copy as Markdown {hint("Mod+Alt+Shift+C")}
       </ContextMenuItem>
       {editable && (
         <>

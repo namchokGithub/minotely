@@ -39,8 +39,8 @@ export function isSaveShortcut(event: KeyboardEvent) {
   );
 }
 
-/** Plain-text copy in the focused WYSIWYG editor. */
-export function isPlainTextCopyShortcut(event: KeyboardEvent) {
+/** Copy as Markdown in the focused WYSIWYG editor (D52). */
+export function isMarkdownCopyShortcut(event: KeyboardEvent) {
   return (
     (isMac
       ? event.metaKey && !event.ctrlKey
