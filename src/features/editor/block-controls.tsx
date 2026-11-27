@@ -9,6 +9,7 @@ import type { Editor } from "@tiptap/react";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 import {
+  AlignCenter,
   ArrowRightLeft,
   Copy,
   GripVertical,
@@ -45,6 +46,7 @@ import {
   startBlockDrag,
 } from "./block-drag";
 import { parseContent } from "./extensions";
+import { IMAGE_ALIGNS } from "./image";
 
 /** The block under the pointer, in page-column coordinates. */
 type Hovered = { pos: number; top: number; left: number };
@@ -444,6 +446,32 @@ function BlockActionMenu({
           ))}
         </DropdownMenuSubContent>
       </DropdownMenuSub>
+      {node.type.name === "image" && (
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <AlignCenter /> Align
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-44">
+            {IMAGE_ALIGNS.map(({ value, label }) => (
+              <DropdownMenuItem
+                key={value}
+                onSelect={() => {
+                  if (!stillThere()) return;
+                  editor.view.dispatch(
+                    editor.state.tr.setNodeMarkup(pos, undefined, {
+                      ...node.attrs,
+                      align: value,
+                    }),
+                  );
+                }}
+              >
+                {label}
+                {(node.attrs.align ?? "left") === value && " ✓"}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      )}
       <DropdownMenuItem onSelect={() => void copyLink()}>
         <Link2 /> Copy link to block
       </DropdownMenuItem>

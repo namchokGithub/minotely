@@ -575,6 +575,9 @@ sees the viewer's IP) and breaks when the link dies.
   (width is not kept in Markdown); the paste heuristic (D41) recognizes it.
 - Resizing: Tiptap's resizable node view with left, right and bottom-corner handles, aspect ratio kept, width
   and height saved in the note; CSS keeps images within the page width (`max-width: 100%`, `height: auto`).
+- Alignment: an `align` attribute (left by default, center, right) set from a small toolbar above a selected
+  image or the `⠿` menu's Align; stored in the note (`data-align`), not in Markdown. Text does not wrap around
+  images, and there is no free positioning: both break Lined rows, phones and block controls.
 - An image that cannot load shows a dashed "Image unavailable" frame (URL in its tooltip).
 - Lined paper: each image block's height is rounded up to whole rows (ResizeObserver), so text after it stays on
   the lines (D40).

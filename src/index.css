@@ -343,6 +343,14 @@ body {
   .minotely-editor [data-resize-container][data-node="image"] {
     @apply max-w-full;
   }
+  .minotely-editor
+    [data-resize-container][data-node="image"]:has(img[data-align="center"]) {
+    @apply justify-center;
+  }
+  .minotely-editor
+    [data-resize-container][data-node="image"]:has(img[data-align="right"]) {
+    @apply justify-end;
+  }
   .minotely-editor [data-resize-container][data-node="image"] img {
     @apply block h-auto! max-w-full rounded-md;
   }

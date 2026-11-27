@@ -82,6 +82,7 @@ import {
   saveSuggestionsEnabled,
 } from "./suggestions-setting";
 import { FloatingToolbar } from "./floating-toolbar";
+import { ImageToolbar } from "./image-toolbar";
 import { SlashCommand, SlashMenuStore, type SlashItem } from "./slash-command";
 import { SlashMenu } from "./slash-menu";
 import { TagEditor } from "./tag-editor";
@@ -683,6 +684,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                   </AppContextMenu>
                   <LinkBubble editor={editor} />
                   <FloatingToolbar editor={editor} />
+                  <ImageToolbar editor={editor} />
                   <SlashMenu store={slashStore} />
                   {note.bookId && (
                     <BlockControls

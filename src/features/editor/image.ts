@@ -202,7 +202,32 @@ const imageFrames = new Plugin({
   },
 });
 
+export type ImageAlign = "left" | "center" | "right";
+
+export const IMAGE_ALIGNS: { value: ImageAlign; label: string }[] = [
+  { value: "left", label: "Align left" },
+  { value: "center", label: "Align center" },
+  { value: "right", label: "Align right" },
+];
+
 export const NoteImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      // Left, center or right in the page (D55); not kept in Markdown.
+      align: {
+        default: "left",
+        parseHTML: (element) => {
+          const value = element.getAttribute("data-align");
+          return value === "center" || value === "right" ? value : "left";
+        },
+        renderHTML: (attributes) =>
+          attributes.align && attributes.align !== "left"
+            ? { "data-align": attributes.align }
+            : {},
+      },
+    };
+  },
   addProseMirrorPlugins() {
     return [...(this.parent?.() ?? []), imageUrlPaste, imageFrames];
   },
