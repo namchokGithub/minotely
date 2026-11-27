@@ -50,10 +50,9 @@ import { parsePastedMarkdown } from "./paste-markdown";
 import { pageBackgroundStyle, usePageBackground } from "./page-background";
 import { PAGE_WIDTHS } from "./page-width";
 import { useUiStore } from "@/stores/ui-store";
-import { copySelectionAsText } from "./copy-text";
 import { AppContextMenu } from "@/components/app-context-menu";
 import { contextKit } from "@/components/menu-kit";
-import { isPlainTextCopyShortcut, isSaveShortcut } from "@/lib/shortcuts";
+import { isMarkdownCopyShortcut, isSaveShortcut } from "@/lib/shortcuts";
 import { EditorContextItems } from "./editor-context-menu";
 import { EditorToolbar } from "./editor-toolbar";
 import {
@@ -77,6 +76,11 @@ import { canAddChild } from "@/features/notes/tree";
 import { DocumentOutline } from "./document-outline";
 import { BlockControls } from "./block-controls";
 import { BlockDragDrop } from "./block-drag";
+import { GhostSuggest, setGhostSuggestEnabled } from "./ghost-suggest";
+import {
+  getSuggestionsEnabled,
+  saveSuggestionsEnabled,
+} from "./suggestions-setting";
 import { FloatingToolbar } from "./floating-toolbar";
 import { SlashCommand, SlashMenuStore, type SlashItem } from "./slash-command";
 import { SlashMenu } from "./slash-menu";
@@ -233,10 +237,13 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   });
   const [pageColumn, setPageColumn] = useState<HTMLDivElement | null>(null);
   const editor = useEditor({
+    // Copied plain text: one line break between blocks, like Copy as text was (D52).
+    coreExtensionOptions: { clipboardTextSerializer: { blockSeparator: "\n" } },
     extensions: [
       ...spellingExtensions,
       SlashCommand.configure({ store: slashStore }),
       BlockDragDrop,
+      GhostSuggest,
     ],
     content: parseContent(initial.content),
     editable: !note.isLocked,
@@ -247,15 +254,14 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
         spellcheck: "false",
         lang: "en-US",
       },
-      handleDOMEvents: {
-        copy: copySelectionAsMarkdown,
-      },
+      // Ctrl/⌘+C and Cut use the editor's own copy (D52): plain text for plain
+      // fields, formatting (HTML) for rich editors, Minotely included.
       clipboardTextParser: parsePastedMarkdown,
       handleKeyDown: (view, event) => {
-        if (!isPlainTextCopyShortcut(event) || view.state.selection.empty)
+        if (!isMarkdownCopyShortcut(event) || view.state.selection.empty)
           return false;
         event.preventDefault();
-        void copySelectionAsText(view);
+        void copySelectionAsMarkdown(view);
         return true;
       },
     },
@@ -296,6 +302,29 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   useEffect(() => {
     spellcheck?.setEnabled(spellcheckEnabled);
   }, [spellcheck, spellcheckEnabled]);
+
+  // Inline Autocomplete (D53): mouse and keyboard devices only (Tab accepts),
+  // editable notes, and the device setting.
+  const [suggestionsEnabled, setSuggestionsEnabled] = useState(() =>
+    getSuggestionsEnabled(uid),
+  );
+  const editable = !note.isLocked;
+  useEffect(() => {
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    setGhostSuggestEnabled(
+      editor.view,
+      suggestionsEnabled && editable && finePointer,
+    );
+  }, [editor, suggestionsEnabled, editable]);
+
+  const toggleSuggestions = () => {
+    const next = !suggestionsEnabled;
+    if (!saveSuggestionsEnabled(uid, next)) {
+      toast.error("Could not save the suggestions setting");
+      return;
+    }
+    setSuggestionsEnabled(next);
+  };
 
   const toggleSpellcheck = () => {
     const next = !spellcheckEnabled;
@@ -625,6 +654,8 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                         spellcheck={spellcheck}
                         spellcheckEnabled={spellcheckEnabled}
                         onToggleSpellcheck={toggleSpellcheck}
+                        suggestionsEnabled={suggestionsEnabled}
+                        onToggleSuggestions={toggleSuggestions}
                         onSpellingAction={() => setSpellingTarget(null)}
                       />
                     }

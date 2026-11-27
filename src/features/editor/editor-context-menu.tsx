@@ -5,14 +5,17 @@ import {
   BookPlus,
   Check,
   ClipboardPaste,
+  FileCode2,
   Code2,
   Copy,
   Highlighter,
   EyeOff,
   Italic,
   Link2,
+  List,
   ListTodo,
   Scissors,
+  Sparkles,
   SpellCheck2,
   TextSelect,
 } from "lucide-react";
@@ -25,8 +28,8 @@ import {
 } from "@/components/ui/context-menu";
 import { shortcut } from "@/lib/shortcuts";
 import { insertOrEditLink } from "./links";
-import { copySelectionAsText } from "./copy-text";
-import { pasteText } from "./paste-markdown";
+import { copySelectionAsMarkdown } from "./copy-markdown";
+import { pasteAsMarkdown } from "./paste-markdown";
 import type { NoteSpellcheckController, SpellingTarget } from "./spellcheck";
 
 /**
@@ -39,6 +42,8 @@ export function EditorContextItems({
   spellcheck,
   spellcheckEnabled,
   onToggleSpellcheck,
+  suggestionsEnabled,
+  onToggleSuggestions,
   onSpellingAction,
 }: {
   editor: Editor;
@@ -46,21 +51,30 @@ export function EditorContextItems({
   spellcheck: NoteSpellcheckController | null;
   spellcheckEnabled: boolean;
   onToggleSpellcheck: () => void;
+  /** Inline Autocomplete, this device (D53). */
+  suggestionsEnabled: boolean;
+  onToggleSuggestions: () => void;
   onSpellingAction: () => void;
 }) {
   const editable = editor.isEditable;
   const { empty } = editor.state.selection;
-  // Cut uses the editor's DOM selection and its existing clipboard behavior.
+  // Cut and Copy use the editor's DOM selection and its own clipboard
+  // behavior: plain text plus formatting, like Ctrl/⌘+X and Ctrl/⌘+C (D52).
   const cut = () => {
     editor.commands.focus();
     document.execCommand("cut");
   };
-  const paste = async () => {
+  const copy = () => {
+    editor.commands.focus();
+    document.execCommand("copy");
+  };
+  /** Plain text as is, or parsed as Markdown (D41). */
+  const paste = async (asMarkdown: boolean) => {
     try {
       const text = await navigator.clipboard.readText();
       editor.commands.focus();
-      // Same rules as Ctrl/⌘+V for plain text, so Markdown is converted too (D41).
-      pasteText(editor.view, text);
+      if (asMarkdown) pasteAsMarkdown(editor.view, text);
+      else editor.view.pasteText(text);
     } catch (error) {
       // Clipboard read needs permission; Ctrl/⌘+V always works.
       console.error("Paste failed", error);
@@ -117,17 +131,25 @@ export function EditorContextItems({
           <Scissors /> Cut {hint("Mod+X")}
         </ContextMenuItem>
       )}
+      <ContextMenuItem disabled={empty} onSelect={copy}>
+        <Copy /> Copy {hint("Mod+C")}
+      </ContextMenuItem>
       <ContextMenuItem
         disabled={empty}
         aria-keyshortcuts={shortcut("Mod+Alt+Shift+C").aria}
-        onSelect={() => void copySelectionAsText(editor.view)}
+        onSelect={() => void copySelectionAsMarkdown(editor.view)}
       >
-        <Copy /> Copy as text {hint("Mod+Alt+Shift+C")}
+        <FileCode2 /> Copy as Markdown {hint("Mod+Alt+Shift+C")}
       </ContextMenuItem>
       {editable && (
-        <ContextMenuItem onSelect={() => void paste()}>
-          <ClipboardPaste /> Paste as text {hint("Mod+Shift+V")}
-        </ContextMenuItem>
+        <>
+          <ContextMenuItem onSelect={() => void paste(false)}>
+            <ClipboardPaste /> Paste as text {hint("Mod+Shift+V")}
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => void paste(true)}>
+            <FileCode2 /> Paste as Markdown
+          </ContextMenuItem>
+        </>
       )}
       {editable && (
         <>
@@ -148,6 +170,10 @@ export function EditorContextItems({
           <ContextMenuItem onSelect={() => chain().toggleTaskList().run()}>
             <ListTodo /> Checklist {hint("Mod+Shift+9")}
           </ContextMenuItem>
+          {/* Also turns a checklist back into a bulleted list. */}
+          <ContextMenuItem onSelect={() => chain().toggleBulletList().run()}>
+            <List /> Bulleted list {hint("Mod+Shift+8")}
+          </ContextMenuItem>
           <ContextMenuItem onSelect={() => chain().toggleCodeBlock().run()}>
             <Code2 /> Code block {hint("Mod+Alt+C")}
           </ContextMenuItem>
@@ -163,6 +189,12 @@ export function EditorContextItems({
         onCheckedChange={onToggleSpellcheck}
       >
         <SpellCheck2 /> Spell check
+      </ContextMenuCheckboxItem>
+      <ContextMenuCheckboxItem
+        checked={suggestionsEnabled}
+        onCheckedChange={onToggleSuggestions}
+      >
+        <Sparkles /> Suggestions
       </ContextMenuCheckboxItem>
     </>
   );

@@ -334,6 +334,11 @@ body {
     @apply min-h-7;
   }
 
+  /* Inline Autocomplete (D53): faint text after the cursor, not part of the note. */
+  .minotely-editor .ghost-suggestion {
+    @apply pointer-events-none text-muted-foreground/50 select-none;
+  }
+
   /* A block opened from a "Copy link to block" link (D48). */
   .minotely-editor .block-flash {
     @apply rounded-md bg-primary/10 transition-colors duration-200;

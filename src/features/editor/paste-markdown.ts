@@ -49,19 +49,25 @@ export function parsePastedMarkdown(
 }
 
 /**
- * Context-menu Paste: text read from the clipboard API, handled like Ctrl/⌘+V.
- * `view.pasteText` alone always pastes as plain text, so Markdown is inserted here.
+ * Context menu "Paste as Markdown" (D41): the clipboard text is always parsed as
+ * Markdown, even without the signs `looksLikeMarkdown` looks for. Inside a code
+ * block it stays plain text.
  */
-export function pasteText(view: EditorView, text: string) {
-  const slice = parsePastedMarkdown(
-    text,
-    view.state.selection.$from,
-    false,
-    view,
-  ) as Slice | undefined;
-  if (!slice) {
+export function pasteAsMarkdown(view: EditorView, text: string) {
+  const { $from } = view.state.selection;
+  if ($from.parent.type.spec.code) {
     view.pasteText(text);
     return;
   }
-  view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+  try {
+    const doc = PMNode.fromJSON(view.state.schema, markdownToContent(text));
+    view.dispatch(
+      view.state.tr
+        .replaceSelection(Slice.maxOpen(doc.content))
+        .scrollIntoView(),
+    );
+  } catch (error) {
+    console.error("Markdown paste failed", error);
+    view.pasteText(text);
+  }
 }

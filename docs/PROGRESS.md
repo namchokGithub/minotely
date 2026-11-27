@@ -29,6 +29,7 @@ Every item not `Done`. Keep in sync with the sections below.
 | M7.3  | Blocks: `/` menu, callout, floating toolbar, block controls, drag, actions, code color | In progress |
 | M7.4  | Nested pages (sub-pages, up to 3 levels) — publish rules                               | In progress |
 | M7.5  | Sub-pages as editable Page lines in the content                                        | In progress |
+| M7.6  | Inline Autocomplete (ghost text from the page, Tab to accept)                          | In progress |
 
 ## Notes
 
@@ -60,6 +61,9 @@ drop, block actions), (3) nested pages. Markdown shortcuts already exist (input 
 - M7.5 (approved, done in code, D50; owner to test): sub-pages are Page lines in the parent's content; editing
   the line renames the page; `/` Sub-page inserts one; Notes-column Add sub-page / Move into… add one; deleting
   a line keeps the page. The Sub-pages section below the note is gone.
+
+- M7.6 (approved, done in code, D53; owner to test): faint completion of words and two-word phrases already in
+  the page; Tab accepts, Esc hides; Suggestions toggle in the editor right-click menu; off on touch devices.
 
 ### M6 — Sync cost and offline editing (2026-11-03)
 

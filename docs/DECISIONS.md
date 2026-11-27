@@ -274,7 +274,7 @@ shows the parsed content. Markdown cannot represent text colors or every custom 
 remove those styles. Locked notes are read-only in both modes. The existing import/export converter supplies
 the body conversion, with no new stored field or Firestore rule change.
 
-## D35 — Copy rich-text selections as Markdown (2026-11-06)
+## D35 — Copy rich-text selections as Markdown (2026-11-06) — replaced by D52
 
 Inside the WYSIWYG note body, Ctrl/⌘+C and the right-click Copy action serialize the selected Tiptap fragment
 to Markdown and write only `text/plain` to the clipboard. This keeps the selected block structure (headings,
@@ -303,7 +303,7 @@ Thai GPLv3 license is bundled with its files. Personal words remain per account 
 language keys; existing English personal words retain their key. Thai segmentation can split a misspelling
 into valid smaller words, leaving that typo unmarked. Raw Markdown remains outside the checker.
 
-## D38 — Plain-text Copy in the editor context menu (2026-11-07)
+## D38 — Plain-text Copy in the editor context menu (2026-11-07) — replaced by D52
 
 The editor's right-click Copy action now writes selected text with block line breaks to the clipboard, without
 Markdown syntax or HTML. The menu label is "Copy as text" and does not show Ctrl/⌘+C as its shortcut because
@@ -338,8 +338,8 @@ copied from a note (Markdown on the clipboard) pastes back with its formatting. 
 of patterns in `paste-markdown.ts` (heading, list, quote, code fence, table separator, rule, bold, strike,
 highlight, inline code, link); plain prose without them pastes as before, because parsing everything as Markdown
 would join multi-line text into one paragraph. Not converted: clipboard content with HTML (normal rich paste),
-Ctrl/⌘+Shift+V, pastes inside a code block, and a bare URL (still becomes a link). The context menu's Paste calls
-the same parser (`view.pasteText` alone is always plain), so it follows the same rules. The detection is a heuristic; Undo or Ctrl/⌘+Shift+V gives the
+Ctrl/⌘+Shift+V, pastes inside a code block, and a bare URL (still becomes a link). The context menu has "Paste as text" (always
+plain, like Ctrl/⌘+Shift+V) and "Paste as Markdown" (always parsed as Markdown, plain inside a code block). The detection is a heuristic; Undo or Ctrl/⌘+Shift+V gives the
 raw text.
 
 ## D42 — Version history kept on the device (2026-11-15)
@@ -511,3 +511,43 @@ changes, as a non-edit transaction (saved with the next real change, like block 
 - Icon click or Ctrl/⌘+Enter opens the page; Enter moves below the line.
 - Markdown: `[Title](<origin>/books/{bookId}/notes/{pageId})` on its own line; a tokenizer turns such a line back
   into a Page line, so Raw mode, copy and paste keep it. Lined paper: one row.
+
+## D51 — Shortcuts on any keyboard layout (2026-11-27)
+
+With a Thai (or other non-Latin) layout, Ctrl/⌘ + a key reports the layout's character (Ctrl+S gives "ห"), so
+shortcuts compared by `event.key` failed; on Windows Ctrl+S also fell through to the browser's Save page.
+App-level shortcuts (Ctrl/⌘+S, Ctrl/⌘+K) now compare the physical key (`shortcutKey`: `event.code` `KeyS` →
+"s"). In the editor, ProseMirror already retries by key position, except Ctrl+Alt on Windows (kept free for
+AltGr); `LayoutShortcuts` offers such a non-ASCII press to the editor again as the US-layout key at the same
+position, so Ctrl+Alt+C, Ctrl+Alt+1–3 and every other editor shortcut work with a Thai layout on Windows and
+macOS. Only presses that produce a non-ASCII character with a modifier are retried; a European AltGr character
+at a position that is also an editor shortcut becomes that shortcut.
+
+## D52 — Copy is plain text plus formatting; Markdown on request (2026-11-27)
+
+Replaces D35 and D38. Writing Markdown on every Ctrl/⌘+C put `**`, `#` and `- [ ]` into chats and other apps.
+Ctrl/⌘+C, Ctrl/⌘+X and the right-click Copy and Cut now use the editor's own clipboard behavior: `text/plain`
+with one line break between blocks (Tiptap's clipboard text serializer, `blockSeparator: "\n"`) and `text/html`,
+so plain fields get clean text and rich editors (Minotely, Google Docs, Notion) keep headings, lists and bold.
+Markdown is on request: the right-click "Copy as Markdown" and Ctrl/⌘+Alt+Shift+C (the shortcut formerly used by
+Copy as text) write only Markdown `text/plain`; text colors and custom highlights are left out.
+
+## D53 — Inline Autocomplete (ghost text) from the page's own words (2026-11-27)
+
+While typing in a note, the rest of a word or two-word phrase already used in the same page shows as faint ghost
+text after the cursor; Tab accepts it, Esc hides it, moving the cursor or leaving the editor drops it. It is a
+ProseMirror widget decoration (`GhostSuggest`), so nothing reaches the note until Tab inserts the text.
+
+- Words come from `Intl.Segmenter("th", { granularity: "word" })` over the page's text blocks (code blocks
+  skipped), which handles Thai and English. The index keeps single words and two neighboring words as phrases
+  (Thai joined directly, others by one space), because the segmenter splits compounds such as "นำโชค" into
+  "นำ" + "โชค". It is rebuilt 300 ms after typing stops, leaving out the half-typed word at the cursor.
+- A suggestion needs at least 2 graphemes typed, the cursor at the end of a word, and an entry that starts with
+  the last two words (as a phrase) or the last word and is longer; the most used wins, then the shorter. Matching ignores upper and lower case; the ghost text continues the entry as written in the page
+  ("mach" → "ine" from "Machine"). The rest must begin a new grapheme: a remainder starting with a combining
+  vowel or tone mark (Thai "เพ" + "ิ่ม") is skipped, because the mark cannot be drawn on the typed letter from a
+  separate element and would float. Never in
+  code blocks, while the `/` menu is being typed, during IME composition (no transaction is dispatched then), or
+  on locked notes.
+- On by default, with a "Suggestions" toggle in the editor's right-click menu stored per account in this
+  browser's `localStorage`. Off on touch devices (`pointer: coarse`), which have no Tab key. No Firestore cost.

@@ -19,17 +19,28 @@ export function shortcut(keys: string) {
   };
 }
 
-/** Ctrl+S on Windows/Linux, ⌘S on macOS. */
+/**
+ * The Latin letter or digit of the physical key (`KeyS` → "s", `Digit1` → "1"),
+ * so shortcuts work with any keyboard layout, Thai included (D51). Other keys:
+ * the produced character, lowercased.
+ */
+export function shortcutKey(event: KeyboardEvent) {
+  const code = /^(?:Key([A-Z])|Digit([0-9]))$/.exec(event.code);
+  if (code) return (code[1] ?? code[2]).toLowerCase();
+  return event.key.toLowerCase();
+}
+
+/** Ctrl+S on Windows/Linux, ⌘S on macOS, on any keyboard layout. */
 export function isSaveShortcut(event: KeyboardEvent) {
   return (
     (event.metaKey || event.ctrlKey) &&
     !event.altKey &&
-    event.key.toLowerCase() === "s"
+    shortcutKey(event) === "s"
   );
 }
 
-/** Plain-text copy in the focused WYSIWYG editor. */
-export function isPlainTextCopyShortcut(event: KeyboardEvent) {
+/** Copy as Markdown in the focused WYSIWYG editor (D52). */
+export function isMarkdownCopyShortcut(event: KeyboardEvent) {
   return (
     (isMac
       ? event.metaKey && !event.ctrlKey
