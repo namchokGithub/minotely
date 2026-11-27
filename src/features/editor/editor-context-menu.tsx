@@ -11,6 +11,7 @@ import {
   EyeOff,
   Italic,
   Link2,
+  List,
   ListTodo,
   Scissors,
   SpellCheck2,
@@ -147,6 +148,10 @@ export function EditorContextItems({
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => chain().toggleTaskList().run()}>
             <ListTodo /> Checklist {hint("Mod+Shift+9")}
+          </ContextMenuItem>
+          {/* Also turns a checklist back into a bulleted list. */}
+          <ContextMenuItem onSelect={() => chain().toggleBulletList().run()}>
+            <List /> Bulleted list {hint("Mod+Shift+8")}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => chain().toggleCodeBlock().run()}>
             <Code2 /> Code block {hint("Mod+Alt+C")}
