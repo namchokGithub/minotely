@@ -354,25 +354,26 @@ body {
   .minotely-editor [data-resize-state="true"] [data-resize-handle] {
     @apply opacity-100;
   }
+  /* Tiptap positions handles inline (edges span the full height, corners sit at
+     0), so only size and look are set here. Edge handles are a thin hit strip
+     with a short pill drawn in the middle. */
   .minotely-editor [data-resize-handle="left"],
   .minotely-editor [data-resize-handle="right"] {
-    @apply top-1/2 h-10 w-1.5 -translate-y-1/2 cursor-ew-resize rounded-full bg-foreground/50;
+    @apply flex w-4 cursor-ew-resize items-center justify-center;
   }
-  .minotely-editor [data-resize-handle="left"] {
-    @apply left-1;
-  }
-  .minotely-editor [data-resize-handle="right"] {
-    @apply right-1;
+  .minotely-editor [data-resize-handle="left"]::after,
+  .minotely-editor [data-resize-handle="right"]::after {
+    @apply h-10 max-h-[60%] w-1.5 rounded-full border border-background bg-foreground/60 content-[''];
   }
   .minotely-editor [data-resize-handle="bottom-left"],
   .minotely-editor [data-resize-handle="bottom-right"] {
-    @apply bottom-1 size-3 rounded-full border-2 border-background bg-foreground/60;
+    @apply m-1.5 size-3 rounded-full border-2 border-background bg-foreground/70;
   }
   .minotely-editor [data-resize-handle="bottom-left"] {
-    @apply left-1 cursor-nesw-resize;
+    @apply cursor-nesw-resize;
   }
   .minotely-editor [data-resize-handle="bottom-right"] {
-    @apply right-1 cursor-nwse-resize;
+    @apply cursor-nwse-resize;
   }
   .minotely-editor .ProseMirror-selectednode img {
     @apply ring-2 ring-primary/60;
