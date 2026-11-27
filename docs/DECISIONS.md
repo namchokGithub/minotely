@@ -511,3 +511,14 @@ changes, as a non-edit transaction (saved with the next real change, like block 
 - Icon click or Ctrl/⌘+Enter opens the page; Enter moves below the line.
 - Markdown: `[Title](<origin>/books/{bookId}/notes/{pageId})` on its own line; a tokenizer turns such a line back
   into a Page line, so Raw mode, copy and paste keep it. Lined paper: one row.
+
+## D51 — Shortcuts on any keyboard layout (2026-11-27)
+
+With a Thai (or other non-Latin) layout, Ctrl/⌘ + a key reports the layout's character (Ctrl+S gives "ห"), so
+shortcuts compared by `event.key` failed; on Windows Ctrl+S also fell through to the browser's Save page.
+App-level shortcuts (Ctrl/⌘+S, Ctrl/⌘+K) now compare the physical key (`shortcutKey`: `event.code` `KeyS` →
+"s"). In the editor, ProseMirror already retries by key position, except Ctrl+Alt on Windows (kept free for
+AltGr); `LayoutShortcuts` offers such a non-ASCII press to the editor again as the US-layout key at the same
+position, so Ctrl+Alt+C, Ctrl+Alt+1–3 and every other editor shortcut work with a Thai layout on Windows and
+macOS. Only presses that produce a non-ASCII character with a modifier are retried; a European AltGr character
+at a position that is also an editor shortcut becomes that shortcut.

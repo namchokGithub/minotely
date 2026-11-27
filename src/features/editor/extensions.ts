@@ -12,6 +12,7 @@ import { Placeholder } from "@tiptap/extensions";
 import UniqueID from "@tiptap/extension-unique-id";
 import { Callout } from "./callout";
 import { PageLink } from "./page-link";
+import { LayoutShortcuts } from "./layout-shortcuts";
 import { Extension, type JSONContent } from "@tiptap/react";
 import { insertOrEditLink, openLink } from "./links";
 
@@ -74,6 +75,7 @@ export const editorExtensions = [
     },
   }),
   LinkShortcuts,
+  LayoutShortcuts,
   Highlight.configure({ multicolor: true }),
   TextStyle,
   Color,

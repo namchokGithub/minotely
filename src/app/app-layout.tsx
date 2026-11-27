@@ -5,7 +5,7 @@ import { Spinner } from "@/components/spinner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { useMediaQuery, useViewportWidth } from "@/lib/use-media-query";
-import { isSaveShortcut } from "@/lib/shortcuts";
+import { isSaveShortcut, shortcutKey } from "@/lib/shortcuts";
 import { BooksPanel } from "@/features/books/books-panel";
 import { NotesPanel } from "@/features/notes/notes-panel";
 import { SearchDialog } from "@/features/search/search-dialog";
@@ -86,7 +86,7 @@ export function AppLayout() {
       if (isSaveShortcut(event)) event.preventDefault();
       if (
         (event.metaKey || event.ctrlKey) &&
-        event.key.toLowerCase() === "k" &&
+        shortcutKey(event) === "k" &&
         !event.defaultPrevented
       ) {
         event.preventDefault();
