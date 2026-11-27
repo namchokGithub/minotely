@@ -551,3 +551,33 @@ ProseMirror widget decoration (`GhostSuggest`), so nothing reaches the note unti
   on locked notes.
 - On by default, with a "Suggestions" toggle in the editor's right-click menu stored per account in this
   browser's `localStorage`. Off on touch devices (`pointer: coarse`), which have no Tab key. No Firestore cost.
+
+## D54 — App version shown in the app (2026-11-27)
+
+The running build is shown as `v{version} · {commit}`: `version` from `package.json` and the first 7 characters
+of `GITHUB_SHA`, which GitHub Actions sets for the deploy step that runs the build (`dev` for local builds).
+Both, and the build time, are baked in at build time through Vite `define` (`__APP_VERSION__`,
+`__APP_COMMIT__`, `__APP_BUILT_AT__`), so nothing is fetched. The commit identifies a deploy even when the
+version was not bumped. Shown under the account email in the Library footer, at the bottom of the phone
+Settings screen, and in the collapsed Library rail's logo tooltip; hovering shows the build time.
+
+## D55 — Images by URL, resizable, no file storage (2026-11-27)
+
+Notes can show images from their own URLs (`@tiptap/extension-image`, block node, `NoteImage`). No file is stored:
+Firebase Storage needs the Blaze plan and was deferred, so an image loads from its site on every open (that site
+sees the viewer's IP) and breaks when the link dies.
+
+- Pasting one `https` URL inserts it as text at once and probes it as an image (no Referer, 3 s timeout); if it
+  loads and the pasted text is still there, the text becomes an image block. Ctrl/⌘+Shift+V, code blocks and
+  pastes with files or HTML images are left alone. Discord attachment links (`ex=`) get a warning that they
+  expire.
+- The `/` menu's Image asks for an `https` URL. Pasted HTML with `<img>` keeps its images. Markdown is `![](url)`
+  (width is not kept in Markdown); the paste heuristic (D41) recognizes it.
+- Resizing: Tiptap's resizable node view with left, right and bottom-corner handles, aspect ratio kept, width
+  and height saved in the note; CSS keeps images within the page width (`max-width: 100%`, `height: auto`).
+- Alignment: an `align` attribute (left by default, center, right) set from a small toolbar above a selected
+  image or the `⠿` menu's Align; stored in the note (`data-align`), not in Markdown. Text does not wrap around
+  images, and there is no free positioning: both break Lined rows, phones and block controls.
+- An image that cannot load shows a dashed "Image unavailable" frame (URL in its tooltip).
+- Lined paper: each image block's height is rounded up to whole rows (ResizeObserver), so text after it stays on
+  the lines (D40).

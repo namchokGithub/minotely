@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PanelRail } from "@/components/panel-rail";
+import { APP_VERSION, APP_VERSION_TITLE } from "@/lib/app-version";
 import { shortcut } from "@/lib/shortcuts";
 import { useAuth, useUid } from "@/features/auth/auth-context";
 import { DataMenu } from "@/features/data/data-menu";
@@ -100,6 +101,7 @@ export function BooksPanel() {
       {collapsed && (
         <PanelRail
           label="Expand Library"
+          hint={`Expand Library · ${APP_VERSION}`}
           controls="books-sidebar"
           onExpand={toggleCollapsed}
           className="bg-sidebar text-sidebar-foreground"
@@ -424,8 +426,15 @@ function PanelFooter() {
 
   return (
     <footer className="flex items-center gap-1 border-t px-3 py-2">
-      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-        {user?.email}
+      <span className="grid min-w-0 flex-1 text-xs text-muted-foreground">
+        <span className="truncate">{user?.email}</span>
+        {/* Which deploy is running (D54). */}
+        <span
+          className="truncate text-[0.6875rem] text-muted-foreground/70"
+          title={APP_VERSION_TITLE}
+        >
+          {APP_VERSION}
+        </span>
       </span>
       <Button
         variant="ghost"

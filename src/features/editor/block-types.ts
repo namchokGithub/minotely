@@ -5,6 +5,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Image as ImageIcon,
   Lightbulb,
   List,
   ListOrdered,
@@ -119,6 +120,18 @@ export const BLOCK_TYPE_LIST: BlockType[] = [
     icon: TableIcon,
     turnInto: false,
     apply: (c) => c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }),
+  },
+  {
+    id: "image",
+    label: "Image",
+    keywords: ["picture", "photo", "url", "img"],
+    icon: ImageIcon,
+    turnInto: false,
+    // Images by URL only (D55); the app does not store files.
+    apply: (c) => {
+      const url = window.prompt("Image URL (https://…)")?.trim();
+      return url && /^https:\/\/\S+$/.test(url) ? c.setImage({ src: url }) : c;
+    },
   },
   {
     id: "divider",

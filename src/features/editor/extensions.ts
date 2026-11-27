@@ -12,6 +12,7 @@ import { Placeholder } from "@tiptap/extensions";
 import UniqueID from "@tiptap/extension-unique-id";
 import { Callout } from "./callout";
 import { PageLink } from "./page-link";
+import { NoteImage } from "./image";
 import { LayoutShortcuts } from "./layout-shortcuts";
 import { Extension, type JSONContent } from "@tiptap/react";
 import { insertOrEditLink, openLink } from "./links";
@@ -47,6 +48,7 @@ export const BLOCK_TYPES = [
   "table",
   "horizontalRule",
   "pageLink",
+  "image",
 ];
 
 /**
@@ -85,6 +87,7 @@ export const editorExtensions = [
   TableCell,
   Callout,
   PageLink,
+  NoteImage,
   // Stable block ids for "Copy link to block" (D48); rendered as data-id.
   UniqueID.configure({ types: BLOCK_TYPES }),
   Placeholder.configure({ placeholder: "Start writing…  Type / for blocks" }),
