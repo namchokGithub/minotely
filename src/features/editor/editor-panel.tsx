@@ -76,6 +76,11 @@ import { canAddChild } from "@/features/notes/tree";
 import { DocumentOutline } from "./document-outline";
 import { BlockControls } from "./block-controls";
 import { BlockDragDrop } from "./block-drag";
+import { GhostSuggest, setGhostSuggestEnabled } from "./ghost-suggest";
+import {
+  getSuggestionsEnabled,
+  saveSuggestionsEnabled,
+} from "./suggestions-setting";
 import { FloatingToolbar } from "./floating-toolbar";
 import { SlashCommand, SlashMenuStore, type SlashItem } from "./slash-command";
 import { SlashMenu } from "./slash-menu";
@@ -238,6 +243,7 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
       ...spellingExtensions,
       SlashCommand.configure({ store: slashStore }),
       BlockDragDrop,
+      GhostSuggest,
     ],
     content: parseContent(initial.content),
     editable: !note.isLocked,
@@ -296,6 +302,29 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
   useEffect(() => {
     spellcheck?.setEnabled(spellcheckEnabled);
   }, [spellcheck, spellcheckEnabled]);
+
+  // Inline Autocomplete (D53): mouse and keyboard devices only (Tab accepts),
+  // editable notes, and the device setting.
+  const [suggestionsEnabled, setSuggestionsEnabled] = useState(() =>
+    getSuggestionsEnabled(uid),
+  );
+  const editable = !note.isLocked;
+  useEffect(() => {
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    setGhostSuggestEnabled(
+      editor.view,
+      suggestionsEnabled && editable && finePointer,
+    );
+  }, [editor, suggestionsEnabled, editable]);
+
+  const toggleSuggestions = () => {
+    const next = !suggestionsEnabled;
+    if (!saveSuggestionsEnabled(uid, next)) {
+      toast.error("Could not save the suggestions setting");
+      return;
+    }
+    setSuggestionsEnabled(next);
+  };
 
   const toggleSpellcheck = () => {
     const next = !spellcheckEnabled;
@@ -625,6 +654,8 @@ function NoteEditor({ note, draft }: { note: Note; draft: NoteDraft | null }) {
                         spellcheck={spellcheck}
                         spellcheckEnabled={spellcheckEnabled}
                         onToggleSpellcheck={toggleSpellcheck}
+                        suggestionsEnabled={suggestionsEnabled}
+                        onToggleSuggestions={toggleSuggestions}
                         onSpellingAction={() => setSpellingTarget(null)}
                       />
                     }

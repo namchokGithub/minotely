@@ -531,3 +531,20 @@ with one line break between blocks (Tiptap's clipboard text serializer, `blockSe
 so plain fields get clean text and rich editors (Minotely, Google Docs, Notion) keep headings, lists and bold.
 Markdown is on request: the right-click "Copy as Markdown" and Ctrl/⌘+Alt+Shift+C (the shortcut formerly used by
 Copy as text) write only Markdown `text/plain`; text colors and custom highlights are left out.
+
+## D53 — Inline Autocomplete (ghost text) from the page's own words (2026-11-27)
+
+While typing in a note, the rest of a word or two-word phrase already used in the same page shows as faint ghost
+text after the cursor; Tab accepts it, Esc hides it, moving the cursor or leaving the editor drops it. It is a
+ProseMirror widget decoration (`GhostSuggest`), so nothing reaches the note until Tab inserts the text.
+
+- Words come from `Intl.Segmenter("th", { granularity: "word" })` over the page's text blocks (code blocks
+  skipped), which handles Thai and English. The index keeps single words and two neighboring words as phrases
+  (Thai joined directly, others by one space), because the segmenter splits compounds such as "นำโชค" into
+  "นำ" + "โชค". It is rebuilt 300 ms after typing stops, leaving out the half-typed word at the cursor.
+- A suggestion needs at least 2 graphemes typed, the cursor at the end of a word, and an entry that starts with
+  the last two words (as a phrase) or the last word and is longer; the most used wins, then the shorter. Never in
+  code blocks, while the `/` menu is being typed, during IME composition (no transaction is dispatched then), or
+  on locked notes.
+- On by default, with a "Suggestions" toggle in the editor's right-click menu stored per account in this
+  browser's `localStorage`. Off on touch devices (`pointer: coarse`), which have no Tab key. No Firestore cost.

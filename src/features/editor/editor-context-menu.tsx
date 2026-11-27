@@ -15,6 +15,7 @@ import {
   List,
   ListTodo,
   Scissors,
+  Sparkles,
   SpellCheck2,
   TextSelect,
 } from "lucide-react";
@@ -41,6 +42,8 @@ export function EditorContextItems({
   spellcheck,
   spellcheckEnabled,
   onToggleSpellcheck,
+  suggestionsEnabled,
+  onToggleSuggestions,
   onSpellingAction,
 }: {
   editor: Editor;
@@ -48,6 +51,9 @@ export function EditorContextItems({
   spellcheck: NoteSpellcheckController | null;
   spellcheckEnabled: boolean;
   onToggleSpellcheck: () => void;
+  /** Inline Autocomplete, this device (D53). */
+  suggestionsEnabled: boolean;
+  onToggleSuggestions: () => void;
   onSpellingAction: () => void;
 }) {
   const editable = editor.isEditable;
@@ -183,6 +189,12 @@ export function EditorContextItems({
         onCheckedChange={onToggleSpellcheck}
       >
         <SpellCheck2 /> Spell check
+      </ContextMenuCheckboxItem>
+      <ContextMenuCheckboxItem
+        checked={suggestionsEnabled}
+        onCheckedChange={onToggleSuggestions}
+      >
+        <Sparkles /> Suggestions
       </ContextMenuCheckboxItem>
     </>
   );
